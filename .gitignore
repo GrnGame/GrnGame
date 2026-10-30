@@ -2,12 +2,10 @@
 .vs*/
 .xmake/
 build/
-CMakeLists.txt
 compile_commands.json
 vsxmake*/
 .idea/
 .DS_Store
-cmake*/
 external/
 benchmark/assets
 benchmark/test.db

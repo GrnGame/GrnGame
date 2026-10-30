@@ -27,12 +27,14 @@
 #define JSON_LIST_REQ_SLOTS(base) ((base) + 2)
 #define JSON_LIST_VAL_SLOT(base) ((base) + 1)
 
-static cJSON *JsonParseValueFromSlot(WrenVM *vm, int32 valueSlot);
-static void JsonPushValueToSlot(WrenVM *vm, cJSON *item, int32 slot);
+static yyjson_mut_val *JsonParseValueFromSlot(WrenVM *vm, yyjson_mut_doc *doc, int32 valueSlot);
+static void JsonPushValueToSlot(WrenVM *vm, yyjson_mut_val *item, int32 slot);
 
-static cJSON *JsonParseMap(WrenVM *vm, WrenHandle *mapHandle)
+static yyjson_mut_val *JsonParseMap(WrenVM *vm, yyjson_mut_doc *doc, WrenHandle *mapHandle)
 {
-    cJSON *object = cJSON_CreateObject();
+    yyjson_mut_val *object = yyjson_mut_obj(doc);
+    if (object == NULL)
+        return NULL;
 
     wrenEnsureSlots(vm, 4);
     wrenSetSlotHandle(vm, SLOT_CONTAINER, mapHandle);
@@ -52,17 +54,20 @@ static cJSON *JsonParseMap(WrenVM *vm, WrenHandle *mapHandle)
         snprintf(key, sizeof(key), "%s", wrenGetSlotString(vm, SLOT_KEY));
 
         wrenGetMapValue(vm, SLOT_CONTAINER, SLOT_KEY, SLOT_VALUE);
-        cJSON *value = JsonParseValueFromSlot(vm, SLOT_VALUE);
-
-        cJSON_AddItemToObject(object, key, value);
+        yyjson_mut_val *value = JsonParseValueFromSlot(vm, doc, SLOT_VALUE);
+        yyjson_mut_val *json_key = yyjson_mut_strcpy(doc, key);
+        if (value == NULL || json_key == NULL || !yyjson_mut_obj_add(object, json_key, value))
+            return NULL;
     }
 
     return object;
 }
 
-static cJSON *JsonParseList(WrenVM *vm, WrenHandle *listHandle)
+static yyjson_mut_val *JsonParseList(WrenVM *vm, yyjson_mut_doc *doc, WrenHandle *listHandle)
 {
-    cJSON *array = cJSON_CreateArray();
+    yyjson_mut_val *array = yyjson_mut_arr(doc);
+    if (array == NULL)
+        return NULL;
 
     wrenEnsureSlots(vm, 4);
 
@@ -74,40 +79,40 @@ static cJSON *JsonParseList(WrenVM *vm, WrenHandle *listHandle)
         wrenSetSlotHandle(vm, SLOT_CONTAINER, listHandle);
 
         wrenGetListElement(vm, SLOT_CONTAINER, i, SLOT_VALUE);
-        cJSON *value = JsonParseValueFromSlot(vm, SLOT_VALUE);
-
-        cJSON_AddItemToArray(array, value);
+        yyjson_mut_val *value = JsonParseValueFromSlot(vm, doc, SLOT_VALUE);
+        if (value == NULL || !yyjson_mut_arr_append(array, value))
+            return NULL;
     }
 
     return array;
 }
 
-static cJSON *JsonParseValueFromSlot(WrenVM *vm, int32 valueSlot)
+static yyjson_mut_val *JsonParseValueFromSlot(WrenVM *vm, yyjson_mut_doc *doc, int32 valueSlot)
 {
     switch (wrenGetSlotType(vm, valueSlot))
     {
     case WREN_TYPE_NULL:
-        return cJSON_CreateNull();
+        return yyjson_mut_null(doc);
 
     case WREN_TYPE_BOOL:
-        return cJSON_CreateBool(wrenGetSlotBool(vm, valueSlot));
+        return yyjson_mut_bool(doc, wrenGetSlotBool(vm, valueSlot));
 
     case WREN_TYPE_NUM:
-        return cJSON_CreateNumber(wrenGetSlotDouble(vm, valueSlot));
+        return yyjson_mut_real(doc, wrenGetSlotDouble(vm, valueSlot));
 
     case WREN_TYPE_STRING:
-        return cJSON_CreateString(wrenGetSlotString(vm, valueSlot));
+        return yyjson_mut_strcpy(doc, wrenGetSlotString(vm, valueSlot));
 
     case WREN_TYPE_MAP: {
         WrenHandle *handle = wrenGetSlotHandle(vm, valueSlot);
-        cJSON *result = JsonParseMap(vm, handle);
+        yyjson_mut_val *result = JsonParseMap(vm, doc, handle);
         wrenReleaseHandle(vm, handle);
         return result;
     }
 
     case WREN_TYPE_LIST: {
         WrenHandle *handle = wrenGetSlotHandle(vm, valueSlot);
-        cJSON *result = JsonParseList(vm, handle);
+        yyjson_mut_val *result = JsonParseList(vm, doc, handle);
         wrenReleaseHandle(vm, handle);
         return result;
     }
@@ -115,11 +120,28 @@ static cJSON *JsonParseValueFromSlot(WrenVM *vm, int32 valueSlot)
     case WREN_TYPE_FOREIGN:
     case WREN_TYPE_UNKNOWN:
     default:
-        return cJSON_CreateNull();
+        return yyjson_mut_null(doc);
     }
 }
 
-static void JsonPushObjectToSlot(WrenVM *vm, cJSON *object, int32 base_slot)
+static yyjson_mut_doc *JsonDocumentFromSlot(WrenVM *vm, int32 valueSlot)
+{
+    yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
+    if (doc == NULL)
+        return NULL;
+
+    yyjson_mut_val *root = JsonParseValueFromSlot(vm, doc, valueSlot);
+    if (root == NULL)
+    {
+        yyjson_mut_doc_free(doc);
+        return NULL;
+    }
+
+    yyjson_mut_doc_set_root(doc, root);
+    return doc;
+}
+
+static void JsonPushObjectToSlot(WrenVM *vm, yyjson_mut_val *object, int32 base_slot)
 {
     wrenEnsureSlots(vm, JSON_MAP_REQ_SLOTS(base_slot));
     wrenSetSlotNewMap(vm, base_slot);
@@ -127,10 +149,12 @@ static void JsonPushObjectToSlot(WrenVM *vm, cJSON *object, int32 base_slot)
     const int32 keySlot = JSON_MAP_KEY_SLOT(base_slot);
     const int32 valueSlot = JSON_MAP_VAL_SLOT(base_slot);
 
-    cJSON *item = NULL;
-    cJSON_ArrayForEach(item, object)
+    yyjson_mut_obj_iter iter = yyjson_mut_obj_iter_with(object);
+    yyjson_mut_val *key;
+    while ((key = yyjson_mut_obj_iter_next(&iter)) != NULL)
     {
-        wrenSetSlotString(vm, keySlot, item->string ? item->string : "");
+        yyjson_mut_val *item = yyjson_mut_obj_iter_get_val(key);
+        wrenSetSlotString(vm, keySlot, yyjson_mut_get_str(key));
 
         JsonPushValueToSlot(vm, item, valueSlot);
 
@@ -138,7 +162,7 @@ static void JsonPushObjectToSlot(WrenVM *vm, cJSON *object, int32 base_slot)
     }
 }
 
-static void JsonPushArrayToSlot(WrenVM *vm, cJSON *array, int32 base_slot)
+static void JsonPushArrayToSlot(WrenVM *vm, yyjson_mut_val *array, int32 base_slot)
 {
     wrenEnsureSlots(vm, JSON_LIST_REQ_SLOTS(base_slot));
     wrenSetSlotNewList(vm, base_slot);
@@ -146,9 +170,10 @@ static void JsonPushArrayToSlot(WrenVM *vm, cJSON *array, int32 base_slot)
     const int32 valueSlot = JSON_LIST_VAL_SLOT(base_slot);
 
     int32 index = 0;
-    cJSON *item = NULL;
-    cJSON_ArrayForEach(item, array)
+    const size_t count = yyjson_mut_arr_size(array);
+    for (size_t i = 0; i < count; ++i)
     {
+        yyjson_mut_val *item = yyjson_mut_arr_get(array, i);
         JsonPushValueToSlot(vm, item, valueSlot);
 
         wrenInsertInList(vm, base_slot, index, valueSlot);
@@ -156,40 +181,36 @@ static void JsonPushArrayToSlot(WrenVM *vm, cJSON *array, int32 base_slot)
     }
 }
 
-static void JsonPushValueToSlot(WrenVM *vm, cJSON *item, int32 slot)
+static void JsonPushValueToSlot(WrenVM *vm, yyjson_mut_val *item, int32 slot)
 {
     if (item == NULL)
     {
         wrenSetSlotNull(vm, slot);
         return;
     }
-    switch (item->type & 0xFF)
+    switch (yyjson_mut_get_type(item))
     {
-    case cJSON_NULL:
+    case YYJSON_TYPE_NULL:
         wrenSetSlotNull(vm, slot);
         break;
 
-    case cJSON_False:
-        wrenSetSlotBool(vm, slot, false);
+    case YYJSON_TYPE_BOOL:
+        wrenSetSlotBool(vm, slot, yyjson_mut_get_bool(item));
         break;
 
-    case cJSON_True:
-        wrenSetSlotBool(vm, slot, true);
+    case YYJSON_TYPE_NUM:
+        wrenSetSlotDouble(vm, slot, yyjson_mut_get_num(item));
         break;
 
-    case cJSON_Number:
-        wrenSetSlotDouble(vm, slot, item->valuedouble);
+    case YYJSON_TYPE_STR:
+        wrenSetSlotString(vm, slot, yyjson_mut_get_str(item));
         break;
 
-    case cJSON_String:
-        wrenSetSlotString(vm, slot, item->valuestring ? item->valuestring : "");
-        break;
-
-    case cJSON_Object:
+    case YYJSON_TYPE_OBJ:
         JsonPushObjectToSlot(vm, item, slot);
         break;
 
-    case cJSON_Array:
+    case YYJSON_TYPE_ARR:
         JsonPushArrayToSlot(vm, item, slot);
         break;
 
@@ -239,7 +260,7 @@ void json_get(WrenVM *vm)
         return;
     }
 
-    cJSON *root = object->json;
+    yyjson_mut_val *root = yyjson_mut_doc_get_root(object->json);
 
     JsonPushValueToSlot(vm, root, 0);
 }
@@ -247,12 +268,17 @@ void json_get(WrenVM *vm)
 void json_set(WrenVM *vm)
 {
     const char *key = wrenGetSlotString(vm, 1);
-    cJSON *value = JsonParseValueFromSlot(vm, 2);
+    yyjson_mut_doc *value = JsonDocumentFromSlot(vm, 2);
+    if (value == NULL)
+    {
+        wrenSetSlotBool(vm, 0, false);
+        return;
+    }
 
     bool success = WriteInJsonObject(key, value);
     if (!success)
     {
-        cJSON_Delete(value);
+        yyjson_mut_doc_free(value);
     }
 
     wrenSetSlotBool(vm, 0, success);
@@ -275,15 +301,20 @@ void create_json_file(WrenVM *vm)
 {
     const char *key = wrenGetSlotString(vm, 1);
 
-    cJSON *value = JsonParseValueFromSlot(vm, 2);
+    yyjson_mut_doc *value = JsonDocumentFromSlot(vm, 2);
     if (UNLIKELY(value == NULL))
     {
         wrenSetSlotBool(vm, 0, false);
         return;
     }
 
-    char *text = cJSON_Print(value);
-    cJSON_Delete(value);
+    char *text = yyjson_mut_write(value, YYJSON_WRITE_PRETTY, NULL);
+    yyjson_mut_doc_free(value);
+    if (UNLIKELY(text == NULL))
+    {
+        wrenSetSlotBool(vm, 0, false);
+        return;
+    }
 
 #ifndef GRNGAME_EMBED_ASSETS
     bool success = JsonCreate(key, text);

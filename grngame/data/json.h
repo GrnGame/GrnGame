@@ -4,10 +4,10 @@
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/macro.h"
 #include "grngame/utils/memory.h"
-#include <cjson/cJSON.h>
 #include <khash.h>
 #include <kvec.h>
 #include <stdbool.h>
+#include <yyjson.h>
 
 #define JSON_PATH_MAX_LEN 1024 * BUFFER_SPACE
 
@@ -16,7 +16,7 @@ typedef struct
     uint64 min;
     uint64 max;
     uint64 last_save_time;
-    cJSON *json;
+    yyjson_mut_doc *json;
     bool embedded; // Present in embedded database, only available on target
 } JsonObject;
 
@@ -68,4 +68,4 @@ bool JsonGetBoolArray(const char *fileKey, const char *key, bool_vec_t *out_valu
 bool JsonGetStringArray(const char *fileKey, const char *key, string_vec_t *out_values);
 
 /* Used by Wren. */
-bool WriteInJsonObject(const char *key, cJSON *object);
+bool WriteInJsonObject(const char *key, yyjson_mut_doc *object);
