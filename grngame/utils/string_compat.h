@@ -1,38 +1,35 @@
 #pragma once
 
 #include "grngame/math/types.h"
-#include <stdlib.h>
+#include "stdio.h"
+#include "stdlib.h"
 #include <string.h>
-#if defined(HAVE_STRCASECMP)
-#include <strings.h>
+
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 #endif
 
-#if !defined(HAVE_STRDUP)
-#if defined(HAVE__STRDUP)
+#ifdef _MSC_VER
 #define strdup _strdup
-#else
-static inline char *grn_strdup(const char *s)
+#endif
+
+#ifdef GRNGAME_WASM
+
+static inline char *strdup(const char *s)
 {
     uint64 len = strlen(s) + 1;
     char *p = malloc(len);
     memcpy(p, s, len);
     return p;
 }
-#define strdup grn_strdup
-#endif
-#endif
 
-#if !defined(HAVE_STRCASECMP)
-#if defined(HAVE__STRICMP)
-#define strcasecmp _stricmp
-#define strncasecmp _strnicmp
-#else
-static inline int grn_strcasecmp(const char *a, const char *b)
+static inline int32 strcasecmp(const char *s1, const char *s2)
 {
-    while (*a && *b)
+    while (*s1 && *s2)
     {
-        unsigned char c1 = (unsigned char)*a++;
-        unsigned char c2 = (unsigned char)*b++;
+        unsigned char c1 = (unsigned char)*s1++;
+        unsigned char c2 = (unsigned char)*s2++;
 
         if (c1 >= 'A' && c1 <= 'Z')
             c1 += 'a' - 'A';
@@ -43,8 +40,13 @@ static inline int grn_strcasecmp(const char *a, const char *b)
             return c1 - c2;
     }
 
-    return (unsigned char)*a - (unsigned char)*b;
+    return (unsigned char)*s1 - (unsigned char)*s2;
 }
-#define strcasecmp grn_strcasecmp
+
 #endif
+
+#include <SDL3/SDL_stdinc.h>
+
+#ifndef strtok_r
+#define strtok_r SDL_strtok_r
 #endif

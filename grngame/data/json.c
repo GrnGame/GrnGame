@@ -1,5 +1,6 @@
 #include "json.h"
 #include "SDL3/SDL_stdinc.h"
+#include "cjson/cJSON.h"
 #include "file.h"
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/assets/load.h"
@@ -28,7 +29,7 @@ static void JsonObjectDestroy(JsonObject *object)
 {
     if (object->json != NULL)
     {
-        yyjson_mut_doc_free(object->json);
+        cJSON_Delete(object->json);
         object->json = NULL;
     }
     free(object);
@@ -130,20 +131,12 @@ bool OpenJsonObject(const char *path, uint64 min, uint64 max)
         return false;
     }
 
-    yyjson_doc *parsed = yyjson_read(text, strlen(text), 0);
+    cJSON *json = cJSON_Parse(text);
     free(text);
 
-    if (UNLIKELY(parsed == NULL))
-    {
-        LOG_ERROR("Impossitble to parse %s, is it a correct json format ?", path);
-        return false;
-    }
-
-    yyjson_mut_doc *json = yyjson_doc_mut_copy(parsed, NULL);
-    yyjson_doc_free(parsed);
     if (UNLIKELY(json == NULL))
     {
-        LOG_ERROR("Impossible to allocate JSON document for %s", path);
+        LOG_ERROR("Impossitble to parse %s, is it a correct json format ?", path);
         return false;
     }
 
@@ -153,23 +146,15 @@ bool OpenJsonObject(const char *path, uint64 min, uint64 max)
     j->max = max;
     j->json = json;
     JsonObjectAdd(path, j);
-    return true;
+    return 0;
 }
 
 bool OpenJsonObjectFromMemory(const char *path, const unsigned char *text, uint64 min, uint64 max)
 {
-    yyjson_doc *parsed = yyjson_read((const char *)text, strlen((const char *)text), 0);
-    if (parsed == NULL)
+    cJSON *json = cJSON_Parse((const char *)text);
+    if (json == NULL)
     {
         LOG_ERROR("Impossitble to parse %s, is it a correct json format ?", path);
-        return false;
-    }
-
-    yyjson_mut_doc *json = yyjson_doc_mut_copy(parsed, NULL);
-    yyjson_doc_free(parsed);
-    if (UNLIKELY(json == NULL))
-    {
-        LOG_ERROR("Impossible to allocate JSON document for %s", path);
         return false;
     }
 
@@ -182,7 +167,7 @@ bool OpenJsonObjectFromMemory(const char *path, const unsigned char *text, uint6
     return true;
 }
 
-static yyjson_mut_val *JsonNavigateToParent(yyjson_mut_doc *doc, char *path_copy, char **out_leaf, bool create)
+static cJSON *JsonNavigateToParent(cJSON *root, char *path_copy, char **out_leaf, bool create)
 {
     char *saveptr = NULL;
     char *token = strtok_r(path_copy, ".", &saveptr);
@@ -191,12 +176,12 @@ static yyjson_mut_val *JsonNavigateToParent(yyjson_mut_doc *doc, char *path_copy
         return NULL;
     }
 
-    yyjson_mut_val *current = yyjson_mut_doc_get_root(doc);
+    cJSON *current = root;
     char *next_token = NULL;
 
     while ((next_token = strtok_r(NULL, ".", &saveptr)) != NULL)
     {
-        yyjson_mut_val *child = yyjson_mut_obj_get(current, token);
+        cJSON *child = cJSON_GetObjectItemCaseSensitive(current, token);
 
         if (child == NULL)
         {
@@ -204,15 +189,10 @@ static yyjson_mut_val *JsonNavigateToParent(yyjson_mut_doc *doc, char *path_copy
             {
                 return NULL;
             }
-            child = yyjson_mut_obj(doc);
-            yyjson_mut_val *child_key = yyjson_mut_strcpy(doc, token);
-            if (child == NULL || child_key == NULL ||
-                !yyjson_mut_obj_add(current, child_key, child))
-            {
-                return NULL;
-            }
+            child = cJSON_CreateObject();
+            cJSON_AddItemToObject(current, token, child);
         }
-        else if (UNLIKELY(yyjson_mut_get_type(child) != YYJSON_TYPE_OBJ))
+        else if (UNLIKELY(!cJSON_IsObject(child)))
         {
             return NULL;
         }
@@ -225,7 +205,7 @@ static yyjson_mut_val *JsonNavigateToParent(yyjson_mut_doc *doc, char *path_copy
     return current;
 }
 
-static yyjson_mut_val *JsonResolve(const char *fileKey, const char *key, char **out_leaf, bool create)
+static cJSON *JsonResolve(const char *fileKey, const char *key, char **out_leaf, bool create)
 {
     JsonObject *entry = JsonObjectGet(fileKey);
     if (UNLIKELY(entry == NULL))
@@ -247,51 +227,51 @@ static yyjson_mut_val *JsonResolve(const char *fileKey, const char *key, char **
 bool JsonGetNumber(const char *fileKey, const char *key, float64 *out)
 {
     char *leaf = NULL;
-    yyjson_mut_val *parent = JsonResolve(fileKey, key, &leaf, false);
+    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
     if (UNLIKELY(parent == NULL))
         return false;
 
-    yyjson_mut_val *item = yyjson_mut_obj_get(parent, leaf);
-    if (UNLIKELY(item == NULL || !yyjson_mut_is_num(item)))
+    cJSON *item = cJSON_GetObjectItemCaseSensitive(parent, leaf);
+    if (UNLIKELY(item == NULL || !cJSON_IsNumber(item)))
     {
         return false;
     }
 
-    *out = yyjson_mut_get_num(item);
+    *out = item->valuedouble;
     return true;
 }
 
 bool JsonGetBool(const char *fileKey, const char *key, bool *out)
 {
     char *leaf = NULL;
-    yyjson_mut_val *parent = JsonResolve(fileKey, key, &leaf, false);
+    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
     if (UNLIKELY(parent == NULL))
         return false;
 
-    yyjson_mut_val *item = yyjson_mut_obj_get(parent, leaf);
-    if (UNLIKELY(item == NULL || !yyjson_mut_is_bool(item)))
+    cJSON *item = cJSON_GetObjectItemCaseSensitive(parent, leaf);
+    if (UNLIKELY(item == NULL || !cJSON_IsBool(item)))
     {
         return false;
     }
 
-    *out = yyjson_mut_get_bool(item);
+    *out = cJSON_IsTrue(item);
     return true;
 }
 
 bool JsonGetString(const char *fileKey, const char *key, const char **out)
 {
     char *leaf = NULL;
-    yyjson_mut_val *parent = JsonResolve(fileKey, key, &leaf, false);
+    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
     if (UNLIKELY(parent == NULL))
         return false;
 
-    yyjson_mut_val *item = yyjson_mut_obj_get(parent, leaf);
-    if (UNLIKELY(item == NULL || !yyjson_mut_is_str(item)))
+    cJSON *item = cJSON_GetObjectItemCaseSensitive(parent, leaf);
+    if (UNLIKELY(item == NULL || !cJSON_IsString(item) || item->valuestring == NULL))
     {
         return false;
     }
 
-    *out = yyjson_mut_get_str(item);
+    *out = item->valuestring;
     return true;
 }
 
@@ -300,12 +280,12 @@ bool JsonGetNumberArray(const char *fileKey, const char *key, float64_vec_t *out
     kv_init(*out);
 
     char *leaf = NULL;
-    yyjson_mut_val *parent = JsonResolve(fileKey, key, &leaf, false);
+    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
     if (UNLIKELY(parent == NULL))
         return false;
 
-    yyjson_mut_val *array = yyjson_mut_obj_get(parent, leaf);
-    if (UNLIKELY(array == NULL || yyjson_mut_get_type(array) != YYJSON_TYPE_ARR))
+    cJSON *array = cJSON_GetObjectItemCaseSensitive(parent, leaf);
+    if (UNLIKELY(array == NULL || !cJSON_IsArray(array)))
     {
         return false;
     }
@@ -313,19 +293,19 @@ bool JsonGetNumberArray(const char *fileKey, const char *key, float64_vec_t *out
     float64_vec_t vec;
     kv_init(vec);
 
-    int64 count = (int64)yyjson_mut_arr_size(array);
+    int64 count = cJSON_GetArraySize(array);
     kv_resize(float64, vec, count);
 
-    for (int64 i = 0; i < count; ++i)
+    cJSON *item = NULL;
+    cJSON_ArrayForEach(item, array)
     {
-        yyjson_mut_val *item = yyjson_mut_arr_get(array, (size_t)i);
-        if (UNLIKELY(!yyjson_mut_is_num(item)))
+        if (UNLIKELY(!cJSON_IsNumber(item)))
         {
             kv_destroy(vec);
             return false;
         }
 
-        kv_push(float64, vec, yyjson_mut_get_num(item));
+        kv_push(float64, vec, item->valuedouble);
     }
 
     *out = vec;
@@ -342,7 +322,7 @@ static void FileWriteJobRun(void *user_data)
 {
     FileWriteJob *job = user_data;
 
-    WriteFileData(job->key, job->text, strlen(job->text), false);
+    WriteFileData(job->key, job->text, strlen(job->key), false);
 
     free(job->key);
     free(job->text);
@@ -359,22 +339,9 @@ bool JsonSaveObject(const char *fileKey)
     }
 
     FileWriteJob *job = malloc(sizeof(*job));
-    if (job == NULL)
-    {
-        LOG_ERROR("Failed to allocate JSON save job for %s", fileKey);
-        return false;
-    }
 
     job->key = PathFromExecutableDirectory(fileKey);
-    job->text = yyjson_mut_write(entry->json, YYJSON_WRITE_PRETTY, NULL);
-    if (job->key == NULL || job->text == NULL)
-    {
-        LOG_ERROR("Failed to serialize JSON file %s", fileKey);
-        free(job->key);
-        free(job->text);
-        free(job);
-        return false;
-    }
+    job->text = cJSON_Print(entry->json);
 
     // Safe asynchronous operation: the file is read once during initialization,
     // and writes occur at most once per second.
@@ -393,12 +360,7 @@ bool JsonSaveObjectFromMemory(const char *fileKey)
         return false;
     }
 
-    char *text = yyjson_mut_write(entry->json, YYJSON_WRITE_PRETTY, NULL);
-    if (text == NULL)
-    {
-        LOG_ERROR("Failed to serialize JSON file %s", fileKey);
-        return false;
-    }
+    char *text = cJSON_Print(entry->json);
 
     bool result = EmbeddedFilePutDisk(fileKey, text, strlen(text));
 
@@ -416,12 +378,12 @@ bool JsonGetBoolArray(const char *fileKey, const char *key, bool_vec_t *out)
     kv_init(*out);
 
     char *leaf = NULL;
-    yyjson_mut_val *parent = JsonResolve(fileKey, key, &leaf, false);
+    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
     if (UNLIKELY(parent == NULL))
         return false;
 
-    yyjson_mut_val *array = yyjson_mut_obj_get(parent, leaf);
-    if (UNLIKELY(array == NULL || yyjson_mut_get_type(array) != YYJSON_TYPE_ARR))
+    cJSON *array = cJSON_GetObjectItemCaseSensitive(parent, leaf);
+    if (UNLIKELY(array == NULL || !cJSON_IsArray(array)))
     {
         return false;
     }
@@ -429,19 +391,19 @@ bool JsonGetBoolArray(const char *fileKey, const char *key, bool_vec_t *out)
     bool_vec_t vec;
     kv_init(vec);
 
-    int64 count = (int64)yyjson_mut_arr_size(array);
+    int64 count = cJSON_GetArraySize(array);
     kv_resize(bool, vec, count);
 
-    for (int64 i = 0; i < count; ++i)
+    cJSON *item = NULL;
+    cJSON_ArrayForEach(item, array)
     {
-        yyjson_mut_val *item = yyjson_mut_arr_get(array, (size_t)i);
-        if (UNLIKELY(!yyjson_mut_is_bool(item)))
+        if (UNLIKELY(!cJSON_IsBool(item)))
         {
             kv_destroy(vec);
             return false;
         }
 
-        kv_push(bool, vec, yyjson_mut_get_bool(item));
+        kv_push(bool, vec, cJSON_IsTrue(item));
     }
 
     *out = vec;
@@ -454,23 +416,23 @@ bool JsonGetStringArray(const char *fileKey, const char *key, string_vec_t *out)
     kv_init(*out);
 
     char *leaf = NULL;
-    yyjson_mut_val *parent = JsonResolve(fileKey, key, &leaf, false);
+    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
     if (UNLIKELY(parent == NULL))
         return false;
 
-    yyjson_mut_val *array = yyjson_mut_obj_get(parent, leaf);
-    if (UNLIKELY(array == NULL || yyjson_mut_get_type(array) != YYJSON_TYPE_ARR))
+    cJSON *array = cJSON_GetObjectItemCaseSensitive(parent, leaf);
+    if (UNLIKELY(array == NULL || !cJSON_IsArray(array)))
     {
         return false;
     }
 
-    int64 count = (int64)yyjson_mut_arr_size(array);
+    int64 count = cJSON_GetArraySize(array);
     kv_resize(char *, *out, count);
 
-    for (int64 i = 0; i < count; ++i)
+    cJSON *item = NULL;
+    cJSON_ArrayForEach(item, array)
     {
-        yyjson_mut_val *item = yyjson_mut_arr_get(array, (size_t)i);
-        if (UNLIKELY(!yyjson_mut_is_str(item)))
+        if (UNLIKELY(!cJSON_IsString(item) || item->valuestring == NULL))
         {
 
             for (uint64 j = 0; j < kv_size(*out); ++j)
@@ -482,7 +444,7 @@ bool JsonGetStringArray(const char *fileKey, const char *key, string_vec_t *out)
             return false;
         }
 
-        kv_push(char *, *out, strdup(yyjson_mut_get_str(item)));
+        kv_push(char *, *out, strdup(item->valuestring));
     }
 
     return true;
@@ -501,7 +463,7 @@ static bool JsonCloseObject(const char *fileKey)
 
     JsonObject *entry = kh_value(manager, it);
 
-    yyjson_mut_doc_free(entry->json);
+    cJSON_Delete(entry->json);
     entry->json = NULL;
 
     free((char *)kh_key(manager, it));
@@ -559,16 +521,17 @@ void JsonSaveObjects(float64 budget)
     }
 }
 
-bool WriteInJsonObject(const char *key, yyjson_mut_doc *object)
+bool WriteInJsonObject(const char *key, cJSON *object)
 {
 #ifndef GRNGAME_WASM
     JsonObject *entry = JsonObjectGet(key);
     if (UNLIKELY(entry == NULL))
     {
-        LOG_ERROR("Cant write in json object because %s doesnt exist.did you forget to open it?", key);
+        LOG_ERROR("Cant write in json object because %s doesnt exist.did you forget to open it?");
         return false;
     }
-    yyjson_mut_doc_free(entry->json);
+    cJSON_Delete(entry->json);
+    entry->json = NULL;
     entry->json = object;
     return true;
 #else
