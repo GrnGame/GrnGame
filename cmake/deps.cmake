@@ -10,8 +10,6 @@ if (GRNGAME_TRACY)
 endif ()
 
 
-# SDL, SDL_image and SDL_mixer use the official release assets:
-# the auto-generated GitHub archives omit the vendored submodules.
 CPMAddPackage(
         NAME SDL3
         URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.12/SDL3-3.4.12.tar.gz
@@ -75,7 +73,7 @@ CPMAddPackage(
 
 CPMAddPackage(
         NAME wren
-        URL https://github.com/Baptistegrn/wren/archive/d18db2cffa5ba76e482d980c3f7bab143c077c2b.tar.gz   # <- replace with your fork if "Map-api" lives there
+        URL https://github.com/Baptistegrn/wren/archive/d18db2cffa5ba76e482d980c3f7bab143c077c2b.tar.gz
         DOWNLOAD_ONLY YES
 )
 if (wren_ADDED AND NOT TARGET wren)
