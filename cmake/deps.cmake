@@ -109,10 +109,11 @@ if (sqlite3_ADDED AND NOT TARGET sqlite3)
 endif ()
 
 CPMAddPackage(
-        NAME yyjson
-        URL https://github.com/ibireme/yyjson/archive/refs/tags/0.13.0.tar.gz
+        NAME cjson
+        URL https://github.com/DaveGamble/cJSON/archive/6d9f2443ab071f86e5d9b43025a40929ec41c46c.tar.gz
         OPTIONS
-        "YYJSON_INSTALL OFF"
+        "ENABLE_CJSON_TEST OFF" "ENABLE_CJSON_UNINSTALL OFF"
+        "CJSON_BUILD_SHARED_LIBS OFF" "ENABLE_CJSON_UTILS OFF"
 )
 
 if (IS_DEV)
