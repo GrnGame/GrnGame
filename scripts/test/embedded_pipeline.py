@@ -1,13 +1,13 @@
 import shutil
 import subprocess
 import sys
+import os
 from pathlib import Path
 
 RUNTIME_BUILD_DIR = Path("build/Runtime")
 STD_DIR = Path("std")
 DATA_DIR = Path("data")
 GAME_CONTROLLER_DB = Path("grngame/input/gamecontrollerdb.txt")
-READ_METADATA_SCRIPT = Path("scripts/metadata/read_metadata.py")
 
 EMBEDDED_PATTERN = "Embedded-*"
 ASSETS_PAK = "Assets.pak"
@@ -19,7 +19,7 @@ IGNORED_FILES = shutil.ignore_patterns("*.exp", "*.lib")
 
 def find_embedded(dir_build_embedded: Path) -> Path:
     for path in dir_build_embedded.glob(EMBEDDED_PATTERN):
-        if path.is_file():
+        if path.is_file() and path.suffix not in {".pdb", ".ilk", ".exp", ".lib", ".obj"}:
             return path
     raise FileNotFoundError(
         f"No {EMBEDDED_PATTERN} file found in {dir_build_embedded}"
@@ -43,18 +43,9 @@ def stage_data(dir_racine: Path, dir_from: Path) -> None:
         data_dir / GAME_CONTROLLER_DB.name,
     )
 
-
-def stage_metadata(dir_racine: Path, dir_from: Path) -> None:
-    shutil.copy2(
-        dir_racine / READ_METADATA_SCRIPT,
-        dir_from / READ_METADATA_SCRIPT.name,
-    )
-
-
 def cleanup(dir_from: Path) -> None:
     shutil.rmtree(dir_from / STD_DIR, ignore_errors=True)
     shutil.rmtree(dir_from / DATA_DIR, ignore_errors=True)
-    (dir_from / READ_METADATA_SCRIPT.name).unlink(missing_ok=True)
 
 
 def build_pak(embedded: Path, dir_from: Path) -> Path:
@@ -95,7 +86,6 @@ if __name__ == "__main__":
 
     stage_std(dir_racine, dir_from)
     stage_data(dir_racine, dir_from)
-    stage_metadata(dir_racine, dir_from)
 
     bundle_runtime(dir_to)
     bundle_metadata(dir_from, dir_to)

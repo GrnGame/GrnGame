@@ -8,6 +8,7 @@
 #include "grngame/core/window.h"
 #include "grngame/data/file.h"
 #include "grngame/data/json.h"
+#include "grngame/data/json_read.h"
 #include "grngame/data/sqlite.h"
 #include "grngame/dev/hotreload.h"
 #include "grngame/dev/logging.h"
@@ -22,6 +23,7 @@
 #include "kvec.h"
 #include "text.h"
 #include <SDL3/SDL.h>
+#include <stddef.h>
 #include <stdlib.h>
 
 static InitResult InitializeLogging(void)
@@ -86,29 +88,32 @@ static InitResult SetSDLMetadata(void)
 
 static bool ParseMetaData()
 {
-    const char *name = NULL;
-    if (!JsonGetString("metadata.json", "name", &name))
+    JsonValue v = JsonReadValueFromDirectory(METADATA, "name");
+    if (v.type != JSONV_TEXT)
     {
-        LOG_ERROR("Failed to read 'name' from metadata.json");
+        LOG_ERROR("Failed to read name section in %s", METADATA);
+        JsonValueFree(&v);
         return false;
     }
-    g_app.info.name = name;
+    g_app.info.name = v.value.s;
 
-    const char *company = NULL;
-    if (!JsonGetString("metadata.json", "company", &company))
+    v = JsonReadValueFromDirectory(METADATA, "version");
+    if (v.type != JSONV_TEXT)
     {
-        LOG_ERROR("Failed to read 'company' from metadata.json");
+        LOG_ERROR("Failed to read version section in %s", METADATA);
+        JsonValueFree(&v);
         return false;
     }
-    g_app.info.company = company;
+    g_app.info.version = v.value.s;
 
-    const char *version = NULL;
-    if (!JsonGetString("metadata.json", "version", &version))
+    v = JsonReadValueFromDirectory(METADATA, "company");
+    if (v.type != JSONV_TEXT)
     {
-        LOG_ERROR("Failed to read 'version' from metadata.json");
+        LOG_ERROR("Failed to read compagny section in %s", METADATA);
+        JsonValueFree(&v);
         return false;
     }
-    g_app.info.version = version;
+    g_app.info.company = v.value.s;
 
     return true;
 }
@@ -116,132 +121,107 @@ static bool ParseMetaData()
 // never embedded
 static InitResult InitAppMetaData()
 {
-    bool json_open = OpenJsonObject("metadata.json", 0, 0);
-    if (json_open != 0)
-    {
-        LOG_ERROR("%s", "Failed to open metadata.json,it is present ?");
-        return INIT_METADATA_FAILED;
-    }
     if (!ParseMetaData())
         return INIT_METADATA_FAILED;
 
     return INIT_OK;
 }
 
-static bool ParseConfig()
+static bool ReadConfigValue(const char *key, const unsigned char *memory, JsonValue *value, uint32 size)
 {
-    bool success = false;
-    const char *fileKey = "config/config.json";
+    *value =
+        memory == NULL ? JsonReadValueFromDirectory(CONFIG, key) : JsonReadValueFromMemory(CONFIG, key, memory, size);
+    return value->type != JSONV_VOID;
+}
 
-    success = JsonGetBool(fileKey, "Config.resizable", &g_app.info.window_resizable);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.resizable' from %s", fileKey);
-        return false;
-    }
-    success = JsonGetBool(fileKey, "Config.fullscreen", &g_app.info.window_fullscreen);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.fullscreen' from %s", fileKey);
-        return false;
-    }
-    success = JsonGetBool(fileKey, "Config.maximised", &g_app.info.window_maximised);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.maximised' from %s", fileKey);
-        return false;
-    }
-    success = JsonGetBool(fileKey, "Config.bordered", &g_app.info.bordered);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.bordered' from %s", fileKey);
-        return false;
-    }
-    success = JsonGetBool(fileKey, "Config.forceUniverseScale", &g_app.info.force_universe_scale);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.forceUniverseScale' from %s", fileKey);
-        return false;
-    }
-    float64 tmp_num = 0.0;
+static bool ParseConfig(const unsigned char *memory, uint32 size)
+{
+    JsonValue value;
 
-    success = JsonGetNumber(fileKey, "Config.fps", &tmp_num);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.fps' from %s", fileKey);
-        return false;
-    }
-    g_app.info.fps = (int32)tmp_num;
+    if (!ReadConfigValue("fps", memory, &value, size) || (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
+        goto invalid;
+    g_app.info.fps = (uint16)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
+    JsonValueFree(&value);
 
-    success = JsonGetNumber(fileKey, "Config.windowWidth", &tmp_num);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.windowWidth' from %s", fileKey);
-        return false;
-    }
-    g_app.info.window_width = (int32)tmp_num;
+    if (!ReadConfigValue("windowWidth", memory, &value, size) ||
+        (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
+        goto invalid;
+    g_app.info.window_width = (float32)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
+    JsonValueFree(&value);
 
-    success = JsonGetNumber(fileKey, "Config.windowHeight", &tmp_num);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.windowHeight' from %s", fileKey);
-        return false;
-    }
-    g_app.info.window_height = (int32)tmp_num;
+    if (!ReadConfigValue("windowHeight", memory, &value, size) ||
+        (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
+        goto invalid;
+    g_app.info.window_height = (float32)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
+    JsonValueFree(&value);
 
-    success = JsonGetNumber(fileKey, "Config.universeWidth", &tmp_num);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.universeWidth' from %s", fileKey);
-        return false;
-    }
-    g_app.info.window_universe_width = (int32)tmp_num;
+    if (!ReadConfigValue("universeWidth", memory, &value, size) ||
+        (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
+        goto invalid;
+    g_app.info.window_universe_width = (uint16)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
+    JsonValueFree(&value);
 
-    success = JsonGetNumber(fileKey, "Config.universeHeight", &tmp_num);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.universeHeight' from %s", fileKey);
-        return false;
-    }
-    g_app.info.window_universe_height = (int32)tmp_num;
+    if (!ReadConfigValue("universeHeight", memory, &value, size) ||
+        (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
+        goto invalid;
+    g_app.info.window_universe_height = (uint16)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
+    JsonValueFree(&value);
 
-    const char *tmp_str = NULL;
+    if (!ReadConfigValue("resizable", memory, &value, size) || value.type != JSONV_BOOL)
+        goto invalid;
+    g_app.info.window_resizable = value.value.b;
+    JsonValueFree(&value);
 
-    success = JsonGetString(fileKey, "Config.assetFolder", &tmp_str);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.assetFolder' from %s", fileKey);
-        return false;
-    }
-    g_app.info.asset_folder = tmp_str;
-    success = JsonGetBool(fileKey, "Config.enable_palette", &g_app.info.enable_palette);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.enable_palette' from %s", fileKey);
-        return false;
-    }
-    string_vec_t palette;
-    success = JsonGetStringArray(fileKey, "Config.palette", &palette);
-    if (!success)
-    {
-        LOG_ERROR("Failed to read 'Config.palette' from %s", fileKey);
-        return false;
-    }
-    g_app.info.palette = palette;
+    if (!ReadConfigValue("fullscreen", memory, &value, size) || value.type != JSONV_BOOL)
+        goto invalid;
+    g_app.info.window_fullscreen = value.value.b;
+    JsonValueFree(&value);
+
+    if (!ReadConfigValue("maximised", memory, &value, size) || value.type != JSONV_BOOL)
+        goto invalid;
+    g_app.info.window_maximised = value.value.b;
+    JsonValueFree(&value);
+
+    if (!ReadConfigValue("bordered", memory, &value, size) || value.type != JSONV_BOOL)
+        goto invalid;
+    g_app.info.bordered = value.value.b;
+    JsonValueFree(&value);
+
+    if (!ReadConfigValue("forceUniverseScale", memory, &value, size) || value.type != JSONV_BOOL)
+        goto invalid;
+    g_app.info.force_universe_scale = value.value.b;
+    JsonValueFree(&value);
+
+    if (!ReadConfigValue("enable_palette", memory, &value, size) || value.type != JSONV_BOOL)
+        goto invalid;
+    g_app.info.enable_palette = value.value.b;
+    JsonValueFree(&value);
+
+    if (!ReadConfigValue("assetFolder", memory, &value, size) || value.type != JSONV_TEXT)
+        goto invalid;
+    g_app.info.asset_folder = value.value.s;
+
+    if (!ReadConfigValue("palette", memory, &value, size) ||
+        (value.type != JSONV_TEXT_ARRAY && value.type != JSONV_EMPTY_ARRAY))
+        goto invalid;
+
+    if (value.type == JSONV_EMPTY_ARRAY)
+        kv_init(g_app.info.palette);
+    else
+        g_app.info.palette = value.value.sa;
 
     return true;
+
+// first time of my life used a goto , but best choice here because used specific code error will be bloated the code
+invalid:
+    JsonValueFree(&value);
+    LOG_ERROR("Failed to read configuration value from %s", CONFIG);
+    return false;
 }
 
 static InitResult LoadAppConfig()
 {
-
-    bool json_open = OpenJsonObject("config/config.json", 0, 0);
-    if (json_open != 0)
-    {
-        LOG_ERROR("%s", "Failed to open config.json,it is present in config/config.json ?");
-        return INIT_CONFIG_FAILED;
-    }
-    if (!ParseConfig())
+    if (!ParseConfig(NULL, 0))
     {
         LOG_ERROR("%s", "Failed to parse config.json : somes parameters arent here");
         return INIT_CONFIG_FAILED;
@@ -257,13 +237,8 @@ static InitResult LoadAppConfigEmbedded()
         LOG_ERROR("%s", "Failed to get config.json in Assets.pak.Did you delete it before package your app ?");
         return INIT_CONFIG_FAILED;
     }
-    bool json_open = OpenJsonObjectFromMemory("config/config.json", asset->data, 0, 0);
-    if (!json_open)
-    {
-        LOG_ERROR("%s", "Failed to parse config.json in Assets.pak");
-        return INIT_CONFIG_FAILED;
-    }
-    if (!ParseConfig())
+
+    if (!ParseConfig(asset->data, asset->size))
     {
         LOG_ERROR("%s", "Failed to parse config.json : somes parameters arent here");
         return INIT_CONFIG_FAILED;

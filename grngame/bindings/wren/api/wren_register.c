@@ -146,7 +146,7 @@ WrenLoadModuleResult LoadModuleFnFromMemory(WrenVM *vm, const char *name)
     char filename[MODULE_SIZE_MAX_NAME];
     snprintf(filename, sizeof(filename), "%s.wren", name);
 
-    EmbeddedFile *asset = EmbeddedFileGet(filename);
+    const EmbeddedFile *asset = EmbeddedFileGet(filename);
 
     if (asset)
     {

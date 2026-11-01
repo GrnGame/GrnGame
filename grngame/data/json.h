@@ -55,17 +55,5 @@ bool JsonExist(const char *key);
 
 bool JsonExistFromMemory(const char *key);
 
-bool JsonGetNumber(const char *fileKey, const char *key, float64 *out);
-
-bool JsonGetBool(const char *fileKey, const char *key, bool *out);
-
-bool JsonGetString(const char *fileKey, const char *key, const char **out);
-
-bool JsonGetNumberArray(const char *fileKey, const char *key, float64_vec_t *out_values);
-
-bool JsonGetBoolArray(const char *fileKey, const char *key, bool_vec_t *out_values);
-
-bool JsonGetStringArray(const char *fileKey, const char *key, string_vec_t *out_values);
-
 /* Used by Wren. */
 bool WriteInJsonObject(const char *key, cJSON *object);

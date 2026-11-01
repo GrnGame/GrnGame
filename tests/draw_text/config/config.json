@@ -1,20 +1,17 @@
 {
-    "Config": {
-        "name": "game",
-        "version": "1.0.0",
-        "fps": 60,
-        "windowWidth": 720,
-        "windowHeight": 720,
-        "universeWidth": 180,
-        "universeHeight": 180,
-        "resizable": true,
-        "fullscreen": false,
-        "maximised": false,
-        "bordered": true,
-        "logDestination": 0,
-        "forceUniverseScale": true,
-        "assetFolder": "assets",
-        "enable_palette": false,
-        "palette": []
-    }
+    "name": "game",
+    "version": "1.0.0",
+    "fps": 60,
+    "windowWidth": 640,
+    "windowHeight": 360,
+    "universeWidth": 640,
+    "universeHeight": 360,
+    "resizable": true,
+    "fullscreen": false,
+    "maximised": false,
+    "bordered": true,
+    "forceUniverseScale": false,
+    "assetFolder": "assets",
+    "enable_palette": false,
+    "palette": []
 }

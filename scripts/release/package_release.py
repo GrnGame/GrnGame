@@ -17,7 +17,6 @@ MAIN_SCRIPT = RESSOURCES_DIR / "main.wren"
 METADATA_FILE = RESSOURCES_DIR / "metadata.json"
 LOGO_FILE = RESSOURCES_DIR / "logo.png"
 
-READ_METADATA_SCRIPT = SCRIPTS_DIR / "metadata" / "read_metadata.py"
 SETUP_SCRIPTS_DIR = SCRIPTS_DIR / "project"
 SERVER_SCRIPT = SCRIPTS_DIR / "server.py"
 INDEX = RESSOURCES_DIR / "index.html"
@@ -111,7 +110,6 @@ def bundle_metadata(stage_dir: Path) -> None:
     model_dir = project_model_dir(stage_dir)
 
     copy_file(METADATA_FILE, model_dir)
-    copy_file(READ_METADATA_SCRIPT, model_dir)
 
 def bundle_logo(stage_dir: Path)-> None:
     copy_file(LOGO_FILE, runtime_dir(stage_dir))

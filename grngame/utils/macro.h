@@ -11,6 +11,7 @@ BEGIN_DECLARATIONS
 // to avoid macro conflit
 typedef kvec_t(float64) float64_vec_t;
 typedef kvec_t(float32) float32_vec_t;
+typedef kvec_t(int64) int64_vec_t;
 typedef kvec_t(bool) bool_vec_t;
 typedef kvec_t(char *) string_vec_t;
 typedef kvec_t(const char *) string_const_vec_t;

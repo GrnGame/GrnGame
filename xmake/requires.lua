@@ -40,6 +40,7 @@ function setup_requires()
 	-- files
 	add_requires("sqlite3", { configs = { shared = false }, system = false })
 	add_requires("cjson", { configs = { shared = false } })
+	add_requires("yyjson", { configs = { shared = false } })
 
 	if is_dev_mode() then
 		add_requires("tinydir", { configs = { shared = false } })
@@ -60,6 +61,7 @@ function apply_game_packages()
 		"freetype",
 		"sqlite3",
 		"highway",
+		"yyjson",
 		"cjson",
 		"libsdl3_mixer",
 		{ public = true }

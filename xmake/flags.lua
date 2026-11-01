@@ -8,6 +8,7 @@ function setup_global_flags()
 		add_ldflags("-u", "JNI_OnLoad", "-u", "SDL_main", { force = true })
 		-- log in android
 		add_syslinks("log")
+		add_cflags("-fPIC")
 	end
 
 	if is_plat("wasm") then

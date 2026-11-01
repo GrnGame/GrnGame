@@ -90,4 +90,13 @@ void ReloadConfig(void);
 extern App g_app;
 extern bool request_stop;
 
+#define STD "std"
+
+#define CONFIG "config/config.json"
+
+#define METADATA "metadata.json"
+
+#define ASSETS_PAK "Assets.pak"
+#define SAVE_FILE "game.data"
+
 END_DECLARATIONS

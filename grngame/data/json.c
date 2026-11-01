@@ -67,6 +67,7 @@ bool JsonCreate(const char *key, const char *text)
     free(path);
     return result;
 }
+
 bool JsonCreateFromMemory(const char *key, const char *text)
 {
 #ifndef GRNGAME_WASM
@@ -151,6 +152,7 @@ bool OpenJsonObject(const char *path, uint64 min, uint64 max)
 
 bool OpenJsonObjectFromMemory(const char *path, const unsigned char *text, uint64 min, uint64 max)
 {
+#ifndef GRNGAME_WASM
     cJSON *json = cJSON_Parse((const char *)text);
     if (json == NULL)
     {
@@ -165,151 +167,10 @@ bool OpenJsonObjectFromMemory(const char *path, const unsigned char *text, uint6
     j->max = max;
     JsonObjectAdd(path, j);
     return true;
-}
-
-static cJSON *JsonNavigateToParent(cJSON *root, char *path_copy, char **out_leaf, bool create)
-{
-    char *saveptr = NULL;
-    char *token = strtok_r(path_copy, ".", &saveptr);
-    if (UNLIKELY(token == NULL))
-    {
-        return NULL;
-    }
-
-    cJSON *current = root;
-    char *next_token = NULL;
-
-    while ((next_token = strtok_r(NULL, ".", &saveptr)) != NULL)
-    {
-        cJSON *child = cJSON_GetObjectItemCaseSensitive(current, token);
-
-        if (child == NULL)
-        {
-            if (!create)
-            {
-                return NULL;
-            }
-            child = cJSON_CreateObject();
-            cJSON_AddItemToObject(current, token, child);
-        }
-        else if (UNLIKELY(!cJSON_IsObject(child)))
-        {
-            return NULL;
-        }
-
-        current = child;
-        token = next_token;
-    }
-
-    *out_leaf = token;
-    return current;
-}
-
-static cJSON *JsonResolve(const char *fileKey, const char *key, char **out_leaf, bool create)
-{
-    JsonObject *entry = JsonObjectGet(fileKey);
-    if (UNLIKELY(entry == NULL))
-    {
-        return NULL;
-    }
-
-    static THREAD_LOCAL char path_copy[JSON_PATH_MAX_LEN];
-    if (UNLIKELY(strlen(key) >= JSON_PATH_MAX_LEN))
-    {
-        return NULL;
-    }
-    strncpy(path_copy, key, JSON_PATH_MAX_LEN - 1);
-    path_copy[JSON_PATH_MAX_LEN - 1] = '\0';
-
-    return JsonNavigateToParent(entry->json, path_copy, out_leaf, create);
-}
-
-bool JsonGetNumber(const char *fileKey, const char *key, float64 *out)
-{
-    char *leaf = NULL;
-    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
-    if (UNLIKELY(parent == NULL))
-        return false;
-
-    cJSON *item = cJSON_GetObjectItemCaseSensitive(parent, leaf);
-    if (UNLIKELY(item == NULL || !cJSON_IsNumber(item)))
-    {
-        return false;
-    }
-
-    *out = item->valuedouble;
-    return true;
-}
-
-bool JsonGetBool(const char *fileKey, const char *key, bool *out)
-{
-    char *leaf = NULL;
-    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
-    if (UNLIKELY(parent == NULL))
-        return false;
-
-    cJSON *item = cJSON_GetObjectItemCaseSensitive(parent, leaf);
-    if (UNLIKELY(item == NULL || !cJSON_IsBool(item)))
-    {
-        return false;
-    }
-
-    *out = cJSON_IsTrue(item);
-    return true;
-}
-
-bool JsonGetString(const char *fileKey, const char *key, const char **out)
-{
-    char *leaf = NULL;
-    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
-    if (UNLIKELY(parent == NULL))
-        return false;
-
-    cJSON *item = cJSON_GetObjectItemCaseSensitive(parent, leaf);
-    if (UNLIKELY(item == NULL || !cJSON_IsString(item) || item->valuestring == NULL))
-    {
-        return false;
-    }
-
-    *out = item->valuestring;
-    return true;
-}
-
-bool JsonGetNumberArray(const char *fileKey, const char *key, float64_vec_t *out)
-{
-    kv_init(*out);
-
-    char *leaf = NULL;
-    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
-    if (UNLIKELY(parent == NULL))
-        return false;
-
-    cJSON *array = cJSON_GetObjectItemCaseSensitive(parent, leaf);
-    if (UNLIKELY(array == NULL || !cJSON_IsArray(array)))
-    {
-        return false;
-    }
-
-    float64_vec_t vec;
-    kv_init(vec);
-
-    int64 count = cJSON_GetArraySize(array);
-    kv_resize(float64, vec, count);
-
-    cJSON *item = NULL;
-    cJSON_ArrayForEach(item, array)
-    {
-        if (UNLIKELY(!cJSON_IsNumber(item)))
-        {
-            kv_destroy(vec);
-            return false;
-        }
-
-        kv_push(float64, vec, item->valuedouble);
-    }
-
-    *out = vec;
-    return true;
+#else
+    LOG_WARNING("Json isnt supported on the web");
+    return false;
+#endif
 }
 
 typedef struct
@@ -371,83 +232,6 @@ bool JsonSaveObjectFromMemory(const char *fileKey)
     LOG_WARNING("Json isnt supported on the web");
     return false;
 #endif
-}
-
-bool JsonGetBoolArray(const char *fileKey, const char *key, bool_vec_t *out)
-{
-    kv_init(*out);
-
-    char *leaf = NULL;
-    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
-    if (UNLIKELY(parent == NULL))
-        return false;
-
-    cJSON *array = cJSON_GetObjectItemCaseSensitive(parent, leaf);
-    if (UNLIKELY(array == NULL || !cJSON_IsArray(array)))
-    {
-        return false;
-    }
-
-    bool_vec_t vec;
-    kv_init(vec);
-
-    int64 count = cJSON_GetArraySize(array);
-    kv_resize(bool, vec, count);
-
-    cJSON *item = NULL;
-    cJSON_ArrayForEach(item, array)
-    {
-        if (UNLIKELY(!cJSON_IsBool(item)))
-        {
-            kv_destroy(vec);
-            return false;
-        }
-
-        kv_push(bool, vec, cJSON_IsTrue(item));
-    }
-
-    *out = vec;
-    return true;
-}
-
-// need to free every string + the array
-bool JsonGetStringArray(const char *fileKey, const char *key, string_vec_t *out)
-{
-    kv_init(*out);
-
-    char *leaf = NULL;
-    cJSON *parent = JsonResolve(fileKey, key, &leaf, false);
-    if (UNLIKELY(parent == NULL))
-        return false;
-
-    cJSON *array = cJSON_GetObjectItemCaseSensitive(parent, leaf);
-    if (UNLIKELY(array == NULL || !cJSON_IsArray(array)))
-    {
-        return false;
-    }
-
-    int64 count = cJSON_GetArraySize(array);
-    kv_resize(char *, *out, count);
-
-    cJSON *item = NULL;
-    cJSON_ArrayForEach(item, array)
-    {
-        if (UNLIKELY(!cJSON_IsString(item) || item->valuestring == NULL))
-        {
-
-            for (uint64 j = 0; j < kv_size(*out); ++j)
-                free(kv_A(*out, j));
-
-            kv_destroy(*out);
-            kv_init(*out);
-
-            return false;
-        }
-
-        kv_push(char *, *out, strdup(item->valuestring));
-    }
-
-    return true;
 }
 
 static bool JsonCloseObject(const char *fileKey)

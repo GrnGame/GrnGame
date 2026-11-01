@@ -9,7 +9,7 @@ includes("xmake/flags.lua")
 includes("xmake/tests.lua")
 
 add_rules("mode.debug", "mode.release")
-
+add_rules("plugin.compile_commands.autoupdate", {outputdir = "."})
 
 setup_options()
 setup_global_flags()
