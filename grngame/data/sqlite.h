@@ -23,7 +23,7 @@ typedef struct
     const char *name; // null for DbArg
     DbType type;
     union {
-        int64 i;
+        int32 i;
         float64 f;
         const char *s;
         struct

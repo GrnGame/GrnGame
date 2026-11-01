@@ -201,7 +201,7 @@ void DbResultPrint(DbResult *res)
             switch (v.type)
             {
             case INTEGER:
-                printf("%lld\n", v.value.i);
+                printf("%d\n", v.value.i);
                 break;
             case FLOAT_:
                 printf("%f\n", v.value.f);

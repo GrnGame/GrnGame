@@ -26,11 +26,11 @@ typedef struct
 {
     JsonValueType type;
     union {
-        int64 i;
+        int32 i;
         float64 f;
         bool b;
         char *s;
-        int64_vec_t ia;
+        int32_vec_t ia;
         float64_vec_t fa;
         bool_vec_t ba;
         string_vec_t sa;

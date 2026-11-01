@@ -15,7 +15,7 @@
 static bool JsonFillArray(yyjson_val *arr, JsonValue *out)
 {
     bool all_bool = true, all_int = true, all_num = true, all_str = true;
-    size_t idx, max;
+    uint32 idx, max;
     yyjson_val *item;
 
     yyjson_arr_foreach(arr, idx, max, item)
@@ -36,7 +36,7 @@ static bool JsonFillArray(yyjson_val *arr, JsonValue *out)
     {
         out->type = JSONV_INTEGER_ARRAY;
         kv_init(out->value.ia);
-        yyjson_arr_foreach(arr, idx, max, item) kv_push(int64, out->value.ia, yyjson_get_sint(item));
+        yyjson_arr_foreach(arr, idx, max, item) kv_push(int32, out->value.ia, yyjson_get_sint(item));
         return true;
     }
     if (all_bool)
