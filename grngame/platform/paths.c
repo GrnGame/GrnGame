@@ -18,7 +18,7 @@ char *FileStem(const char *path)
 
     // last dot after the slash
     const char *dot = strrchr(start, '.');
-    uint64 len = dot ? (uint64)(dot - start) : strlen(start);
+    uint32 len = dot ? (uint32)(dot - start) : (uint32)strlen(start);
 
     char *stem = malloc(len + 1);
     memcpy(stem, start, len);
@@ -144,13 +144,13 @@ char *PathFromExecutableDirectory(const char *relative)
     while (*relative == '/')
         relative++;
 
-    uint64 exe_len = strlen(exe_dir);
+    uint32 exe_len = (uint32)strlen(exe_dir);
 
     // trim trailing slashes on exe_dir
     while (exe_len > 0 && exe_dir[exe_len - 1] == '/')
         exe_len--;
 
-    uint64 len = exe_len + strlen(relative) + 2; // +2 bytes for '/' and for '\0'
+    uint32 len = exe_len + (uint32)strlen(relative) + 2; // +2 bytes for '/' and for '\0'
     char *buf = malloc(len);
     snprintf(buf, len, "%.*s/%s", (int32)exe_len, exe_dir, relative);
 
@@ -168,7 +168,7 @@ char *PathFromStorage(const char *file)
         LOG_ERROR("Failed to get storage of the app");
         return NULL;
     }
-    uint32 n = strlen(base) + strlen(file) + 1;
+    uint32 n = (uint32)strlen(base) + (uint32)strlen(file) + 1;
     char *out = (char *)malloc(n);
     snprintf(out, n, "%s%s", base, file);
     SDL_free(base);

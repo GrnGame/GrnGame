@@ -202,8 +202,8 @@ static void JsonPushValueToSlot(WrenVM *vm, cJSON *item, int32 slot)
 void open_json_file(WrenVM *vm)
 {
     const char *key = wrenGetSlotString(vm, 1);
-    uint64 min = (uint64)wrenGetSlotDouble(vm, 2);
-    uint64 max = (uint64)wrenGetSlotDouble(vm, 3);
+    uint32 min = (uint32)wrenGetSlotDouble(vm, 2);
+    uint32 max = (uint32)wrenGetSlotDouble(vm, 3);
 #ifndef GRNGAME_EMBED_ASSETS
     bool error = OpenJsonObject(key, min, max);
 #else

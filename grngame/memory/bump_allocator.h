@@ -7,20 +7,20 @@
 typedef struct
 {
     void *base;
-    uint64 size;      // total reserved size
-    uint64 committed; // how much is currently committed
-    uint64 offset;    // how much is currently used
+    uint32 size;      // total reserved size
+    uint32 committed; // how much is currently committed
+    uint32 offset;    // how much is currently used
 } BumpAllocator;
 
 /// Creates a bump allocator with the given virtual size reserved
 /// (you can ask it for 1TB on a 8GB of RAM machine)
-BumpAllocator BumpAllocatorInit(uint64 virtual_size);
+BumpAllocator BumpAllocatorInit(uint32 virtual_size);
 
 /// Allocates size bytes, aligned to align
-void *BumpAllocatorPushAligned(BumpAllocator *allocator, uint64 size, uint64 align);
+void *BumpAllocatorPushAligned(BumpAllocator *allocator, uint32 size, uint32 align);
 
 /// Allocates size bytes
-void *BumpAllocatorPush(BumpAllocator *allocator, uint64 size);
+void *BumpAllocatorPush(BumpAllocator *allocator, uint32 size);
 
 /// Makes the entire arena reusable without freeing the underlying memory
 void BumpAllocatorReset(BumpAllocator *allocator);
@@ -32,4 +32,4 @@ void BumpAllocatorFree(BumpAllocator *allocator);
 void *BumpAllocatorHead(BumpAllocator *allocator);
 
 /// Manually increments offset, returning false if we overran
-bool BumpAllocatorIncrement(BumpAllocator *allocator, uint64 size, uint64 align);
+bool BumpAllocatorIncrement(BumpAllocator *allocator, uint32 size, uint32 align);

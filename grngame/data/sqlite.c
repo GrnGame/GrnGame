@@ -154,7 +154,7 @@ static DbResult DbResultGet(sqlite3_stmt *stmt)
                 int32 size = sqlite3_column_bytes(stmt, i);
                 v.value.blob.data = malloc(size);
                 memcpy(v.value.blob.data, sqlite3_column_blob(stmt, i), size);
-                v.value.blob.size = size;
+                v.value.blob.size = (uint32)size;
                 break;
             }
             case SQLITE_NULL:
@@ -190,11 +190,11 @@ bool DataFetch(sqlite3 *db, const char *sql, DbResult *out)
 
 void DbResultPrint(DbResult *res)
 {
-    for (uint64 r = 0; r < kv_size(res->rows); r++)
+    for (uint32 r = 0; r < (uint32)kv_size(res->rows); r++)
     {
         DbRow row = kv_A(res->rows, r);
-        printf("Row %llu:\n", r);
-        for (uint64 c = 0; c < kv_size(row.cols); c++)
+        printf("Row %u:\n", r);
+        for (uint32 c = 0; c < (uint32)kv_size(row.cols); c++)
         {
             DbValue v = kv_A(row.cols, c);
             printf("  %s = ", v.name);
@@ -210,7 +210,7 @@ void DbResultPrint(DbResult *res)
                 printf("%s\n", v.value.s);
                 break;
             case DATA:
-                printf("[BLOB size=%llu]\n", v.value.blob.size);
+                printf("[BLOB size=%u]\n", v.value.blob.size);
                 break;
             case VOID_:
                 printf("NULL\n");
@@ -222,10 +222,10 @@ void DbResultPrint(DbResult *res)
 
 void DbResultFree(DbResult *res)
 {
-    for (uint64 r = 0; r < kv_size(res->rows); r++)
+    for (uint32 r = 0; r < (uint32)kv_size(res->rows); r++)
     {
         DbRow row = kv_A(res->rows, r);
-        for (uint64 c = 0; c < kv_size(row.cols); c++)
+        for (uint32 c = 0; c < (uint32)kv_size(row.cols); c++)
         {
             DbValue v = kv_A(row.cols, c);
             free((void *)v.name);

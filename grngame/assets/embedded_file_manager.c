@@ -18,7 +18,7 @@ const char *EmbedKindTable(EmbedKind kind)
     return EMBED_TABLE_NAMES[kind];
 }
 
-static EmbeddedFile *EmbeddedFileCreate(EmbedKind kind, const char *path, const void *data, uint64 size)
+static EmbeddedFile *EmbeddedFileCreate(EmbedKind kind, const char *path, const void *data, uint32 size)
 {
     EmbeddedFile *file = malloc(sizeof(*file));
     file->name = strdup(path);
@@ -106,14 +106,14 @@ static bool MemoryRemove(const char *path)
     return true;
 }
 
-void EmbeddedFilePutMemory(EmbedKind kind, const char *path, const void *data, uint64 size)
+void EmbeddedFilePutMemory(EmbedKind kind, const char *path, const void *data, uint32 size)
 {
     MemoryPutOwned(EmbeddedFileCreate(kind, path, data, size));
 }
 
 static bool LoadRow(DbRow *row, EmbedKind kind)
 {
-    if (UNLIKELY(kv_size(row->cols) < 2))
+    if (UNLIKELY((uint32)kv_size(row->cols) < 2))
         return false;
 
     DbValue *path = &kv_A(row->cols, 0);
@@ -136,7 +136,7 @@ static bool LoadTableFrom(sqlite3 *db, const char *label, EmbedKind kind)
     success = DataFetch(db, sql, &res);
 
     bool ok = success;
-    for (uint64 i = 0; ok && i < kv_size(res.rows); ++i)
+    for (uint32 i = 0; ok && i < (uint32)kv_size(res.rows); ++i)
         ok = LoadRow(&kv_A(res.rows, i), kind);
 
     if (!ok)
@@ -156,7 +156,7 @@ static bool AssetsPakTableExists(const char *name)
 
     DbResult res;
     bool success = DataFetch(g_app.info.file_db, sql, &res);
-    bool exists = success && kv_size(res.rows) > 0;
+    bool exists = success && (uint32)kv_size(res.rows) > 0;
     DbResultFree(&res);
     return exists;
 }
@@ -209,12 +209,12 @@ bool EmbeddedFileExists(const char *path)
 
 const char *EmbedKindTable(EmbedKind kind);
 
-uint64 EmbeddedFileManagerGetCounts(EmbedKind kind)
+uint32 EmbeddedFileManagerGetCounts(EmbedKind kind)
 {
     return g_app.embedded_file_manager.counts[kind];
 }
 
-uint64 EmbeddedFileManagerGetTotalCount()
+uint32 EmbeddedFileManagerGetTotalCount()
 {
     return g_app.embedded_file_manager.total_count;
 }
@@ -238,7 +238,7 @@ static bool GameDataExec(const char *sql, DbArg *args, int32 arg_count)
     return ok;
 }
 
-static bool GameDataDbWrite(const char *path, const void *data, uint64 size)
+static bool GameDataDbWrite(const char *path, const void *data, uint32 size)
 {
     char sql[255 * BUFFER_SPACE];
     snprintf(sql, sizeof(sql),
@@ -262,12 +262,12 @@ static bool GameDataDbDelete(const char *path)
     return GameDataExec(sql, &arg, 1);
 }
 
-bool EmbeddedFilePutDisk(const char *path, const void *data, uint64 size)
+bool EmbeddedFilePutDisk(const char *path, const void *data, uint32 size)
 {
     return GameDataDbWrite(path, data, size);
 }
 
-bool EmbeddedFilePut(const char *path, const void *data, uint64 size)
+bool EmbeddedFilePut(const char *path, const void *data, uint32 size)
 {
     if (!EmbeddedFilePutDisk(path, data, size))
         return false;

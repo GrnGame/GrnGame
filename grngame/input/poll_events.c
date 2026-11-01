@@ -82,7 +82,7 @@ static void UpdateMousePosition()
 static void BackspaceTextInput()
 {
     InputManager *im = &g_app.input_manager;
-    if (kv_size(im->text_input) > 0)
+    if ((uint32)kv_size(im->text_input) > 0)
         kv_size(im->text_input)--;
 }
 

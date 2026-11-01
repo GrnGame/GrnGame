@@ -13,7 +13,7 @@ bool ParseVersionToInt(const char *version, int32 *out)
     return true;
 }
 
-bool ParseVersionToString(int32 version_num, char *out, size_t out_size)
+bool ParseVersionToString(int32 version_num, char *out, uint32 out_size)
 {
     if (out == NULL || out_size == 0 || version_num < 0)
         return false;

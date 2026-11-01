@@ -170,7 +170,7 @@ static COLD void CleanupAppResources(void)
 
 static HOT void RunGarbageCollector(void)
 {
-    if (UNLIKELY(g_app.info.frame_count % ((uint64)g_app.info.fps * GARBAGE_COLLECTOR_TIME_TO_REFRESH) == 0))
+    if (UNLIKELY(g_app.info.frame_count % ((uint32)g_app.info.fps * GARBAGE_COLLECTOR_TIME_TO_REFRESH) == 0))
         wrenCollectGarbage(g_app.wren_manager.vm);
 }
 

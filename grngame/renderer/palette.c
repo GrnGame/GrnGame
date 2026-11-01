@@ -18,7 +18,7 @@ void PaletteFreeStringVec(string_vec_t *vec)
     if (UNLIKELY(vec == NULL))
         return;
 
-    for (uint64 i = 0; i < kv_size(*vec); i++)
+    for (uint32 i = 0; i < (uint32)kv_size(*vec); i++)
     {
         free(kv_A(*vec, i));
     }
@@ -75,7 +75,7 @@ SDL_Color ColorFromHex(const char *hex)
     if (hex[0] == '#')
         hex++;
 
-    if (UNLIKELY(strlen(hex) < 6))
+    if (UNLIKELY((uint32)strlen(hex) < 6))
     {
         LOG_ERROR("Invalid color hex: %s", hex);
         return color;
@@ -117,7 +117,7 @@ void PaletteParse(string_vec_t *text)
         return;
     }
 
-    for (uint64 i = 0; i < kv_size(*text); i++)
+    for (uint32 i = 0; i < (uint32)kv_size(*text); i++)
     {
         const char *color = kv_A(*text, i);
 

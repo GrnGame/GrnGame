@@ -86,7 +86,7 @@ static void EmbedFileCallback(const char *path, void *userdata)
     if (kind == EMBED_KIND_NONE)
         return;
 
-    size_t size;
+    uint32 size;
     unsigned char *content = ReturnFileData(path, &size);
     if (UNLIKELY(!content))
     {

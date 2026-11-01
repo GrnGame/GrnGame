@@ -42,7 +42,7 @@ JsonValue JsonReadValue(const char *file, const char *path);
 JsonValue JsonReadValueFromDirectory(const char *path, const char *key);
 
 // for config
-JsonValue JsonReadValueFromMemory(const char *file, const char *path, const unsigned char *text, size_t size);
+JsonValue JsonReadValueFromMemory(const char *file, const char *path, const unsigned char *text, uint32 size);
 
 void JsonValueFree(JsonValue *v);
 

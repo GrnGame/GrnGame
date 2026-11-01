@@ -22,7 +22,7 @@ ParticleEmitter ParticleEmitterCreate(int32 capacity)
         capacity = 128;
     emit.capacity = capacity;
 
-    emit.particles = malloc((uint64)capacity * sizeof(Particle));
+    emit.particles = malloc((uint32)capacity * sizeof(Particle));
     CLEAR_ARRAY(emit.particles, 0, capacity);
 
     emit.lifetime = 1.0f;

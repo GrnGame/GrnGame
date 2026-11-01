@@ -19,11 +19,11 @@ static inline int32 Math_LerpInt(int32 a, int32 b, float32 t)
 static inline float64 Average(float64_vec_t vec)
 {
     float64 sum = 0;
-    for (uint64 i = 0; i < kv_size(vec); i++)
+    for (uint32 i = 0; i < (uint32)kv_size(vec); i++)
     {
         sum += kv_A(vec, i);
     }
-    return sum / kv_size(vec);
+    return sum / (uint32)kv_size(vec);
 }
 
 #ifndef MAX

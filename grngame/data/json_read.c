@@ -9,7 +9,6 @@
 #include "grngame/utils/string_compat.h"
 #include "kvec.h"
 #include "yyjson.h"
-#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -64,7 +63,7 @@ static bool JsonFillArray(yyjson_val *arr, JsonValue *out)
     return false;
 }
 
-static JsonValue JsonReadValueFromText(const char *file, const char *key, const char *text, uint64 size)
+static JsonValue JsonReadValueFromText(const char *file, const char *key, const char *text, uint32 size)
 {
     JsonValue result;
     CLEAR_PTR(&result, 0);
@@ -129,7 +128,7 @@ JsonValue JsonReadValue(const char *file, const char *key)
         return result;
     }
 
-    JsonValue result = JsonReadValueFromText(file, key, text, strlen(text));
+    JsonValue result = JsonReadValueFromText(file, key, text, (uint32)strlen(text));
     free(text);
     return result;
 }
@@ -142,7 +141,7 @@ JsonValue JsonReadValueFromDirectory(const char *path, const char *key)
     return v;
 }
 
-JsonValue JsonReadValueFromMemory(const char *file, const char *key, const unsigned char *text, size_t size)
+JsonValue JsonReadValueFromMemory(const char *file, const char *key, const unsigned char *text, uint32 size)
 {
     if (UNLIKELY(text == NULL))
     {
@@ -171,7 +170,7 @@ void JsonValueFree(JsonValue *v)
         kv_destroy(v->value.ba);
         break;
     case JSONV_TEXT_ARRAY:
-        for (uint32 i = 0; i < kv_size(v->value.sa); ++i)
+        for (uint32 i = 0; i < (uint32)kv_size(v->value.sa); ++i)
             free(kv_A(v->value.sa, i));
         kv_destroy(v->value.sa);
         break;

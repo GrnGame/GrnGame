@@ -19,13 +19,13 @@ KHASH_MAP_INIT_STR(wren_class_map, WrenForeignClassMethods)
 static khash_t(wren_method_map) *g_methods = NULL;
 static khash_t(wren_class_map) *g_classes = NULL;
 
-static void MakeMethodKey(char *buffer, uint64 max, const char *module, const char *className, bool isStatic,
+static void MakeMethodKey(char *buffer, uint32 max, const char *module, const char *className, bool isStatic,
                           const char *signature)
 {
     snprintf(buffer, max, "%s:%s:%s:%s", module, className, isStatic ? "s" : "i", signature);
 }
 
-static void MakeClassKey(char *buffer, uint64 max, const char *module, const char *className)
+static void MakeClassKey(char *buffer, uint32 max, const char *module, const char *className)
 {
     snprintf(buffer, max, "%s:%s", module, className);
 }
@@ -128,7 +128,7 @@ static void LoadModuleComplete(WrenVM *vm, const char *module, WrenLoadModuleRes
     }
 }
 
-static char *AddEndOfString(char *data, uint64 size)
+static char *AddEndOfString(char *data, uint32 size)
 {
     uint32 sz = size;
     char *buf = malloc(sz + 1);

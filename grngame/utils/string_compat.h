@@ -18,7 +18,7 @@
 
 static inline char *strdup(const char *s)
 {
-    uint64 len = strlen(s) + 1;
+    uint32 len = (uint32)strlen(s) + 1;
     char *p = malloc(len);
     memcpy(p, s, len);
     return p;

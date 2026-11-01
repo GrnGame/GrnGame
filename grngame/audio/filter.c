@@ -47,7 +47,7 @@ static void NodeInitEcho(FilterNode *node, const FilterDef *def, const SDL_Audio
 
     node->wet = def->echo.wet;
 
-    node->memory = malloc((uint64)node->length * spec->channels * sizeof(float32));
+    node->memory = malloc((uint32)node->length * spec->channels * sizeof(float32));
     CLEAR_ARRAY(node->memory, 0, node->length * spec->channels);
 }
 

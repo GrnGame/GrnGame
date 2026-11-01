@@ -4,7 +4,7 @@
 #include "grngame/math/types.h"
 #include <grngame/utils/string_compat.h>
 #include <stdbool.h>
-#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,15 +15,18 @@ bool PathInfo(const char *path, SDL_PathInfo *info)
 }
 
 // todo return a bool
-void *LoadFile(const char *name, size_t *size)
+void *LoadFile(const char *name, uint32 *size)
 {
-    void *data = SDL_LoadFile(name, size);
+    size_t loaded_size = 0;
+    void *data = SDL_LoadFile(name, &loaded_size);
+    if (size != NULL)
+        *size = (uint32)loaded_size;
     if (!data)
         LOG_ERROR("Cant load file :%s error:", name, SDL_GetError());
     return data;
 }
 
-bool SaveFile(const char *name, const void *data, size_t size)
+bool SaveFile(const char *name, const void *data, uint32 size)
 {
     bool ok = SDL_SaveFile(name, data, size);
     if (!ok)
@@ -40,7 +43,7 @@ SDL_IOStream *IOFromFile(const char *file, const char *mode)
     return io;
 }
 
-bool WriteIO(SDL_IOStream *io, const void *data, size_t size)
+bool WriteIO(SDL_IOStream *io, const void *data, uint32 size)
 {
     bool ok = (SDL_WriteIO(io, data, size) == size);
     if (!ok)
@@ -48,7 +51,7 @@ bool WriteIO(SDL_IOStream *io, const void *data, size_t size)
     return ok;
 }
 
-bool ReadIO(SDL_IOStream *io, void *data, size_t size)
+bool ReadIO(SDL_IOStream *io, void *data, uint32 size)
 {
     bool ok = (SDL_ReadIO(io, data, size) == size);
     if (!ok && SDL_GetIOStatus(io) != SDL_IO_STATUS_EOF)
@@ -81,7 +84,7 @@ bool FileExist(const char *name)
 }
 
 // dont use sdl api because we need to free data with sdl_free
-unsigned char *ReturnFileData(const char *name, size_t *size_out)
+unsigned char *ReturnFileData(const char *name, uint32 *size_out)
 {
     FILE *file = fopen(name, "rb");
     if (file == NULL)
@@ -112,21 +115,21 @@ unsigned char *ReturnFileData(const char *name, size_t *size_out)
         return NULL;
     }
 
-    size_t file_size = (size_t)size;
+    uint32 file_size = (uint32)size;
     unsigned char *buffer = malloc(file_size + 1);
 
-    size_t read_count = fread(buffer, 1, file_size, file);
+    uint32 read_count = (uint32)fread(buffer, 1, file_size, file);
     fclose(file);
 
     buffer[read_count] = '\0';
 
     if (size_out != NULL)
-        *size_out = read_count;
+        *size_out = (uint32)read_count;
 
     return buffer;
 }
 
-bool WriteFileData(const char *name, const void *data, size_t size, bool append)
+bool WriteFileData(const char *name, const void *data, uint32 size, bool append)
 {
     if (!append)
         return SaveFile(name, data, size);
@@ -144,7 +147,7 @@ bool WriteFileData(const char *name, const void *data, size_t size, bool append)
 bool MoveFile_(const char *dst, const char *src)
 {
 
-    size_t size = 0;
+    uint32 size = 0;
     void *data = ReturnFileData(src, &size);
     if (!data)
     {

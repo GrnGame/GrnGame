@@ -52,7 +52,7 @@ static void WrenStartVM()
     g_app.wren_manager.vm = wrenNewVM(&(g_app.wren_manager.config));
 }
 
-static char *AddEndOfString(char *data, uint64 size)
+static char *AddEndOfString(char *data, uint32 size)
 {
     uint32 sz = size;
     char *buf = malloc(sz + 1);

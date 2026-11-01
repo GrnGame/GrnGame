@@ -81,9 +81,9 @@ void ProcessHotreloadQueue(void)
     if (g_queue_mutex)
         LOCK_MUTEX(g_queue_mutex);
 
-    uint64 count = kv_size(g_app.queue);
+    uint32 count = (uint32)kv_size(g_app.queue);
 
-    for (uint64 i = 0; i < count; ++i)
+    for (uint32 i = 0; i < count; ++i)
     {
         HotreloadQueueElement elem = kv_A(g_app.queue, i);
         const char *cpath = elem.new_file;

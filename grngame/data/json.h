@@ -13,9 +13,9 @@
 
 typedef struct
 {
-    uint64 min;
-    uint64 max;
-    uint64 last_save_time;
+    uint32 min;
+    uint32 max;
+    uint32 last_save_time;
     cJSON *json;
     bool embedded; // Present in embedded database, only available on target
 } JsonObject;
@@ -31,10 +31,10 @@ JsonObject *JsonObjectGet(const char *key);
 bool JsonObjectContains(const char *key);
 
 /* Open JSON from the filesystem. */
-bool OpenJsonObject(const char *key, uint64 min, uint64 max);
+bool OpenJsonObject(const char *key, uint32 min, uint32 max);
 
 /* Open JSON from embedded memory/database. */
-bool OpenJsonObjectFromMemory(const char *path, const unsigned char *text, uint64 min, uint64 max);
+bool OpenJsonObjectFromMemory(const char *path, const unsigned char *text, uint32 min, uint32 max);
 
 /* Save JSON asynchronously to the filesystem. */
 bool JsonSaveObject(const char *fileKey);

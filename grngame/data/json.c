@@ -59,7 +59,7 @@ bool JsonCreate(const char *key, const char *text)
         return false;
 
     char *path = PathFromExecutableDirectory(key);
-    bool result = WriteFileData(path, text, strlen(text), false);
+    bool result = WriteFileData(path, text, (uint32)strlen(text), false);
     if (!result)
     {
         LOG_ERROR("Failed to create json file :%s", key);
@@ -71,7 +71,7 @@ bool JsonCreate(const char *key, const char *text)
 bool JsonCreateFromMemory(const char *key, const char *text)
 {
 #ifndef GRNGAME_WASM
-    uint64 size = strlen(text);
+    uint32 size = (uint32)strlen(text);
     if (!EmbeddedFilePut(key, text, size))
     {
         LOG_ERROR("Failed to create json from memory :%s", key);
@@ -120,7 +120,7 @@ bool JsonObjectContains(const char *key)
     return kh_get(JsonObjects, manager, key) != kh_end(manager);
 }
 
-bool OpenJsonObject(const char *path, uint64 min, uint64 max)
+bool OpenJsonObject(const char *path, uint32 min, uint32 max)
 {
     char *path_ = PathFromExecutableDirectory(path);
     char *text = (char *)ReturnFileData(path_, NULL);
@@ -150,7 +150,8 @@ bool OpenJsonObject(const char *path, uint64 min, uint64 max)
     return 0;
 }
 
-bool OpenJsonObjectFromMemory(const char *path, const unsigned char *text, uint64 min, uint64 max)
+// todo : add size parameter
+bool OpenJsonObjectFromMemory(const char *path, const unsigned char *text, uint32 min, uint32 max)
 {
 #ifndef GRNGAME_WASM
     cJSON *json = cJSON_Parse((const char *)text);
@@ -183,7 +184,7 @@ static void FileWriteJobRun(void *user_data)
 {
     FileWriteJob *job = user_data;
 
-    WriteFileData(job->key, job->text, strlen(job->key), false);
+    WriteFileData(job->key, job->text, (uint32)strlen(job->key), false);
 
     free(job->key);
     free(job->text);
@@ -223,7 +224,7 @@ bool JsonSaveObjectFromMemory(const char *fileKey)
 
     char *text = cJSON_Print(entry->json);
 
-    bool result = EmbeddedFilePutDisk(fileKey, text, strlen(text));
+    bool result = EmbeddedFilePutDisk(fileKey, text, (uint32)strlen(text));
 
     free(text);
 
@@ -271,8 +272,8 @@ COLD void JsonManagerDestroy(JsonManager manager)
 void JsonSaveObjects(float64 budget)
 {
     JsonManager manager = g_app.json_manager;
-    uint64 current_time_sec = g_app.info.frame_count / (uint64)g_app.info.fps;
-    uint64 start_ticks = TimeNow();
+    uint32 current_time_sec = g_app.info.frame_count / (uint32)g_app.info.fps;
+    uint32 start_ticks = TimeNow();
 
     float64 max_time_ms = budget * 0.8;
 
@@ -284,7 +285,7 @@ void JsonSaveObjects(float64 budget)
         JsonObject *json = kh_value(manager, it);
         if ((json->min > json->max) || (json->min == 0 && json->max == 0))
             continue;
-        uint64 elapsed_sec = current_time_sec - json->last_save_time;
+        uint32 elapsed_sec = current_time_sec - json->last_save_time;
 
         bool is_mandatory = elapsed_sec >= json->max;
         bool should_save = is_mandatory || elapsed_sec >= json->min;
@@ -292,7 +293,7 @@ void JsonSaveObjects(float64 budget)
         if (!should_save)
             continue;
 
-        uint64 elapsed_ms = TimeNow() - start_ticks;
+        uint32 elapsed_ms = TimeNow() - start_ticks;
 
         if (!is_mandatory && elapsed_ms >= max_time_ms)
             continue;

@@ -29,7 +29,7 @@ typedef struct
         struct
         {
             void *data;
-            uint64 size;
+            uint32 size;
         } blob; // not exposed to Wren
     } value;
 } DbValue;

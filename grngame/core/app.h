@@ -39,7 +39,7 @@ typedef struct AppInfo
 
     uint16 fps;
     float32 dt;
-    uint64 frame_count;
+    uint32 frame_count;
 
     uint16 window_universe_width;
     uint16 window_universe_height;

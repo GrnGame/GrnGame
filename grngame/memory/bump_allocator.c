@@ -2,10 +2,10 @@
 #include "grngame/math/types.h"
 #include "grngame/platform/virtual_memory.h"
 
-static uint64 RoundUpToPage(uint64 size);
-static bool EnsureCommitted(BumpAllocator *allocator, uint64 needed);
+static uint32 RoundUpToPage(uint32 size);
+static bool EnsureCommitted(BumpAllocator *allocator, uint32 needed);
 
-BumpAllocator BumpAllocatorInit(uint64 virtual_size)
+BumpAllocator BumpAllocatorInit(uint32 virtual_size)
 {
     void *base = VirtualMemoryReserve(virtual_size);
     return (BumpAllocator){
@@ -16,9 +16,9 @@ BumpAllocator BumpAllocatorInit(uint64 virtual_size)
     };
 }
 
-void *BumpAllocatorPushAligned(BumpAllocator *allocator, uint64 size, uint64 align)
+void *BumpAllocatorPushAligned(BumpAllocator *allocator, uint32 size, uint32 align)
 {
-    uint64 aligned = (allocator->offset + (align - 1)) & ~(align - 1);
+    uint32 aligned = (allocator->offset + (align - 1)) & ~(align - 1);
     if (!EnsureCommitted(allocator, aligned + size))
         return NULL;
 
@@ -26,7 +26,7 @@ void *BumpAllocatorPushAligned(BumpAllocator *allocator, uint64 size, uint64 ali
     return (char *)allocator->base + aligned;
 }
 
-void *BumpAllocatorPush(BumpAllocator *allocator, uint64 size)
+void *BumpAllocatorPush(BumpAllocator *allocator, uint32 size)
 {
     return BumpAllocatorPushAligned(allocator, size, 8);
 }
@@ -49,9 +49,9 @@ void *BumpAllocatorHead(BumpAllocator *allocator)
     return (char *)allocator->base + allocator->offset;
 }
 
-bool BumpAllocatorIncrement(BumpAllocator *allocator, uint64 size, uint64 align)
+bool BumpAllocatorIncrement(BumpAllocator *allocator, uint32 size, uint32 align)
 {
-    uint64 aligned = (allocator->offset + (align - 1)) & ~(align - 1);
+    uint32 aligned = (allocator->offset + (align - 1)) & ~(align - 1);
     if (!EnsureCommitted(allocator, aligned + size))
         return false;
 
@@ -59,19 +59,19 @@ bool BumpAllocatorIncrement(BumpAllocator *allocator, uint64 size, uint64 align)
     return true;
 }
 
-static uint64 RoundUpToPage(uint64 size)
+static uint32 RoundUpToPage(uint32 size)
 {
     return (size + VirtualMemoryPageSize() - 1) & ~(VirtualMemoryPageSize() - 1);
 }
 
-static bool EnsureCommitted(BumpAllocator *allocator, uint64 needed)
+static bool EnsureCommitted(BumpAllocator *allocator, uint32 needed)
 {
     if (needed <= allocator->committed)
         return true;
     if (needed > allocator->size)
         return false;
 
-    uint64 to_commit = RoundUpToPage(needed - allocator->committed);
+    uint32 to_commit = RoundUpToPage(needed - allocator->committed);
     void *ptr = (char *)allocator->base + allocator->committed;
     if (!VirtualMemoryCommit(ptr, to_commit))
         return false;

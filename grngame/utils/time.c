@@ -4,7 +4,7 @@
 
 float64 TimeNow(void)
 {
-    static uint64 freq = 0;
+    static uint32 freq = 0;
 
     if (freq == 0)
     {
