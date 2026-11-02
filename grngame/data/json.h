@@ -4,7 +4,7 @@
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/macro.h"
 #include "grngame/utils/memory.h"
-#include <cjson/cJSON.h>
+#include <cJSON.h>
 #include <khash.h>
 #include <kvec.h>
 #include <stdbool.h>

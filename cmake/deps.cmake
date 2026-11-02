@@ -107,9 +107,16 @@ endif ()
 CPMAddPackage(
         NAME cjson
         URL https://github.com/DaveGamble/cJSON/archive/6d9f2443ab071f86e5d9b43025a40929ec41c46c.tar.gz
-        OPTIONS
-        "ENABLE_CJSON_TEST OFF" "ENABLE_CJSON_UNINSTALL OFF"
-        "CJSON_BUILD_SHARED_LIBS OFF" "ENABLE_CJSON_UTILS OFF"
+        DOWNLOAD_ONLY YES
+)
+if (cjson_ADDED AND NOT TARGET cjson)
+    add_library(cjson STATIC "${cjson_SOURCE_DIR}/cJSON.c")
+    target_include_directories(cjson PUBLIC "${cjson_SOURCE_DIR}")
+endif ()
+
+CPMAddPackage(
+        NAME yyjson
+        URL https://github.com/ibireme/yyjson/archive/refs/tags/0.13.0.tar.gz
 )
 
 if (IS_DEV)
