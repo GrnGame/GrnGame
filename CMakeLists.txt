@@ -106,6 +106,7 @@ target_link_libraries(grngame PUBLIC
         sqlite3
         hwy
         cjson
+        yyjson
 )
 
 if (IS_DESKTOP)
