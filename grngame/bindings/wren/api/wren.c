@@ -97,18 +97,19 @@ static bool WrenInterpret(const char *filename)
     if (!file_content)
     {
         LOG_ERROR("Failed to read script '%s'", filename);
+        free(module_name);
         return false;
     }
 
     WrenInterpretResult result = wrenInterpret(g_app.wren_manager.vm, module_name, file_content);
     free(file_content);
-
     if (result != WREN_RESULT_SUCCESS)
     {
         LOG_ERROR("wrenInterpret failed for '%s'", filename);
+        free(module_name);
         return false;
     }
-
+    free(module_name);
     return true;
 }
 
