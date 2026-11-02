@@ -34,14 +34,6 @@ if (EMSCRIPTEN AND GRNGAME_WASM_THREADS)
 endif ()
 
 # cache CPM packages
-if (CMAKE_HOST_WIN32)
-    set(_cpm_home "$ENV{USERPROFILE}")
-else ()
-    set(_cpm_home "$ENV{HOME}")
-endif ()
-if (_cpm_home)
-    set(CPM_SOURCE_CACHE "${_cpm_home}/.cache/CPM" CACHE PATH "CPM source cache")
-endif ()
 include(cmake/CPM.cmake)
 include(cmake/platform.cmake) # defines IS_DESKTOP / IS_DEV
 include(cmake/deps.cmake)
