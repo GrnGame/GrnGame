@@ -1,8 +1,9 @@
 import shutil
 import sys
 from pathlib import Path
+import os
 
-RUNTIME_BUILD_DIR = Path("build/Runtime")
+RUNTIME_BUILD_DIR = os.environ.get("GRN_RUNTIME_DIR", "build/Runtime")
 STD_DIR = Path("std")
 DATA_DIR = Path("data")
 GAME_CONTROLLER_DB = Path("grngame/input/gamecontrollerdb.txt")
