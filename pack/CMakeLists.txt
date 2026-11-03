@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 project(GrnGamePackaging)
 
-install(DIRECTORY "${STAGING_DIR}/" DESTINATION ".")
+file(TO_CMAKE_PATH "${STAGING_DIR}" STAGING_DIR_CMAKE)
+install(DIRECTORY "${STAGING_DIR_CMAKE}/" DESTINATION ".")
 
 set(CPACK_PACKAGE_NAME "GrnGame")
 set(CPACK_PACKAGE_VERSION "${GRNGAME_VERSION}")
@@ -14,6 +15,7 @@ elseif(UNIX AND NOT APPLE)
     set(CPACK_GENERATOR "DEB;RPM;TGZ")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Baptiste Guerin baptiste.guerin34@gmail.com")
     set(CPACK_RPM_PACKAGE_AUTOREQPROV "no")
+    set(CPACK_RPM_SPEC_MORE_DEFINE "%define __strip /bin/true")
 endif()
 
 include(CPack)
