@@ -27,7 +27,7 @@ static bool CreateGameDataFile(const char *path, const char *version)
         return false;
 
     const bool ok = ApplyDbPragmas(db) && ApplyDbVersion(db, version) &&
-              DataWrite(db, "CREATE TABLE IF NOT EXISTS data (path TEXT PRIMARY KEY, content BLOB);");
+                    DataWrite(db, "CREATE TABLE IF NOT EXISTS data (path TEXT PRIMARY KEY, content BLOB);");
 
     DbClose(db);
 
