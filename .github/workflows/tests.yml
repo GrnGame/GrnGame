@@ -17,16 +17,11 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Setup xmake
-        uses: xmake-io/github-action-setup-xmake@v1
+      - name: Cache CMake dependencies
+        uses: actions/cache@v4
         with:
-          xmake-version: latest
-          actions-cache-folder: '.xmake-cache-tests-linux-x64'
-          package-cache: true
-          build-cache: true
-
-      - name: Update xmake repo
-        run: xmake repo -u
+          path: .cmake-cache/cpm
+          key: cmake-cpm-tests-linux-x64-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
 
       - name: Setup Virtual Display
         run: |
@@ -35,11 +30,12 @@ jobs:
             xvfb libgl1-mesa-dri libglx-mesa0 libegl1 libgles2 mesa-vulkan-drivers
 
       - name: Configure
+        env:
+          CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
         run: >
-          xmake config --clean
-          -m release
-          -y -vv
-          --embed_assets=false
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DGRNGAME_EMBED_ASSETS=OFF
 
       - name: Run auto tests
         env:
@@ -48,4 +44,6 @@ jobs:
           GALLIUM_DRIVER: llvmpipe
           MESA_GL_VERSION_OVERRIDE: "4.5"
           MESA_GLSL_VERSION_OVERRIDE: "450"
-        run: xvfb-run -a -s "-screen 0 1280x720x24" xmake run auto_tests -vv
+        run: >
+          xvfb-run -a -s "-screen 0 1280x720x24"
+          cmake --build build --config Release --target run_auto_tests --parallel

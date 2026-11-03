@@ -17,16 +17,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup xmake
-        uses: xmake-io/github-action-setup-xmake@v1
+      - name: Cache CMake dependencies
+        uses: actions/cache@v4
         with:
-          xmake-version: latest
-          actions-cache-folder: '.xmake-cache-ios-${{ matrix.arch }}'
-          package-cache: true
-          build-cache: true
-
-      - name: update xmake repo
-        run: xmake repo -u
+          path: .cmake-cache/cpm
+          key: cmake-cpm-ios-${{ matrix.arch }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
 
       #sdk min version is 26.2
       - name: Select Xcode
@@ -37,18 +32,24 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
 
       - name: Configure
+        env:
+          CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
         run: >
-          xmake f -p iphoneos -a ${{ matrix.arch }} -m release -c
-          --target_minver=17.5 
-          --embed_assets=y
-          -y -vv
+          cmake -S . -B build
+          -G Xcode
+          -DCMAKE_SYSTEM_NAME=iOS
+          -DCMAKE_OSX_SYSROOT=iphoneos
+          -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=17.5
+          -DCMAKE_BUILD_TYPE=Release
+          -DGRNGAME_EMBED_ASSETS=ON
 
       - name: Build
-        run: xmake build -y -vv
+        run: cmake --build build --config Release --parallel
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: "ios-${{ matrix.arch }}-release-embedtrue"
-          path: build/Runtime/
+          path: build/runtime/release/
           if-no-files-found: error

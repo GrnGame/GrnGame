@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-wasm:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: "wasm / release"
 
     steps:
@@ -15,34 +15,26 @@ jobs:
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v14
 
-      - name: Setup xmake
-        uses: xmake-io/github-action-setup-xmake@v1
+      - name: Cache CMake dependencies
+        uses: actions/cache@v4
         with:
-          xmake-version: latest
-          actions-cache-folder: '.xmake-cache-wasm'
-          package-cache: true
-          build-cache: true
-
-      - name: update xmake repo
-        run: xmake repo -u
-
-      - name: clean xmake packages
-        run: |
-          rm -rf ~/.xmake/packages
-          rm -rf ~/.xmake/cache
+          path: .cmake-cache/cpm
+          key: cmake-cpm-wasm-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
 
       - name: Configure
+        env:
+          CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
         run: >
-          xmake f -p wasm -c
-          -y -vv
-          --embed_assets=y
-          --wasm_threads=y
+          emcmake cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DGRNGAME_EMBED_ASSETS=ON
+          -DGRNGAME_WASM_THREADS=ON
 
       - name: Build
-        run: xmake build -y -vv
+        run: cmake --build build --config Release --parallel
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: "wasm-release-embedtrue"
-          path: build/Runtime/
+          path: build/runtime/release/

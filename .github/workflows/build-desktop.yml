@@ -9,18 +9,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-22.04, runner: ubuntu-22.04, platform: linux-x64, buildtype: release, embed: false }
-          - { os: ubuntu-22.04, runner: ubuntu-22.04, platform: linux-x64, buildtype: release, embed: true }
-          - { os: ubuntu-22.04-arm, runner: ubuntu-22.04-arm, platform: linux-arm64, buildtype: release, embed: false }
-          - { os: ubuntu-22.04-arm, runner: ubuntu-22.04-arm, platform: linux-arm64, buildtype: release, embed: true }
-          - { os: macos-latest, runner: macos-latest, platform: macos-arm64, buildtype: release, embed: false }
-          - { os: macos-latest, runner: macos-latest, platform: macos-arm64, buildtype: release, embed: true }
-          - { os: macos-15-intel, runner: macos-15-intel, platform: macos-x64, buildtype: release, embed: false }
-          - { os: macos-15-intel, runner: macos-15-intel, platform: macos-x64, buildtype: release, embed: true }
-          - { os: windows-latest, runner: windows-latest, platform: windows-x64, buildtype: release, embed: false }
-          - { os: windows-latest, runner: windows-latest, platform: windows-x64, buildtype: release, embed: true }
-          - { os: windows-11-arm, runner: windows-11-arm, platform: windows-arm64, buildtype: release, embed: false }
-          - { os: windows-11-arm, runner: windows-11-arm, platform: windows-arm64, buildtype: release, embed: true }
+          - { os: ubuntu-22.04, runner: ubuntu-22.04, platform: linux-x64, buildtype: Release, embed: false }
+          - { os: ubuntu-22.04, runner: ubuntu-22.04, platform: linux-x64, buildtype: Release, embed: true }
+          - { os: ubuntu-22.04-arm, runner: ubuntu-22.04-arm, platform: linux-arm64, buildtype: Release, embed: false }
+          - { os: ubuntu-22.04-arm, runner: ubuntu-22.04-arm, platform: linux-arm64, buildtype: Release, embed: true }
+          - { os: macos-latest, runner: macos-latest, platform: macos-arm64, buildtype: Release, embed: false }
+          - { os: macos-latest, runner: macos-latest, platform: macos-arm64, buildtype: Release, embed: true }
+          - { os: macos-15-intel, runner: macos-15-intel, platform: macos-x64, buildtype: Release, embed: false }
+          - { os: macos-15-intel, runner: macos-15-intel, platform: macos-x64, buildtype: Release, embed: true }
+          - { os: windows-latest, runner: windows-latest, platform: windows-x64, buildtype: Release, embed: false }
+          - { os: windows-latest, runner: windows-latest, platform: windows-x64, buildtype: Release, embed: true }
+          - { os: windows-11-arm, runner: windows-11-arm, platform: windows-arm64, buildtype: Release, embed: false }
+          - { os: windows-11-arm, runner: windows-11-arm, platform: windows-arm64, buildtype: Release, embed: true }
 
     runs-on: ${{ matrix.runner }}
     name: "${{ matrix.platform }} / ${{ matrix.buildtype }} / embedded = ${{ matrix.embed }}"
@@ -29,31 +29,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup xmake
-        uses: xmake-io/github-action-setup-xmake@v1
+      - name: Cache CMake dependencies
+        uses: actions/cache@v4
         with:
-          xmake-version: latest
-          actions-cache-folder: '.xmake-cache-${{ matrix.platform }}-embed-${{ matrix.embed }}'
-          package-cache: true
-          build-cache: true
-
-      - name: update xmake repo
-        run: xmake repo -u
+          path: .cmake-cache/cpm
+          #this is the future if a cmake file change cache is delete
+          key: cmake-cpm-${{ matrix.platform }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
 
       - name: Configure
+        env:
+          CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
         run: >
-          xmake config --clean
-          -m ${{ matrix.buildtype }}
-          -y -vv
-          --embed_assets=${{ matrix.embed }}
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }}
+          -DGRNGAME_EMBED_ASSETS=${{ matrix.embed }}
 
       - name: Build
-        run: xmake build -y -vv
+        run: cmake --build build --config ${{ matrix.buildtype }} --parallel
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: "${{ matrix.platform }}-${{ matrix.buildtype }}-embed${{ matrix.embed }}"
           path: |
-            build/Embedded/
-            build/Runtime/
+            build/embedded/release/
+            build/runtime/release/

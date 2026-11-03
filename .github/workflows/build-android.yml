@@ -10,38 +10,37 @@ jobs:
       matrix:
         abi: [arm64-v8a, x86_64]
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: "android-${{ matrix.abi }} / release"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup xmake
-        uses: xmake-io/github-action-setup-xmake@v1
+      - name: Cache CMake dependencies
+        uses: actions/cache@v4
         with:
-          xmake-version: latest
-          actions-cache-folder: '.xmake-cache-android-${{ matrix.abi }}'
-          package-cache: true
-          build-cache: true
-
-      - name: update xmake repo
-        run: xmake repo -u
+          path: .cmake-cache/cpm
+          key: cmake-cpm-android-${{ matrix.abi }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
 
       #ndk is already installed 
       - name: Configure
+        env:
+          CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
         run: >
-          xmake f -p android -a ${{ matrix.abi }} -m release -c
-          --ndk="$ANDROID_NDK_LATEST_HOME"
-          --embed_assets=y
-          -y -vv
+          cmake -S . -B build
+          -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake"
+          -DANDROID_ABI=${{ matrix.abi }}
+          -DANDROID_PLATFORM=android-26
+          -DCMAKE_BUILD_TYPE=Release
+          -DGRNGAME_EMBED_ASSETS=ON
 
       - name: Build
-        run: xmake build -y -vv
+        run: cmake --build build --config Release --target Runtime --parallel
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: "android-${{ matrix.abi }}-release"
-          path: build/Runtime/libGrnGame.so
+          path: build/runtime/release/libGrnGame.so
           if-no-files-found: error
