@@ -1,6 +1,12 @@
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(FETCHCONTENT_QUIET OFF)
 
+if (EMSCRIPTEN)
+    set(_grn_sdl_pthreads ${GRNGAME_WASM_THREADS})
+else ()
+    set(_grn_sdl_pthreads ON)
+endif ()
+
 if (GRNGAME_TRACY)
     CPMAddPackage(
             NAME tracy
@@ -19,8 +25,7 @@ CPMAddPackage(
         "SDL_TEST_LIBRARY OFF"
         "SDL_TESTS OFF"
         "SDL_INSTALL OFF"
-        #yes sdl use an option for threads on web 
-        "SDL_PTHREADS ${GRNGAME_WASM_THREADS}"
+        "SDL_PTHREADS ${_grn_sdl_pthreads}"
 )
 
 CPMAddPackage(
