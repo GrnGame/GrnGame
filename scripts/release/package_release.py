@@ -140,6 +140,10 @@ def bundle_desktop_binary(platform: str, stage_dir: Path) -> None:
 
 
 def resolve_runtime_source(artifact: Path) -> Path:
+    release = artifact / "release"
+    if release.is_dir():
+        return release
+
     nested = artifact / "Runtime"
     return nested if nested.is_dir() else artifact
 
@@ -157,7 +161,7 @@ def bundle_runtimes(stage_dir: Path) -> None:
 
 def bundle_android_libs(android_dst: Path) -> None:
     for abi, artifact_name in ANDROID_ARTIFACTS.items():
-        lib = ARTIFACTS_DIR / artifact_name / ANDROID_LIB_NAME
+        lib = resolve_runtime_source(ARTIFACTS_DIR / artifact_name) / ANDROID_LIB_NAME
 
         if lib.is_file():
             copy_file(lib, android_dst / "app" / "jni" / "src" / abi)

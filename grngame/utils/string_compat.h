@@ -14,36 +14,38 @@
 #define strdup _strdup
 #endif
 
-#ifdef GRNGAME_WASM
+// uncomment this if symbols arent define on wasm compiler  (can be possible)
 
-static inline char *strdup(const char *s)
-{
-    uint32 len = (uint32)strlen(s) + 1;
-    char *p = malloc(len);
-    memcpy(p, s, len);
-    return p;
-}
+// #ifdef GRNGAME_WASM
 
-static inline int32 strcasecmp(const char *s1, const char *s2)
-{
-    while (*s1 && *s2)
-    {
-        unsigned char c1 = (unsigned char)*s1++;
-        unsigned char c2 = (unsigned char)*s2++;
+// static inline char *strdup(const char *s)
+// {
+//     uint32 len = (uint32)strlen(s) + 1;
+//     char *p = malloc(len);
+//     memcpy(p, s, len);
+//     return p;
+// }
 
-        if (c1 >= 'A' && c1 <= 'Z')
-            c1 += 'a' - 'A';
-        if (c2 >= 'A' && c2 <= 'Z')
-            c2 += 'a' - 'A';
+// static inline int32 strcasecmp(const char *s1, const char *s2)
+// {
+//     while (*s1 && *s2)
+//     {
+//         unsigned char c1 = (unsigned char)*s1++;
+//         unsigned char c2 = (unsigned char)*s2++;
 
-        if (c1 != c2)
-            return c1 - c2;
-    }
+//         if (c1 >= 'A' && c1 <= 'Z')
+//             c1 += 'a' - 'A';
+//         if (c2 >= 'A' && c2 <= 'Z')
+//             c2 += 'a' - 'A';
 
-    return (unsigned char)*s1 - (unsigned char)*s2;
-}
+//         if (c1 != c2)
+//             return c1 - c2;
+//     }
 
-#endif
+//     return (unsigned char)*s1 - (unsigned char)*s2;
+// }
+
+// #endif
 
 #include <SDL3/SDL_stdinc.h>
 

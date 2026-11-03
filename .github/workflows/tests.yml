@@ -17,6 +17,31 @@ jobs:
         with:
           python-version: "3.x"
 
+      #sdl dependencies using SDL_X11_XCURSOR OFF going to remove somes fonctionalities 
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev \
+            libdbus-1-dev \
+            libdrm-dev \
+            libegl1-mesa-dev \
+            libgbm-dev \
+            libgl1-mesa-dev \
+            libgles2-mesa-dev \
+            libpulse-dev \
+            libwayland-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxfixes-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxss-dev \
+            libxt-dev \
+            libxv-dev
+
       - name: Cache CMake dependencies
         uses: actions/cache@v4
         with:
