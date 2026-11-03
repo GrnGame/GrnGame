@@ -9,3 +9,4 @@ vsxmake*/
 external/
 benchmark/assets
 benchmark/test.db
+__pycache__

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 project(GrnGame C CXX)
 
+set(GRNGAME_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/build")
+
 # embed_assets defaults to ON everywhere except desktop (forced on for wasm/android/iOS)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(_grn_embed_default OFF)
@@ -12,7 +14,7 @@ option(GRNGAME_TRACY "Enable tracy profiler instrumentation" OFF)
 option(GRNGAME_EMBED_ASSETS "Generate embedded assets (forced on for wasm/android/iOS)" ${_grn_embed_default})
 option(GRNGAME_SOFTWARE_RENDERER "Use software renderer" OFF)
 option(GRNGAME_PIXEL_INT_POSITION "Use integer pixel positions" ON)
-option(GRNGAME_BIG_BUFFER "Use bigger buffers" ON)
+option(GRNGAME_BIG_BUFFER "Use bigger buffers" OFF)
 option(GRNGAME_WASM_THREADS "Enable threads for wasm" OFF)
 
 set(CMAKE_C_STANDARD 17)
@@ -25,6 +27,8 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON) # lto on release
 # set msvc runtime to static
 if (MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    # when many cl work together use this
+    add_compile_options(/FS)
 endif ()
 
 # wasm thread flags must also reach the dependencies, so set them before deps.cmake
@@ -93,6 +97,8 @@ list(REMOVE_ITEM GRNGAME_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/grngame/embedded/e
 add_library(grngame STATIC ${GRNGAME_SOURCES})
 target_include_directories(grngame PUBLIC ${CMAKE_SOURCE_DIR})
 target_compile_definitions(grngame PRIVATE WITH_SDL3_STATIC)
+set_target_properties(grngame PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${GRNGAME_OUTPUT_DIR}")
 
 # libraries
 target_link_libraries(grngame PUBLIC
@@ -196,7 +202,13 @@ if (IS_DEV AND NOT CMAKE_CROSSCOMPILING)
     add_executable(Embedded "${CMAKE_CURRENT_SOURCE_DIR}/grngame/embedded/embedded_file_generator_main.c")
     set_target_properties(Embedded PROPERTIES
             OUTPUT_NAME "Embedded-${GRNGAME_TAG}"
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Embedded")
+            RUNTIME_OUTPUT_DIRECTORY "${GRNGAME_OUTPUT_DIR}/embedded/$<LOWER_CASE:$<CONFIG>>")
+    foreach (config IN LISTS CMAKE_CONFIGURATION_TYPES)
+        string(TOUPPER "${config}" config_upper)
+        string(TOLOWER "${config}" config_lower)
+        set_target_properties(Embedded PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY_${config_upper} "${GRNGAME_OUTPUT_DIR}/embedded/${config_lower}")
+    endforeach ()
     target_link_libraries(Embedded PRIVATE grngame)
 endif ()
 
@@ -205,16 +217,18 @@ if (ANDROID)
     add_library(Runtime SHARED runtime/main.c)
     set_target_properties(Runtime PROPERTIES
             OUTPUT_NAME "GrnGame"
-            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Runtime")
+            LIBRARY_OUTPUT_DIRECTORY "${GRNGAME_OUTPUT_DIR}/runtime/$<LOWER_CASE:$<CONFIG>>")
 else ()
     add_executable(Runtime runtime/main.c)
     set_target_properties(Runtime PROPERTIES
             OUTPUT_NAME "Runtime-${GRNGAME_TAG}"
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Runtime")
-    # uncomment to produce an html page instead of bare js
-    # if (EMSCRIPTEN)
-    #     set_target_properties(Runtime PROPERTIES SUFFIX ".html")
-    # endif ()
+            RUNTIME_OUTPUT_DIRECTORY "${GRNGAME_OUTPUT_DIR}/runtime/$<LOWER_CASE:$<CONFIG>>")
+    foreach (config IN LISTS CMAKE_CONFIGURATION_TYPES)
+        string(TOUPPER "${config}" config_upper)
+        string(TOLOWER "${config}" config_lower)
+        set_target_properties(Runtime PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY_${config_upper} "${GRNGAME_OUTPUT_DIR}/runtime/${config_lower}")
+    endforeach ()
 endif ()
 target_link_libraries(Runtime PRIVATE grngame)
 

@@ -1,98 +1,50 @@
 import shutil
 import subprocess
 import sys
-import os
 from pathlib import Path
+from helper import (
+    copy_controller_db,
+    copy_runtime,
+    copy_std,
+    remove_controller_db,
+    remove_runtime,
+    remove_std,
+)
 
-RUNTIME_BUILD_DIR = Path("build/Runtime")
 STD_DIR = Path("std")
 DATA_DIR = Path("data")
-GAME_CONTROLLER_DB = Path("grngame/input/gamecontrollerdb.txt")
-
 EMBEDDED_PATTERN = "Embedded-*"
 ASSETS_PAK = "Assets.pak"
-METADATA_FILE = "metadata.json"
 PAK_CONTENT = ["assets", "scripts", str(STD_DIR), "config", str(DATA_DIR)]
 
-IGNORED_FILES = shutil.ignore_patterns("*.exp", "*.lib")
 
-
-def find_embedded(dir_build_embedded: Path) -> Path:
-    for path in dir_build_embedded.glob(EMBEDDED_PATTERN):
+def find_embedded(embedded_dir: Path) -> Path:
+    for path in embedded_dir.glob(EMBEDDED_PATTERN):
         if path.is_file() and path.suffix not in {".pdb", ".ilk", ".exp", ".lib", ".obj"}:
             return path
-    raise FileNotFoundError(
-        f"No {EMBEDDED_PATTERN} file found in {dir_build_embedded}"
-    )
+    raise FileNotFoundError(f"No {EMBEDDED_PATTERN} found in {embedded_dir}")
 
 
-def stage_std(dir_racine: Path, dir_from: Path) -> None:
-    shutil.copytree(
-        dir_racine / STD_DIR,
-        dir_from / STD_DIR,
-        copy_function=shutil.copy2,
-    )
-
-
-def stage_data(dir_racine: Path, dir_from: Path) -> None:
-    data_dir = dir_from / DATA_DIR
-    data_dir.mkdir()
-
-    shutil.copy2(
-        dir_racine / GAME_CONTROLLER_DB,
-        data_dir / GAME_CONTROLLER_DB.name,
-    )
-
-def cleanup(dir_from: Path) -> None:
-    shutil.rmtree(dir_from / STD_DIR, ignore_errors=True)
-    shutil.rmtree(dir_from / DATA_DIR, ignore_errors=True)
-
-
-def build_pak(embedded: Path, dir_from: Path) -> Path:
-    command = [str(embedded.resolve()), ASSETS_PAK, *PAK_CONTENT]
-
-    subprocess.run(command, cwd=dir_from, check=True)
-
-    return dir_from / ASSETS_PAK
-
-
-def move_pak(pak: Path, dir_to: Path) -> None:
-    dir_to.mkdir(parents=True, exist_ok=True)
-
-    shutil.move(pak, dir_to / pak.name)
-
-
-def bundle_runtime(dir_to: Path) -> None:
-    shutil.copytree(
-        RUNTIME_BUILD_DIR,
-        dir_to,
-        dirs_exist_ok=True,
-        copy_function=shutil.copy2,
-        ignore=IGNORED_FILES,
-    )
-
-
-def bundle_metadata(dir_from: Path, dir_to: Path) -> None:
-    shutil.copy2(dir_from / METADATA_FILE, dir_to / METADATA_FILE)
+def build_pak(embedded: Path, test_dir: Path) -> None:
+    cmd = [str(embedded.resolve()), ASSETS_PAK, *PAK_CONTENT]
+    subprocess.run(cmd, cwd=test_dir, check=True)
 
 
 if __name__ == "__main__":
-    dir_from = Path(sys.argv[1]) #target name
-    dir_to = Path(sys.argv[2]) #build dir
-    dir_racine = Path(sys.argv[3]) #./
-    dir_build_embedded = Path(sys.argv[4]) #target embedded
+    test_dir = Path(sys.argv[1])
+    root_dir = Path(sys.argv[2])
+    embedded_dir = Path(sys.argv[3])
+    runtime_exe = Path(sys.argv[4]) if len(sys.argv) > 4 else None
 
-    embedded = find_embedded(dir_build_embedded)
+    embedded = find_embedded(embedded_dir)
 
-    stage_std(dir_racine, dir_from)
-    stage_data(dir_racine, dir_from)
-
-    bundle_runtime(dir_to)
-    bundle_metadata(dir_from, dir_to)
+    copy_std(root_dir, test_dir)
+    copy_controller_db(root_dir, test_dir)
 
     try:
-        pak = build_pak(embedded, dir_from)
+        build_pak(embedded, test_dir)
     finally:
-        cleanup(dir_from)
+        remove_std(test_dir)
 
-    move_pak(pak, dir_to)
+    if runtime_exe:
+        copy_runtime(runtime_exe, test_dir)

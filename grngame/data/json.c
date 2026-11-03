@@ -1,6 +1,4 @@
 #include "json.h"
-#include "SDL3/SDL_stdinc.h"
-#include "cJSON.h"
 #include "file.h"
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/assets/load.h"

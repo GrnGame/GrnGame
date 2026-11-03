@@ -1,50 +1,31 @@
-import shutil
 import sys
 from pathlib import Path
-import os
-
-RUNTIME_BUILD_DIR = os.environ.get("GRN_RUNTIME_DIR", "build/Runtime")
-STD_DIR = Path("std")
-DATA_DIR = Path("data")
-GAME_CONTROLLER_DB = Path("grngame/input/gamecontrollerdb.txt")
-
-IGNORED_FILES = shutil.ignore_patterns("*.exp", "*.lib")
-
-
-def copy_folder(src: Path, dst: Path, ignore=None) -> None:
-    shutil.copytree(
-        src,
-        dst,
-        dirs_exist_ok=True,
-        copy_function=shutil.copy2,
-        ignore=ignore,
-    )
-
-
-def bundle_assets(dir_from: Path, dir_to: Path) -> None:
-    copy_folder(dir_from, dir_to)
-
-
-def bundle_std(dir_to: Path) -> None:
-    copy_folder(STD_DIR, dir_to / STD_DIR)
-
-
-def bundle_controller_db(dir_to: Path) -> None:
-    data_dir = dir_to / DATA_DIR
-    data_dir.mkdir(parents=True, exist_ok=True)
-
-    shutil.copy2(GAME_CONTROLLER_DB, data_dir / GAME_CONTROLLER_DB.name)
-
-
-def bundle_runtime(dir_to: Path) -> None:
-    copy_folder(RUNTIME_BUILD_DIR, dir_to, ignore=IGNORED_FILES)
-
+from helper import (
+    copy_controller_db,
+    copy_runtime,
+    copy_std,
+    remove_controller_db,
+    remove_runtime,
+    remove_std,
+)
 
 if __name__ == "__main__":
-    dir_from = Path(sys.argv[1]) # target
-    dir_to = Path(sys.argv[2]) #build dir
+    action = sys.argv[1]
+    test_dir = Path(sys.argv[2])
+    #prepare before run executable
+    if action == "prepare":
+        root_dir = Path(sys.argv[3])
+        runtime_exe = Path(sys.argv[4]) if len(sys.argv) > 4 else None
 
-    bundle_assets(dir_from, dir_to)
-    bundle_std(dir_to)
-    bundle_controller_db(dir_to)
-    bundle_runtime(dir_to)
+        copy_std(root_dir, test_dir)
+        copy_controller_db(root_dir, test_dir)
+        if runtime_exe:
+            copy_runtime(runtime_exe, test_dir)
+    #clean after run executable
+    elif action == "clean":
+        runtime_exe = Path(sys.argv[3]) if len(sys.argv) > 3 else None
+
+        remove_std(test_dir)
+        remove_controller_db(test_dir)
+        if runtime_exe:
+            remove_runtime(runtime_exe, test_dir)

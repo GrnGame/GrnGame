@@ -26,10 +26,15 @@ CPMAddPackage(
         URL https://github.com/libsdl-org/SDL_image/releases/download/release-3.2.4/SDL3_image-3.2.4.tar.gz
         OPTIONS
         "BUILD_SHARED_LIBS OFF"
-        "SDLIMAGE_VENDORED OFF"
+        "SDLIMAGE_VENDORED ON"
+        "SDLIMAGE_DEPS_SHARED OFF"
         "SDLIMAGE_INSTALL OFF"
         "SDLIMAGE_SAMPLES OFF"
         "SDLIMAGE_STRICT ON"
+        "SDLIMAGE_AVIF OFF"
+        "SDLIMAGE_TIF OFF"
+        "SDLIMAGE_WEBP OFF"
+        "SDLIMAGE_JXL OFF"
 )
 
 CPMAddPackage(
