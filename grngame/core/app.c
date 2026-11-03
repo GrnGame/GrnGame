@@ -40,7 +40,7 @@
 
 static bool s_is_running = false;
 
-static HOT void MainLoopIteration(const void *arg);
+static HOT void MainLoopIteration( void *arg);
 static COLD void MainLoop(void);
 static COLD void EnsureInitSucceeded(InitResult res);
 
@@ -210,7 +210,7 @@ static void UpdateEngineTime(const float64 frame_start_time)
     g_app.info.dt = (float32)(TimeNow() - frame_start_time);
 }
 
-static HOT void MainLoopIteration(const void *arg)
+static HOT void MainLoopIteration(void *arg)
 {
     (void)arg;
 
