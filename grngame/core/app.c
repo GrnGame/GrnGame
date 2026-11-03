@@ -40,7 +40,7 @@
 
 static bool s_is_running = false;
 
-static HOT void MainLoopIteration( void *arg);
+static HOT void MainLoopIteration(void *arg);
 static COLD void MainLoop(void);
 static COLD void EnsureInitSucceeded(InitResult res);
 
