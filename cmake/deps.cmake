@@ -43,6 +43,12 @@ CPMAddPackage(
         "SDLIMAGE_WEBP OFF"
         "SDLIMAGE_JXL OFF"
 )
+if (CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    target_link_libraries(SDL3_image-static PUBLIC
+            "-framework ImageIO"
+            "-framework MobileCoreServices"
+    )
+endif ()
 
 CPMAddPackage(
         NAME SDL3_mixer

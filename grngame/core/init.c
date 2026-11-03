@@ -86,47 +86,6 @@ static InitResult SetSDLMetadata(void)
     return INIT_OK;
 }
 
-static bool ParseMetaData()
-{
-    JsonValue v = JsonReadValueFromDirectory(METADATA, "name");
-    if (v.type != JSONV_TEXT)
-    {
-        LOG_ERROR("Failed to read name section in %s", METADATA);
-        JsonValueFree(&v);
-        return false;
-    }
-    g_app.info.name = v.value.s;
-
-    v = JsonReadValueFromDirectory(METADATA, "version");
-    if (v.type != JSONV_TEXT)
-    {
-        LOG_ERROR("Failed to read version section in %s", METADATA);
-        JsonValueFree(&v);
-        return false;
-    }
-    g_app.info.version = v.value.s;
-
-    v = JsonReadValueFromDirectory(METADATA, "company");
-    if (v.type != JSONV_TEXT)
-    {
-        LOG_ERROR("Failed to read compagny section in %s", METADATA);
-        JsonValueFree(&v);
-        return false;
-    }
-    g_app.info.company = v.value.s;
-
-    return true;
-}
-
-// never embedded
-static InitResult InitAppMetaData()
-{
-    if (!ParseMetaData())
-        return INIT_METADATA_FAILED;
-
-    return INIT_OK;
-}
-
 static bool ReadConfigValue(const char *key, const unsigned char *memory, JsonValue *value, uint32 size)
 {
     *value =
@@ -197,9 +156,21 @@ static bool ParseConfig(const unsigned char *memory, uint32 size)
     g_app.info.enable_palette = value.value.b;
     JsonValueFree(&value);
 
+    if (!ReadConfigValue("name", memory, &value, size) || value.type != JSONV_TEXT)
+        goto invalid;
+    g_app.info.name = value.value.s;
+
     if (!ReadConfigValue("assetFolder", memory, &value, size) || value.type != JSONV_TEXT)
         goto invalid;
     g_app.info.asset_folder = value.value.s;
+
+    if (!ReadConfigValue("version", memory, &value, size) || value.type != JSONV_TEXT)
+        goto invalid;
+    g_app.info.version = value.value.s;
+
+    if (!ReadConfigValue("company", memory, &value, size) || value.type != JSONV_TEXT)
+        goto invalid;
+    g_app.info.company = value.value.s;
 
     if (!ReadConfigValue("palette", memory, &value, size) ||
         (value.type != JSONV_TEXT_ARRAY && value.type != JSONV_EMPTY_ARRAY))
@@ -388,27 +359,41 @@ InitResult InitAll(void)
 
     InitializeJson();
 
-    if (InitAppMetaData() != INIT_OK)
-        return INIT_METADATA_FAILED;
-
 #if GRNGAME_WASM
     g_app.embedded_file_manager = EmbeddedFileManagerCreate();
-    if (!InitAssetsPak())
-        return INIT_OPEN_GAME_DATA_FAILED;
-
     if (!EmbeddedFileManagerLoadAssetsPak())
         return INIT_OPEN_GAME_DATA_FAILED;
 #elif GRNGAME_EMBED_ASSETS
-    g_app.embedded_file_manager = EmbeddedFileManagerCreate();
-    if (!InstallAssetsPak() || !InstallGameData() || !InitAssetsPak() || !InitGameData())
+#ifdef GRNGAME_ANDROID
+    // todo optimise copy file
+    char *storage = PathFromAndroidStorage("Assets.pak");
+    if (!MoveFile_("Assets.pak", storage))
         return INIT_OPEN_GAME_DATA_FAILED;
-    if (!EmbeddedFileManagerLoadAssetsPak() || !EmbeddedFileManagerLoadGameData())
+    g_app.info.file_db = DbCreate(storage);
+    free(storage);
+#else
+    g_app.embedded_file_manager = EmbeddedFileManagerCreate();
+    g_app.info.file_db = DbCreate("Assets.pak");
+
+#endif
+
+    if (!EmbeddedFileManagerLoadAssetsPak())
         return INIT_OPEN_GAME_DATA_FAILED;
 #endif
 
     result = InitAppConfig();
     if (result != INIT_OK)
         return result;
+
+#ifdef GRNGAME_EMBED_ASSETS
+#ifndef GRNGAME_WASM
+    if (!InstallGameData() || !InitGameData())
+        return INIT_OPEN_GAME_DATA_FAILED;
+
+    if (!EmbeddedFileManagerLoadGameData())
+        return INIT_OPEN_GAME_DATA_FAILED;
+#endif
+#endif
 
     result = InitializeSDL();
     if (result != INIT_OK)

@@ -158,6 +158,19 @@ char *PathFromExecutableDirectory(const char *relative)
 #endif
 }
 
+char *PathFromAndroidStorage(const char *file)
+{
+#ifdef GRNGAME_ANDROID
+    const char *path = SDL_GetAndroidInternalStoragePath();
+    uint32 n = (uint32)strlen(path) + (uint32)strlen(file) + 2;
+    char *out = malloc(n);
+    snprintf(out, n, "%s/%s", path, file);
+    return out;
+#else
+    return strdup(file);
+#endif
+}
+
 // need to free
 char *PathFromStorage(const char *file)
 {

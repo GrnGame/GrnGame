@@ -44,7 +44,6 @@ RUNTIME_BINARIES = {
 EMBEDDED_PATTERN = "Embedded-*"
 ASSETS_PAK = "Assets.pak"
 PAK_CONTENT = ["assets", "scripts", "std", "data", "config"]
-METADATA_FILE = "metadata.json"
 
 
 def require_assets_bundle(path: Path) -> None:
@@ -153,10 +152,6 @@ def bundle_assets_pak(project_dir: Path) -> None:
     copy_to_all_platforms(assets_pak, project_dir / DIST_DIR)
 
 
-def bundle_metadata(project_dir: Path) -> None:
-    copy_to_all_platforms(project_dir / METADATA_FILE, project_dir / DIST_DIR)
-
-
 if __name__ == "__main__":
     project_dir = Path.cwd()
 
@@ -164,4 +159,3 @@ if __name__ == "__main__":
     bundle_runtime(RUNTIME_DIR, project_dir)
     bundle_assets(project_dir)
     bundle_assets_pak(project_dir)
-    bundle_metadata(project_dir)

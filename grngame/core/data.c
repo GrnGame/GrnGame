@@ -20,88 +20,6 @@ static sqlite3 *OpenStorageDb(const char *name)
     return db;
 }
 
-typedef enum
-{
-    ASSETS_PAK_INSTALL,
-    ASSETS_PAK_REPLACE,
-    ASSETS_PAK_KEEP_INSTALLED,
-    ASSETS_PAK_ERROR
-} AssetsPakDecision;
-
-static AssetsPakDecision DecideAssetsPakAction(const char *installed_path, const char *bundled_path)
-{
-    if (!FileExist(installed_path))
-    {
-        LOG_DEBUG("Assets.pak not present in storage move it");
-        return ASSETS_PAK_INSTALL;
-    }
-
-    int32 installed_version = 0;
-    int32 bundled_version = 0;
-
-    if (!ReadSqliteVersion(installed_path, &installed_version) || !ReadSqliteVersion(bundled_path, &bundled_version))
-    {
-        LOG_ERROR("Cannot read Assets.pak versions");
-        return ASSETS_PAK_ERROR;
-    }
-
-    if (bundled_version > installed_version)
-    {
-        // parse should work
-        char old[128 * BUFFER_SPACE];
-        ParseVersionToString(installed_version, old, sizeof(old));
-        char new[128 * BUFFER_SPACE];
-        ParseVersionToString(installed_version, new, sizeof(new));
-
-        LOG_DEBUG("Changing assets.pak version from %s to %s", old, new);
-        return ASSETS_PAK_REPLACE;
-    }
-    else
-    {
-        return ASSETS_PAK_KEEP_INSTALLED;
-    }
-}
-
-static bool ExecuteAssetsPakDecision(AssetsPakDecision decision, const char *installed_path, const char *bundled_path)
-{
-    switch (decision)
-    {
-    case ASSETS_PAK_KEEP_INSTALLED:
-        return true;
-
-    case ASSETS_PAK_INSTALL:
-        return MoveFile_(installed_path, bundled_path);
-
-    case ASSETS_PAK_REPLACE:
-        return RemovePath(installed_path) && MoveFile_(installed_path, bundled_path);
-
-    case ASSETS_PAK_ERROR:
-    default:
-        return false;
-    }
-}
-
-bool InstallAssetsPak(void)
-{
-#ifdef GRNGAME_WASM
-    return true;
-#else
-    char *installed_path = PathFromStorage("Assets.pak");
-    char *bundled_path = PathFromExecutableDirectory("Assets.pak");
-
-    bool ok = false;
-    if (installed_path && bundled_path)
-    {
-        AssetsPakDecision decision = DecideAssetsPakAction(installed_path, bundled_path);
-        ok = ExecuteAssetsPakDecision(decision, installed_path, bundled_path);
-    }
-
-    free(installed_path);
-    free(bundled_path);
-    return ok;
-#endif
-}
-
 static bool CreateGameDataFile(const char *path, const char *version)
 {
     sqlite3 *db = DbCreate(path);
@@ -133,17 +51,6 @@ bool InstallGameData(void)
 
     free(path);
     return ok;
-}
-
-bool InitAssetsPak(void)
-{
-    g_app.info.file_db = OpenStorageDb("Assets.pak");
-    if (!g_app.info.file_db)
-    {
-        LOG_ERROR("Cannot open Assets.pak");
-        return false;
-    }
-    return true;
 }
 
 static bool DetectGameDataVersionChange(const char *path)

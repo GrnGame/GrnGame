@@ -1,9 +1,6 @@
 #pragma once
 #include "grngame/data/sqlite.h"
 
-bool InstallAssetsPak(void);
-bool InitAssetsPak(void);
-
 bool InitGameData(void);
 bool InstallGameData(void);
 

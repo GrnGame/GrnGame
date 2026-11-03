@@ -37,4 +37,7 @@ char *PathFromExecutableDirectory(const char *relative);
 /// need to free
 char *PathFromStorage(const char *file);
 
+/// need to free
+char *PathFromAndroidStorage(const char *file);
+
 END_DECLARATIONS

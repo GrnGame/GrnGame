@@ -14,7 +14,6 @@ GAME_CONTROLLER_DB = Path("grngame/input/gamecontrollerdb.txt")
 
 CONFIG_FILE = RESSOURCES_DIR / "config.json"
 MAIN_SCRIPT = RESSOURCES_DIR / "main.wren"
-METADATA_FILE = RESSOURCES_DIR / "metadata.json"
 LOGO_FILE = RESSOURCES_DIR / "logo.png"
 
 SETUP_SCRIPTS_DIR = SCRIPTS_DIR / "project"
@@ -106,11 +105,6 @@ def bundle_project_model(stage_dir: Path) -> None:
     copy_folder(STD_DIR, model_dir / "std")
 
 
-def bundle_metadata(stage_dir: Path) -> None:
-    model_dir = project_model_dir(stage_dir)
-
-    copy_file(METADATA_FILE, model_dir)
-
 def bundle_logo(stage_dir: Path)-> None:
     copy_file(LOGO_FILE, runtime_dir(stage_dir))
 
@@ -182,7 +176,6 @@ def make_zip(platform: str, stage_dir: Path, tag: str) -> None:
 
 def build_stage(platform: str, stage_dir: Path) -> None:
     bundle_project_model(stage_dir)
-    bundle_metadata(stage_dir)
     bundle_setup_scripts(stage_dir)
     bundle_server_script(stage_dir)
     bundle_server_index(stage_dir)

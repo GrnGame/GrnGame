@@ -9,10 +9,10 @@
 
 int main(int argc, char **argv)
 {
-    JsonValue v = JsonReadValue(METADATA, "version");
+    JsonValue v = JsonReadValue("config/config.json", "version");
     if (v.type != JSONV_TEXT)
     {
-        LOG_ERROR("Failed to read version section in %s", METADATA);
+        LOG_ERROR("Failed to read version section in %s", "config/config.json");
         JsonValueFree(&v);
         return false;
     }

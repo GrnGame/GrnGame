@@ -52,7 +52,7 @@ static on_start() {
 }
 
 static on_update(dt) {
-    __content["time"] = __content["time"] + 1
+    //__content["time"] = __content["time"] + 1
 }
 static on_fixed_update(dt) {}
 static on_render() {}

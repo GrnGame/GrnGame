@@ -1,6 +1,4 @@
 {
-    "name": "game",
-    "version": "1.0.0",
     "fps": 60,
     "windowWidth": 640,
     "windowHeight": 360,
@@ -13,5 +11,8 @@
     "forceUniverseScale": false,
     "assetFolder": "assets",
     "enable_palette": false,
-    "palette": []
+    "palette": [],
+    "name": "My game",
+    "version": "1.0.0",
+    "company": "my.society.com"
 }
