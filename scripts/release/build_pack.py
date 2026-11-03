@@ -25,7 +25,8 @@ if __name__ == "__main__":
         [
             "cmake", "-B", "build_pack", "-S", "pack",
             f"-DSTAGING_DIR={stage_dir}",
-            f"-DGRNGAME_VERSION={version}"
+            f"-DGRNGAME_VERSION={version}",
+            f"-DCPACK_SYSTEM_NAME={platform}"
         ],
         check=True,
     )
