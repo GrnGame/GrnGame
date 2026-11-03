@@ -3,6 +3,13 @@ project(GrnGame C CXX)
 
 set(GRNGAME_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/build")
 
+if (CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    #temporary bundle will be change soon
+    set(GRNGAME_BUNDLE_IDENTIFIER "com.grngame.game" CACHE STRING
+        "Bundle identifier used by generated iOS Xcode targets")
+    set(CMAKE_XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${GRNGAME_BUNDLE_IDENTIFIER}")
+endif ()
+
 # embed_assets defaults to ON everywhere except desktop (forced on for wasm/android/iOS)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(_grn_embed_default OFF)
