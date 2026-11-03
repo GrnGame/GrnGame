@@ -365,6 +365,7 @@ InitResult InitAll(void)
         return INIT_OPEN_GAME_DATA_FAILED;
 #elif GRNGAME_EMBED_ASSETS
 #ifdef GRNGAME_ANDROID
+    g_app.embedded_file_manager = EmbeddedFileManagerCreate();
     char *storage = PathFromAndroidStorage("Assets.pak");
     if (!MoveFile_(storage, ASSETS_PAK))
     {
