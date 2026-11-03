@@ -129,7 +129,12 @@ endif ()
 CPMAddPackage(
         NAME yyjson
         URL https://github.com/ibireme/yyjson/archive/refs/tags/0.13.0.tar.gz
+        DOWNLOAD_ONLY YES
 )
+if (yyjson_ADDED AND NOT TARGET yyjson)
+    add_library(yyjson STATIC "${yyjson_SOURCE_DIR}/src/yyjson.c")
+    target_include_directories(yyjson PUBLIC "${yyjson_SOURCE_DIR}/src")
+endif ()
 
 if (IS_DEV)
     CPMAddPackage(
