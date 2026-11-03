@@ -146,9 +146,8 @@ bool WriteFileData(const char *name, const void *data, uint32 size, bool append)
 
 bool MoveFile_(const char *dst, const char *src)
 {
-
     uint32 size = 0;
-    void *data = ReturnFileData(src, &size);
+    void *data = LoadFile(src, &size);
     if (!data)
     {
         LOG_ERROR("impossible to get data from %s", src);
@@ -156,7 +155,7 @@ bool MoveFile_(const char *dst, const char *src)
     }
 
     bool ok = SaveFile(dst, data, size);
-    free(data);
+    SDL_free(data);
 
     if (!ok)
     {

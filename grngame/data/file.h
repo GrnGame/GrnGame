@@ -20,6 +20,7 @@ bool CloseIO(SDL_IOStream *io);
 bool RemovePath(const char *path);
 
 bool FileExist(const char *name);
+// dont work on android
 unsigned char *ReturnFileData(const char *name, uint32 *size_out);
 bool WriteFileData(const char *name, const void *data, uint32 size, bool append);
 bool MoveFile_(const char *dst, const char *name);
