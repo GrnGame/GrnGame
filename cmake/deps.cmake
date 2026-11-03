@@ -19,6 +19,8 @@ CPMAddPackage(
         "SDL_TEST_LIBRARY OFF"
         "SDL_TESTS OFF"
         "SDL_INSTALL OFF"
+        #yes sdl use an option for threads on web 
+        "SDL_PTHREADS ${GRNGAME_WASM_THREADS}"
 )
 
 CPMAddPackage(
