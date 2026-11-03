@@ -10,7 +10,7 @@ jobs:
       matrix:
         arch: [arm64]
 
-    runs-on: macos-26
+    runs-on: macos-15
     name: "ios-${{ matrix.arch }} / release"
 
     steps:
