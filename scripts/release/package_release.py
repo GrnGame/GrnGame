@@ -31,14 +31,14 @@ PLATFORMS = [
     "macos-arm64",
     "windows-x64",
     "windows-arm64",
+    "ios-arm64",
+    "wasm"
 ]
 
 DESKTOP_ARTIFACTS = {platform: f"{platform}-release-embedfalse" for platform in PLATFORMS}
 
 RUNTIME_ARTIFACTS = [
     *(f"{platform}-release-embedtrue" for platform in PLATFORMS),
-    "wasm-release-embedtrue",
-    "ios-arm64-release-embedtrue",
 ]
 
 ANDROID_ARTIFACTS = {

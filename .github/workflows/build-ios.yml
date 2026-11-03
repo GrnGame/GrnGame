@@ -43,6 +43,8 @@ jobs:
           -DCMAKE_OSX_DEPLOYMENT_TARGET=17.5
           -DCMAKE_BUILD_TYPE=Release
           -DGRNGAME_EMBED_ASSETS=ON
+          -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO
+          -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO
 
       - name: Build
         run: cmake --build build --config Release --parallel

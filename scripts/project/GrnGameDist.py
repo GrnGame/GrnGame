@@ -27,8 +27,8 @@ SERVER_FILES = [
     "server.py",
     "index.html",
     "logo.png",
-    "Runtime-wasm-wasm32-releaseembedded.js",
-    "Runtime-wasm-wasm32-releaseembedded.wasm",
+    "Runtime-wasm-x86-releaseembedded.js",
+    "Runtime-wasm-x86-releaseembedded.wasm",
 ]
 
 RUNTIME_BINARIES = {
