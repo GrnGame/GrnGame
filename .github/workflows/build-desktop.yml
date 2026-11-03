@@ -15,8 +15,8 @@ jobs:
           - { os: ubuntu-22.04-arm, runner: ubuntu-22.04-arm, platform: linux-arm64, buildtype: Release, embed: true }
           - { os: macos-15, runner: macos-15, platform: macos-arm64, buildtype: Release, embed: false }
           - { os: macos-15, runner: macos-15, platform: macos-arm64, buildtype: Release, embed: true }
-          - { os: macos-15-intel, runner: macos-15-intel, platform: macos-x64, buildtype: Release, embed: false }
-          - { os: macos-15-intel, runner: macos-15-intel, platform: macos-x64, buildtype: Release, embed: true }
+          #- { os: macos-15-intel, runner: macos-15-intel, platform: macos-x64, buildtype: Release, embed: false }
+          #- { os: macos-15-intel, runner: macos-15-intel, platform: macos-x64, buildtype: Release, embed: true }
           - { os: windows-latest, runner: windows-latest, platform: windows-x64, buildtype: Release, embed: false }
           - { os: windows-latest, runner: windows-latest, platform: windows-x64, buildtype: Release, embed: true }
           - { os: windows-11-arm, runner: windows-11-arm, platform: windows-arm64, buildtype: Release, embed: false }
