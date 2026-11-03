@@ -149,7 +149,9 @@ def bundle_assets_pak(project_dir: Path) -> None:
     assets_pak = project_dir / ASSETS_PAK
     require_assets_bundle(assets_pak)
 
-    copy_to_all_platforms(assets_pak, project_dir / DIST_DIR)
+    dist_dir = project_dir / DIST_DIR
+    copy_to_all_platforms(assets_pak, dist_dir)
+    copy_file(assets_pak, dist_dir / ANDROID_DIST_DIR / "app" / "src" / "main" / "assets")
 
 
 if __name__ == "__main__":

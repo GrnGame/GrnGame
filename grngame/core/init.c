@@ -365,10 +365,13 @@ InitResult InitAll(void)
         return INIT_OPEN_GAME_DATA_FAILED;
 #elif GRNGAME_EMBED_ASSETS
 #ifdef GRNGAME_ANDROID
-    // todo optimise copy file
     char *storage = PathFromAndroidStorage("Assets.pak");
-    if (!MoveFile_("Assets.pak", storage))
+    if (!MoveFile_(storage, ASSETS_PAK))
+    {
+        free(storage);
         return INIT_OPEN_GAME_DATA_FAILED;
+    }
+
     g_app.info.file_db = DbCreate(storage);
     free(storage);
 #else
