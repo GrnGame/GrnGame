@@ -61,6 +61,17 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y rpm fakeroot
 
+      #wix not here on arm
+      - name: Install WiX Toolset (v3)
+        if: runner.os == 'Windows'
+        run: |
+          choco install wixtoolset -y --no-progress
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\Program Files (x86)\WiX Toolset v3.14\bin"
+
+      - name: Check WiX
+        if: runner.os == 'Windows'
+        run: where.exe candle
+
       - name: Run Pack script
         run: python scripts/release/build_pack.py "${{ github.ref_name }}"
 

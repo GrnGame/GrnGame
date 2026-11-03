@@ -40,7 +40,7 @@
 
 static bool s_is_running = false;
 
-static HOT void MainLoopIteration(void *arg);
+static HOT void MainLoopIteration(const void *arg);
 static COLD void MainLoop(void);
 static COLD void EnsureInitSucceeded(InitResult res);
 
@@ -49,7 +49,7 @@ static HOT void RenderFrame(void);
 static COLD void InitializeLoopState(void);
 static COLD void CleanupAppResources(void);
 
-static COLD void EnsureInitSucceeded(InitResult res)
+static COLD void EnsureInitSucceeded(const InitResult res)
 {
     if (UNLIKELY(res == INIT_SDL_FAILED))
     {
@@ -98,7 +98,7 @@ void EngineStart()
     SetSeed();
     CheckAllTypes();
 
-    InitResult res = InitAll();
+    const InitResult res = InitAll();
     EnsureInitSucceeded(res);
 
     MainLoop();
@@ -115,7 +115,7 @@ static void EngineStop(void)
     CleanupAppResources();
 }
 
-void EngineRequestStop(void)
+static void EngineRequestStop(void)
 {
     if (UNLIKELY(g_app.request_stop))
     {
@@ -189,10 +189,10 @@ static HOT void RenderFrame(void)
     PROFILE_ZONE_END(render_zone);
 }
 
-static void UpdateEngineTime(float64 frame_start_time)
+static void UpdateEngineTime(const float64 frame_start_time)
 {
     float64 frame_elapsed_time = TimeNow() - frame_start_time;
-    float64 target_frame_time = 1.0 / (float64)g_app.info.fps;
+    const float64 target_frame_time = 1.0 / (float64)g_app.info.fps;
     if (frame_elapsed_time < target_frame_time)
     {
         float64 remaining_time = target_frame_time - frame_elapsed_time;
@@ -201,7 +201,7 @@ static void UpdateEngineTime(float64 frame_start_time)
 
         if (frame_elapsed_time < target_frame_time)
         {
-            float64 delay_sec = target_frame_time - frame_elapsed_time;
+            const float64 delay_sec = target_frame_time - frame_elapsed_time;
 
             SDL_Delay((uint32)(delay_sec * 1000.0));
         }
@@ -210,7 +210,7 @@ static void UpdateEngineTime(float64 frame_start_time)
     g_app.info.dt = (float32)(TimeNow() - frame_start_time);
 }
 
-static HOT void MainLoopIteration(void *arg)
+static HOT void MainLoopIteration(const void *arg)
 {
     (void)arg;
 

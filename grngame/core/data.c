@@ -26,7 +26,7 @@ static bool CreateGameDataFile(const char *path, const char *version)
     if (!db)
         return false;
 
-    bool ok = ApplyDbPragmas(db) && ApplyDbVersion(db, version) &&
+    const bool ok = ApplyDbPragmas(db) && ApplyDbVersion(db, version) &&
               DataWrite(db, "CREATE TABLE IF NOT EXISTS data (path TEXT PRIMARY KEY, content BLOB);");
 
     DbClose(db);
@@ -69,7 +69,7 @@ static bool DetectGameDataVersionChange(const char *path)
         return false;
     }
 
-    bool version_changed = (stored_version != app_version);
+    const bool version_changed = (stored_version != app_version);
 
     if (version_changed)
     {
@@ -94,7 +94,7 @@ bool InitGameData(void)
     if (!path)
         return false;
 
-    bool ok = DetectGameDataVersionChange(path);
+    const bool ok = DetectGameDataVersionChange(path);
     free(path);
     if (!ok)
         return false;
