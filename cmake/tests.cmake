@@ -79,6 +79,9 @@ function(grn_add_test_target name)
 endfunction()
 
 function(grn_setup_tests)
+    if (NOT IS_DESKTOP)
+        return()
+    endif ()
     cmake_parse_arguments(ARG "" "" "TARGET_TESTS;AUTO_TESTS" ${ARGN})
 
     set(deps Runtime)
