@@ -1,8 +1,7 @@
 import shutil
 from pathlib import Path
 
-
-#dont update dist folder 
+# dont update dist folder
 
 PROJECT_MODEL_DIR = Path(__file__).resolve().parent.parent / "project_model"
 
@@ -11,7 +10,7 @@ STD_DIR = Path("std")
 GAME_CONTROLLER_DB = DATA_DIR / "gamecontrollerdb.txt"
 
 EMBEDDED_PATTERN = "Embedded-*"
-RUNTIME_PATTERN = "Runtime-*"
+RUNTIME_PATTERN = "desktop-*"
 
 
 def require_file(path: Path) -> None:
@@ -46,7 +45,7 @@ def find_embedded(project_model: Path) -> Path:
 
 
 def find_runtime(project_model: Path) -> Path:
-    return find_executable(project_model, RUNTIME_PATTERN, "Runtime")
+    return find_executable(project_model, RUNTIME_PATTERN, RUNTIME_PATTERN)
 
 
 def replace_binary(binary: Path, dir_to: Path, pattern: str) -> None:

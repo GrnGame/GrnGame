@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: [arm64-v8a, x86_64]
+        abi: [ arm64-v8a, x86_64 ]
 
     runs-on: ubuntu-latest
     name: "android-${{ matrix.abi }} / release"
@@ -23,7 +23,7 @@ jobs:
           path: .cmake-cache/cpm
           key: cmake-cpm-android-${{ matrix.abi }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
 
-      #ndk is already installed 
+      #ndk is already installed
       - name: Configure
         env:
           CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
@@ -41,6 +41,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "android-${{ matrix.abi }}-release"
+          name: "runtime-android-${{ matrix.abi }}"
           path: build/runtime/release/libGrnGame.so
           if-no-files-found: error

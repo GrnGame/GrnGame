@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [arm64]
+        arch: [ arm64 ]
 
     runs-on: macos-15
     name: "ios-${{ matrix.arch }} / release"
@@ -52,6 +52,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "ios-${{ matrix.arch }}-release-embedtrue"
+          name: "runtime-ios-${{ matrix.arch }}"
           path: build/runtime/release/
           if-no-files-found: error

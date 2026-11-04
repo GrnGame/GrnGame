@@ -45,3 +45,6 @@ if __name__ == "__main__":
 
     for f in output_dir.glob("*.zip"):
         f.unlink()
+
+    for f in output_dir.glob("*.tar.gz"):
+        f.unlink()

@@ -71,6 +71,29 @@ if (GRNGAME_EMBED_ASSETS)
 endif ()
 set(GRNGAME_TAG "${GRNGAME_PLAT}-${GRNGAME_ARCH}-$<LOWER_CASE:$<CONFIG>>${GRNGAME_SUFFIX}")
 
+if (GRNGAME_EMBED_ASSETS)
+    set(GRNGAME_KIND "runtime")
+else ()
+    set(GRNGAME_KIND "desktop")
+endif ()
+
+set(_bin_plat "${GRNGAME_PLAT}")
+set(_bin_arch "${GRNGAME_ARCH}")
+if (_bin_plat STREQUAL "macosx")
+    set(_bin_plat "macos")
+elseif (_bin_plat STREQUAL "iphoneos")
+    set(_bin_plat "ios")
+endif ()
+if (_bin_arch STREQUAL "x86_64")
+    set(_bin_arch "x64")
+endif ()
+
+if (EMSCRIPTEN)
+    set(GRNGAME_BIN_NAME "${GRNGAME_KIND}-wasm")
+else ()
+    set(GRNGAME_BIN_NAME "${GRNGAME_KIND}-${_bin_plat}-${_bin_arch}")
+endif ()
+
 # global flags
 # todo trim down
 if (MSVC)
@@ -212,7 +235,7 @@ if (ANDROID)
 else ()
     add_executable(Runtime runtime/main.c)
     set_target_properties(Runtime PROPERTIES
-            OUTPUT_NAME "Runtime-${GRNGAME_TAG}"
+            OUTPUT_NAME "${GRNGAME_BIN_NAME}"
             RUNTIME_OUTPUT_DIRECTORY "${GRNGAME_OUTPUT_DIR}/runtime/$<LOWER_CASE:$<CONFIG>>" MACOSX_BUNDLE OFF)
     foreach (config IN LISTS CMAKE_CONFIGURATION_TYPES)
         string(TOUPPER "${config}" config_upper)
