@@ -176,7 +176,7 @@ def bundle_android(stage_dir: Path) -> None:
 
 def make_zip(platform: str, stage_dir: Path, tag: str) -> None:
     OUTPUT_DIR.mkdir(exist_ok=True)
-    archive = OUTPUT_DIR / f"{platform}-{tag}"
+    archive = OUTPUT_DIR / f"GrnGame-{platform}-{tag.lstrip("v")}"
     shutil.make_archive(str(archive), "zip", root_dir=stage_dir)
 
 

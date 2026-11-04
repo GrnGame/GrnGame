@@ -48,16 +48,12 @@ Builds release packages and archives.
 
 ### `/pack`
 
-Contains Xmake rules used to package the project and create distributable
+Contains cmake rules used to package the project and create distributable
 builds.
 
-### `/packages`
+### `/cmake`
 
-Contains custom and third-party Xmake package definitions.
-
-### `/xmake`
-
-Contains the Lua modules used by the main Xmake build.
+Contains the Lua modules used by the main cmake build.
 
 ### `/std`
 
