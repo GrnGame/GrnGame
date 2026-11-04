@@ -136,6 +136,10 @@ def bundle_desktop_binary(platform: str, stage_dir: Path) -> None:
 
 
 def resolve_runtime_source(artifact: Path) -> Path:
+    nested_v4 = artifact / "runtime" / "release"
+    if nested_v4.is_dir():
+        return nested_v4
+
     release = artifact / "release"
     if release.is_dir():
         return release

@@ -42,3 +42,6 @@ if __name__ == "__main__":
 
     for f in output_dir.glob("*.wixpdb"):
         f.unlink()
+
+    for f in output_dir.glob("*.zip"):
+        f.unlink()
