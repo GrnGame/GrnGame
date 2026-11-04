@@ -143,6 +143,23 @@ if (IS_DEV)
         add_library(tinydir INTERFACE)
         target_include_directories(tinydir INTERFACE "${tinydir_SOURCE_DIR}")
     endif ()
+
+
+    CPMAddPackage(
+            NAME dmon
+            GITHUB_REPOSITORY septag/dmon
+            GIT_TAG 98364a4d1964d603075e5e2657cfbc6c3496c9c1 # dmon have no release dont forget to update commit
+            DOWNLOAD_ONLY YES
+    )
+    if (dmon_ADDED AND NOT TARGET dmon)
+        add_library(dmon INTERFACE)
+        target_include_directories(dmon INTERFACE "${dmon_SOURCE_DIR}")
+        if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            target_link_libraries(dmon INTERFACE pthread)
+        elseif (APPLE)
+            target_link_libraries(dmon INTERFACE "-framework CoreFoundation" "-framework CoreServices")
+        endif ()
+    endif ()
 endif ()
 
 if (IS_DESKTOP)

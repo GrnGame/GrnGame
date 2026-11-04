@@ -6,7 +6,7 @@ on:
 jobs:
   auto-tests:
     runs-on: ubuntu-22.04
-    name: "auto tests / linux-x64 / embedded = false"
+    name: "auto tests / desktop / linux-x64"
 
     steps:
       - name: Checkout

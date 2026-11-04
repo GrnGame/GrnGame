@@ -12,7 +12,7 @@
 #include <string.h>
 
 #define DMON_IMPL
-#include "packages/d/dmon.h"
+#include "dmon.h"
 
 static void HotReloadInitQueue()
 {
