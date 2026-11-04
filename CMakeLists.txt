@@ -145,7 +145,7 @@ if (IS_DESKTOP)
 endif ()
 
 if (IS_DEV)
-    target_link_libraries(grngame PRIVATE tinydir)
+    target_link_libraries(grngame PRIVATE tinydir dmon)
     target_compile_definitions(grngame PUBLIC GRNGAME_DEV_MODE)
 endif ()
 
