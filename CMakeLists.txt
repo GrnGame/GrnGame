@@ -1,14 +1,10 @@
 cmake_minimum_required(VERSION 3.22)
 project(GrnGame C CXX)
 
-set(GRNGAME_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/build")
+#enable ctests
+enable_testing()
 
-if (CMAKE_SYSTEM_NAME STREQUAL "iOS")
-    #temporary bundle will be change soon
-    set(GRNGAME_BUNDLE_IDENTIFIER "com.grngame.game" CACHE STRING
-        "Bundle identifier used by generated iOS Xcode targets")
-    set(CMAKE_XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${GRNGAME_BUNDLE_IDENTIFIER}")
-endif ()
+set(GRNGAME_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/build")
 
 # embed_assets defaults to ON everywhere except desktop (forced on for wasm/android/iOS)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -17,11 +13,9 @@ else ()
     set(_grn_embed_default ON)
 endif ()
 
-option(GRNGAME_TRACY "Enable tracy profiler instrumentation" OFF)
 option(GRNGAME_EMBED_ASSETS "Generate embedded assets (forced on for wasm/android/iOS)" ${_grn_embed_default})
 option(GRNGAME_SOFTWARE_RENDERER "Use software renderer" OFF)
 option(GRNGAME_PIXEL_INT_POSITION "Use integer pixel positions" ON)
-option(GRNGAME_BIG_BUFFER "Use bigger buffers" OFF)
 option(GRNGAME_WASM_THREADS "Enable threads for wasm" OFF)
 
 set(CMAKE_C_STANDARD 17)
@@ -132,22 +126,12 @@ if (IS_DEV)
     target_compile_definitions(grngame PUBLIC GRNGAME_DEV_MODE)
 endif ()
 
-# handle features
-if (GRNGAME_TRACY)
-    target_link_libraries(grngame PUBLIC Tracy::TracyClient)
-    target_compile_definitions(grngame PUBLIC TRACY_ENABLE)
-endif ()
-
 if (GRNGAME_SOFTWARE_RENDERER)
     target_compile_definitions(grngame PUBLIC GRNGAME_SOFTWARE)
 endif ()
 
 if (GRNGAME_PIXEL_INT_POSITION)
     target_compile_definitions(grngame PUBLIC PIXEL_INT_ONLY)
-endif ()
-
-if (GRNGAME_BIG_BUFFER)
-    target_compile_definitions(grngame PUBLIC BUFFER_BIG_MEMORY_SPACE)
 endif ()
 
 if (GRNGAME_EMBED_ASSETS)
@@ -229,7 +213,7 @@ else ()
     add_executable(Runtime runtime/main.c)
     set_target_properties(Runtime PROPERTIES
             OUTPUT_NAME "Runtime-${GRNGAME_TAG}"
-            RUNTIME_OUTPUT_DIRECTORY "${GRNGAME_OUTPUT_DIR}/runtime/$<LOWER_CASE:$<CONFIG>>")
+            RUNTIME_OUTPUT_DIRECTORY "${GRNGAME_OUTPUT_DIR}/runtime/$<LOWER_CASE:$<CONFIG>>" MACOSX_BUNDLE OFF)
     foreach (config IN LISTS CMAKE_CONFIGURATION_TYPES)
         string(TOUPPER "${config}" config_upper)
         string(TOLOWER "${config}" config_lower)
@@ -242,6 +226,6 @@ target_link_libraries(Runtime PRIVATE grngame)
 # tests
 include(cmake/tests.cmake)
 grn_setup_tests(
-        TARGET_TESTS json pad_event engine_work sound version draw_text
-        AUTO_TESTS   engine_work
+        TARGET_TESTS json pad_event sound version draw_text
+        AUTO_TESTS engine_work
 )

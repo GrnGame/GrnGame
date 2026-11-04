@@ -48,89 +48,67 @@ endfunction()
 
 function(grn_add_test_target name)
     set(tgt "tests_${name}")
-    
-    #test only on desktop 
-    if (TARGET ${tgt}_prepare OR NOT IS_DESKTOP)
+
+    # test only on desktop
+    if (NOT IS_DESKTOP)
         message(STATUS "You need to be on desktop to run tests!")
         return()
     endif ()
 
     set(test_src_dir "${CMAKE_SOURCE_DIR}/tests/${name}")
 
-    set(deps Runtime)
-    if (TARGET Embedded)
-        list(APPEND deps Embedded)
-    endif ()
-
     grn_pipeline_prepare_command(${name} prepare_command)
     grn_pipeline_clean_command(${name} clean_command)
 
+    #ctest moove files
+    add_test(NAME ${tgt}_prepare COMMAND ${prepare_command})
+    set_tests_properties(${tgt}_prepare PROPERTIES FIXTURES_SETUP "fixture_${name}")
 
-    add_custom_target(${tgt}_prepare
-            COMMAND ${prepare_command}
-            COMMENT "Preparing tests/${name}"
-            VERBATIM)
-    add_dependencies(${tgt}_prepare ${deps})
+    #ctest run
+    add_test(NAME ${tgt}_run
+            COMMAND "${test_src_dir}/$<TARGET_FILE_NAME:Runtime>"
+            WORKING_DIRECTORY "${test_src_dir}")
+    set_tests_properties(${tgt}_run PROPERTIES FIXTURES_REQUIRED "fixture_${name}")
 
-    add_custom_target(${tgt}_run
-            COMMAND ${CMAKE_COMMAND} -E chdir "${test_src_dir}" "${test_src_dir}/$<TARGET_FILE_NAME:Runtime>"
-            COMMENT "Running test: ${name}"
-            VERBATIM)
-    
-    add_dependencies(${tgt}_run ${tgt}_prepare)
-
+    #ctest cleanup
     if (clean_command)
-        add_custom_target(${tgt}_clean
-                COMMAND ${clean_command}
-                COMMENT "Cleaning tests/${name}"
-                VERBATIM)
-        add_dependencies(${tgt}_clean ${tgt}_run)
-        
-        add_custom_target(${tgt} ALL DEPENDS ${tgt}_clean)
-        set_target_properties(${tgt} PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    else()
-        add_custom_target(${tgt} ALL DEPENDS ${tgt}_run)
-        set_target_properties(${tgt} PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    endif()
-
-endfunction()
-
-function(grn_add_run_group_target group)
-    set(tests ${ARGN})
-    set(test_targets)
-
-    foreach (name IN LISTS tests)
-        list(APPEND test_targets tests_${name})
-    endforeach ()
-
-    if (test_targets)
-        add_custom_target(${group} DEPENDS ${test_targets})
-    else ()
-        add_custom_target(${group} COMMAND ${CMAKE_COMMAND} -E echo "No tests in ${group}")
+        add_test(NAME ${tgt}_clean COMMAND ${clean_command})
+        set_tests_properties(${tgt}_clean PROPERTIES FIXTURES_CLEANUP "fixture_${name}")
     endif ()
+
 endfunction()
 
 function(grn_setup_tests)
     cmake_parse_arguments(ARG "" "" "TARGET_TESTS;AUTO_TESTS" ${ARGN})
 
-    foreach (name IN LISTS ARG_TARGET_TESTS ARG_AUTO_TESTS)
+    set(deps Runtime)
+    if (TARGET Embedded)
+        list(APPEND deps Embedded)
+    endif ()
+
+    if (NOT TARGET build_test_deps)
+        add_custom_target(build_test_deps DEPENDS ${deps})
+    endif ()
+
+    set(all_tests ${ARG_TARGET_TESTS} ${ARG_AUTO_TESTS})
+    if (all_tests)
+        list(REMOVE_DUPLICATES all_tests)
+    endif ()
+
+    foreach (name IN LISTS all_tests)
         grn_add_test_target(${name})
-    endforeach ()
 
-    add_custom_target(tests)
-    foreach (name IN LISTS ARG_TARGET_TESTS)
-        if (TARGET tests_${name})
-            add_dependencies(tests tests_${name})
+        set(test_labels "")
+        if ("${name}" IN_LIST ARG_TARGET_TESTS)
+            list(APPEND test_labels "target_tests")
         endif ()
-    endforeach ()
-
-    add_custom_target(auto_tests)
-    foreach (name IN LISTS ARG_AUTO_TESTS)
-        if (TARGET tests_${name})
-            add_dependencies(auto_tests tests_${name})
+        if ("${name}" IN_LIST ARG_AUTO_TESTS)
+            list(APPEND test_labels "auto_tests")
         endif ()
+
+        set_tests_properties(tests_${name}_run PROPERTIES LABELS "${test_labels}")
     endforeach ()
 
-    grn_add_run_group_target(run_tests      ${ARG_TARGET_TESTS})
-    grn_add_run_group_target(run_auto_tests ${ARG_AUTO_TESTS})
+    add_custom_target(run_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L "target_tests|auto_tests" DEPENDS build_test_deps)
+    add_custom_target(run_auto_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L "auto_tests" DEPENDS build_test_deps)
 endfunction()

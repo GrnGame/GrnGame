@@ -7,15 +7,6 @@ else ()
     set(_grn_sdl_pthreads ON)
 endif ()
 
-if (GRNGAME_TRACY)
-    CPMAddPackage(
-            NAME tracy
-            URL https://github.com/wolfpld/tracy/archive/refs/tags/v0.11.1.tar.gz
-            OPTIONS "TRACY_ENABLE ON" "TRACY_ON_DEMAND ON"
-    )
-endif ()
-
-
 CPMAddPackage(
         NAME SDL3
         URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.12/SDL3-3.4.12.tar.gz

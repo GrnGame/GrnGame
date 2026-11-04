@@ -29,15 +29,16 @@ PLATFORMS = [
     "macos-x64",
     "macos-arm64",
     "windows-x64",
-    "windows-arm64",
-    "ios-arm64",
-    "wasm"
+    "windows-arm64"
 ]
 
 DESKTOP_ARTIFACTS = {platform: f"{platform}-release-embedfalse" for platform in PLATFORMS}
 
 RUNTIME_ARTIFACTS = [
     *(f"{platform}-release-embedtrue" for platform in PLATFORMS),
+    "ios-arm64-release-embedtrue",
+    "wasm-release-embedtrue"
+
 ]
 
 ANDROID_ARTIFACTS = {
@@ -105,7 +106,7 @@ def bundle_project_model(stage_dir: Path) -> None:
     copy_folder(STD_DIR, model_dir / "std")
 
 
-def bundle_logo(stage_dir: Path)-> None:
+def bundle_logo(stage_dir: Path) -> None:
     copy_file(LOGO_FILE, runtime_dir(stage_dir))
 
 
@@ -116,6 +117,7 @@ def bundle_setup_scripts(stage_dir: Path) -> None:
 
 def bundle_server_script(stage_dir: Path) -> None:
     copy_file(SERVER_SCRIPT, runtime_dir(stage_dir))
+
 
 def bundle_server_index(stage_dir: Path) -> None:
     copy_file(INDEX, runtime_dir(stage_dir))
