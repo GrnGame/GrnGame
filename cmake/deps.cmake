@@ -180,7 +180,7 @@ if (angelscript_ADDED AND NOT TARGET angelscript)
 
     set(_as_asm "")
 
-    if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64" OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR IOS))
+    if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64" OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64"))
         set(_as_asm as_callfunc_arm64_xcode.S)
     elseif (EMSCRIPTEN)
         #no asm files
