@@ -79,22 +79,6 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-        NAME wren
-        URL https://github.com/Baptistegrn/wren/archive/d18db2cffa5ba76e482d980c3f7bab143c077c2b.tar.gz
-        DOWNLOAD_ONLY YES
-)
-if (wren_ADDED AND NOT TARGET wren)
-    file(GLOB _wren_src
-            "${wren_SOURCE_DIR}/src/vm/*.c"
-            "${wren_SOURCE_DIR}/src/optional/*.c")
-    add_library(wren STATIC ${_wren_src})
-    target_include_directories(wren PUBLIC
-            "${wren_SOURCE_DIR}/src/include"
-            "${wren_SOURCE_DIR}/src/vm"
-            "${wren_SOURCE_DIR}/src/optional")
-endif ()
-
-CPMAddPackage(
         NAME highway
         URL https://github.com/google/highway/archive/refs/tags/1.4.0.tar.gz
         OPTIONS

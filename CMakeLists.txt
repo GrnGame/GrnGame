@@ -18,9 +18,7 @@ option(GRNGAME_SOFTWARE_RENDERER "Use software renderer" OFF)
 option(GRNGAME_PIXEL_INT_POSITION "Use integer pixel positions" ON)
 option(GRNGAME_WASM_THREADS "Enable threads for wasm" OFF)
 
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON) # lto on release
@@ -239,7 +237,6 @@ target_link_libraries(grngame PUBLIC
         SDL3_mixer::SDL3_mixer-static
         klib
         cglm
-        wren
         freetype
         sqlite3
         hwy
