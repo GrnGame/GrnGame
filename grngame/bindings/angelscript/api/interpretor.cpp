@@ -25,8 +25,6 @@ bool InterpretFromMemory(const char *filename)
     }
 
     auto *engine = static_cast<asIScriptEngine *>(g_app.angel_manager.engine);
-
-    // 1. On utilise le Builder ici !
     CScriptBuilder builder;
     builder.SetIncludeCallback(LoadModuleFnFromMemory, nullptr);
 
@@ -38,7 +36,6 @@ bool InterpretFromMemory(const char *filename)
         return false;
     }
 
-    // 2. On ajoute la section via le builder
     result = builder.AddSectionFromMemory(filename, static_cast<const char *>(asset->data), asset->size);
     if (result < 0)
     {
@@ -46,8 +43,6 @@ bool InterpretFromMemory(const char *filename)
         free(module_name);
         return false;
     }
-
-    // 3. On build via le builder
     result = builder.BuildModule();
     if (result < 0)
     {
@@ -77,8 +72,6 @@ bool Interpret(const char *filename)
     }
 
     auto *engine = static_cast<asIScriptEngine *>(g_app.angel_manager.engine);
-
-    // 1. On utilise le Builder ici !
     CScriptBuilder builder;
     builder.SetIncludeCallback(LoadModuleFn, nullptr);
 
@@ -91,7 +84,6 @@ bool Interpret(const char *filename)
         return false;
     }
 
-    // 2. On passe la taille exacte au builder pour éviter les bugs de lecture
     result = builder.AddSectionFromMemory(filename, file_content, file_size);
     free(file_content);
 
@@ -102,7 +94,6 @@ bool Interpret(const char *filename)
         return false;
     }
 
-    // 3. On build via le builder
     result = builder.BuildModule();
     if (result < 0)
     {
@@ -149,12 +140,9 @@ bool AngelInit(const char *filename)
         LOG_ERROR("AngelScript : impossible to save engine stop function");
     engine->SetDefaultNamespace("");
 
-    // Message callback globale au moteur
     engine->SetMessageCallback(asFUNCTION(MessageCallback), nullptr, asCALL_CDECL);
 
     g_app.angel_manager.engine = reinterpret_cast<void *>(engine);
-
-    // Plus de trace de CScriptBuilder ici, il est géré dans Interpret()
     return Interpret(filename);
 }
 
@@ -185,11 +173,9 @@ bool AngelInitFromMemory(const char *filename)
 
     g_app.angel_manager.engine = reinterpret_cast<void *>(engine);
 
-    // Pareil, le Builder est géré dans InterpretFromMemory()
     return InterpretFromMemory(filename);
 }
 
-// ... AngelFree et AngelReload inchangés ...
 bool AngelFree()
 {
     FreeCallbacks();

@@ -13,9 +13,9 @@ typedef enum EmbedKind
 } EmbedKind;
 
 static const char *const EMBED_TABLE_NAMES[EMBED_KIND_COUNT] = {
-    [EMBED_KIND_ASSET] = "assets",
-    [EMBED_KIND_DATA] = "data",
-    [EMBED_KIND_SCRIPT] = "scripts",
+    "assets",
+    "data",
+    "scripts",
 };
 
 typedef struct EmbedContext
