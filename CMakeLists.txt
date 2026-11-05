@@ -115,7 +115,10 @@ if (IS_DEV)
 endif ()
 
 # grngame library
-file(GLOB_RECURSE GRNGAME_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/grngame/*.c")
+file(GLOB_RECURSE GRNGAME_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/grngame/*.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/grngame/*.cpp")
+
 # wasm doesn't like a double main declaration (segfault)
 list(REMOVE_ITEM GRNGAME_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/grngame/embedded/embedded_file_generator_main.c")
 add_library(grngame STATIC ${GRNGAME_SOURCES})
@@ -137,11 +140,7 @@ target_link_libraries(grngame PUBLIC
         hwy
         cjson
         yyjson
-        libDaScript
-)
-
-target_include_directories(grngame PUBLIC
-        "${daScript_SOURCE_DIR}/include"
+        angelscript
 )
 
 if (IS_DESKTOP)

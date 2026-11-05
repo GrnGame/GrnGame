@@ -11,3 +11,4 @@ benchmark/assets
 benchmark/test.db
 __pycache__
 cmake-build-debug
+valgrind.xml

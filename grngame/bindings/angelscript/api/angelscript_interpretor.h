@@ -1,6 +1,6 @@
 #pragma once
 #include "../../../utils/c_cpp.h"
-#include "grngame/math/types.h"
+#include "angelscript.h"
 
 BEGIN_DECLARATIONS
 

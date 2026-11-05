@@ -171,46 +171,44 @@ if (IS_DESKTOP)
 endif ()
 
 
-    CPMAddPackage(
-            NAME daScript
-            GITHUB_REPOSITORY BorisBat/daScript
-            GIT_TAG v0.6.5
-            #no tests
-            EXCLUDE_FROM_ALL YES
-            SYSTEM YES
+CPMAddPackage(
+        NAME angelscript
+        URL https://github.com/anjo76/angelscript/archive/a4a4eb80eb815d44bf0bca479913c735b8ee268a.tar.gz
+        DOWNLOAD_ONLY YES
+)
+if (angelscript_ADDED AND NOT TARGET angelscript)
+    set(_sdk "${angelscript_SOURCE_DIR}/sdk")
+    file(GLOB _src "${_sdk}/angelscript/source/*.cpp")
+    add_library(angelscript STATIC ${_src}
+            "${_sdk}/add_on/scriptany/scriptany.cpp"
+            "${_sdk}/add_on/scriptarray/scriptarray.cpp"
+            "${_sdk}/add_on/scriptdictionary/scriptdictionary.cpp"
+            "${_sdk}/add_on/scriptstdstring/scriptstdstring.cpp"
+            "${_sdk}/add_on/scriptstdstring/scriptstdstring_utils.cpp")
 
-            OPTIONS
-            "CMAKE_BUILD_TYPE Release"
-            "BUILD_SHARED_LIBS OFF"
-            "BUILD_TESTING OFF"
-            "DAS_ENABLE_PIC ON"
+    target_include_directories(angelscript PUBLIC "${_sdk}/angelscript/include" "${_sdk}/add_on")
+    set_target_properties(angelscript PROPERTIES POSITION_INDEPENDENT_CODE ON) # android shared lib
+    if (MSVC)
+        target_compile_definitions(angelscript PRIVATE _CRT_SECURE_NO_WARNINGS)
+    endif ()
 
-            #no tierces libs
-            "DAS_SQLITE_DISABLED ON"
-            "DAS_CRYPTO_DISABLED ON"
-            "DAS_PUGIXML_DISABLED ON"
-            "DAS_STBIMAGE_DISABLED ON"
-            "DAS_MESHOPTIMIZER_DISABLED ON"
-
-            "DAS_HV_DISABLED ON"
-            "DAS_GLFW_DISABLED ON"
-            "DAS_IMGUI_DISABLED ON"
-            "DAS_VULKAN_DISABLED ON"
-            "DAS_AUDIO_DISABLED ON"
-            "DAS_STDDLG_DISABLED ON"
-            "DAS_CLIPBOARD_DISABLED ON"
-
-            "DAS_FLEX_BISON_DISABLED ON"
-            "DAS_CLANG_BIND_DISABLED ON"
-            "DAS_LLVM_DISABLED ON"
-            "DAS_SMT_DISABLED ON"
-            "DAS_CUDA_DISABLED ON"
-            "DAS_METAL_DISABLED ON"
-            "DAS_ACCELERATE_DISABLED ON"
-            "DAS_TOOLS_DISABLED OFF"
-            "DAS_TREE_SITTER_DISABLED ON"
-            "DAS_TERMINAL_DISABLED ON"
-            "DAS_AOT_EXAMPLES_DISABLED ON"
-            "DAS_TUTORIAL_DISABLED ON"
-            "DAS_TESTS_DISABLED ON"
-    )
+    set(_as_asm "")
+    if (EMSCRIPTEN)
+    elseif (MSVC AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(AMD64|x86_64|x64)$")
+        enable_language(ASM_MASM)
+        set(_as_asm as_callfunc_x64_msvc_asm.asm)
+    elseif (NOT MSVC AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
+        enable_language(ASM)
+        set(_as_asm as_callfunc_arm64_gcc.S)
+        if (APPLE)
+            set(_as_asm as_callfunc_arm64_xcode.S)
+        endif ()
+    elseif (NOT APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
+        enable_language(ASM)
+        set(_as_asm as_callfunc_arm_gcc.S)
+        set_source_files_properties("${_as}/angelscript/source/${_as_asm}" PROPERTIES COMPILE_FLAGS "-Wa,-mimplicit-it=always")
+    endif ()
+    if (_as_asm)
+        target_sources(angelscript PRIVATE "${_as}/angelscript/source/${_as_asm}")
+    endif ()
+endif ()
