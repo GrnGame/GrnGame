@@ -180,7 +180,19 @@ if (angelscript_ADDED AND NOT TARGET angelscript)
 
     set(_as_asm "")
 
-    if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64" OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64"))
+    # Détection arm64 pour Apple (macOS Apple Silicon + iOS)
+    set(_as_apple_arm64 OFF)
+    if (APPLE)
+        if (CMAKE_SYSTEM_NAME STREQUAL "iOS"
+                OR CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64"
+                OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64"
+                OR (NOT CMAKE_OSX_ARCHITECTURES AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64"))
+            set(_as_apple_arm64 ON)
+        endif ()
+    endif ()
+
+    if (_as_apple_arm64)
+        enable_language(ASM)
         set(_as_asm as_callfunc_arm64_xcode.S)
     elseif (EMSCRIPTEN)
         #no asm files
@@ -197,6 +209,10 @@ if (angelscript_ADDED AND NOT TARGET angelscript)
     endif ()
 
     if (_as_asm)
-        target_sources(angelscript PRIVATE "${_sdk}/angelscript/source/${_as_asm}")
+        set(_as_asm_path "${_sdk}/angelscript/source/${_as_asm}")
+        if (_as_apple_arm64)
+            set_source_files_properties("${_as_asm_path}" PROPERTIES LANGUAGE ASM)
+        endif ()
+        target_sources(angelscript PRIVATE "${_as_asm_path}")
     endif ()
 endif ()
