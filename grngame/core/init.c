@@ -352,7 +352,7 @@ void InitializeScripts(void)
     {
     }
 #else
-    if (!BindingsInitFromMemory("main.as"))
+    if (!BindingsInitFromMemory("scripts/main.as"))
     {
         HandleBindingsFailure();
         return;
