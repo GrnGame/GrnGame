@@ -52,3 +52,12 @@
 #ifndef strtok_r
 #define strtok_r SDL_strtok_r
 #endif
+
+char *AddEndOfString(char *data, uint32 size)
+{
+    uint32 sz = size;
+    char *buf = malloc(sz + 1);
+    memcpy(buf, data, sz);
+    buf[sz] = '\0';
+    return buf;
+}

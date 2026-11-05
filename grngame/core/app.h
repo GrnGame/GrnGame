@@ -4,6 +4,7 @@
 #include "SDL3/SDL_pixels.h"
 #include "grngame/assets/asset_manager.h"
 #include "grngame/audio/sound_manager.h"
+#include "grngame/bindings/angelscript/api/interpretor.h"
 #include "grngame/bindings/wren/wren_api.h"
 #include "grngame/core/text.h"
 #include "grngame/data/json.h"
@@ -73,6 +74,7 @@ typedef struct
     InputManager input_manager;
     JsonManager json_manager;
     WrenManager wren_manager;
+    AngelManager angel_manager;
     EmbeddedFileManager embedded_file_manager;
     PaletteManager palette_manager;
     ThreadManager thread_manager;
