@@ -127,8 +127,16 @@ function(grn_setup_tests)
         string(APPEND content "  [==[${c}]==]\n")
     endforeach ()
     string(APPEND content ")\n")
+    
+    file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/CTestCustom-$<CONFIG>.cmake" CONTENT "${content}")
 
-    file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/CTestCustom.cmake" CONTENT "${content}")
+    if (CMAKE_CONFIGURATION_TYPES)
+        set(ctest_config [=[$ENV{CMAKE_CONFIG_TYPE}]=])
+    else ()
+        set(ctest_config "${CMAKE_BUILD_TYPE}")
+    endif ()
+    file(WRITE "${CMAKE_BINARY_DIR}/CTestCustom.cmake"
+            "include(\"${CMAKE_BINARY_DIR}/CTestCustom-${ctest_config}.cmake\" OPTIONAL)\n")
 
     add_custom_target(run_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L "target_tests|auto_tests" DEPENDS build_test_deps)
     add_custom_target(run_auto_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L "auto_tests" DEPENDS build_test_deps)
