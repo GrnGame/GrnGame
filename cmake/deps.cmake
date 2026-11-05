@@ -184,7 +184,9 @@ if (angelscript_ADDED AND NOT TARGET angelscript)
             "${_sdk}/add_on/scriptarray/scriptarray.cpp"
             "${_sdk}/add_on/scriptdictionary/scriptdictionary.cpp"
             "${_sdk}/add_on/scriptstdstring/scriptstdstring.cpp"
-            "${_sdk}/add_on/scriptstdstring/scriptstdstring_utils.cpp")
+            "${_sdk}/add_on/scriptstdstring/scriptstdstring_utils.cpp"
+            "${_sdk}/add_on/scriptbuilder/scriptbuilder.cpp"
+    )
 
     target_include_directories(angelscript PUBLIC "${_sdk}/angelscript/include" "${_sdk}/add_on")
     set_target_properties(angelscript PROPERTIES POSITION_INDEPENDENT_CODE ON) # android shared lib

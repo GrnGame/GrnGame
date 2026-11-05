@@ -1,10 +1,17 @@
 #pragma once
 #include "../../../utils/c_cpp.h"
-#include <angelscript.h>
+#include "grngame/math/types.h"
+
+#ifdef __cplusplus
+class CScriptBuilder;
+typedef CScriptBuilder *BuilderPtr;
+#else
+typedef void *BuilderPtr;
+#endif
 
 BEGIN_DECLARATIONS
 
-bool LoadModuleFn(const char *moduleName);
-bool LoadModuleFnFromMemory(const char *moduleName);
+int32 LoadModuleFn(const char *include, const char *from, BuilderPtr builder, void *userParam);
+int32 LoadModuleFnFromMemory(const char *include, const char *from, BuilderPtr builder, void *userParam);
 
 END_DECLARATIONS

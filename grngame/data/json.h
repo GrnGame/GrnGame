@@ -54,6 +54,3 @@ bool JsonCreateFromMemory(const char *key, const char *text);
 bool JsonExist(const char *key);
 
 bool JsonExistFromMemory(const char *key);
-
-/* Used by Wren. */
-bool WriteInJsonObject(const char *key, cJSON *object);

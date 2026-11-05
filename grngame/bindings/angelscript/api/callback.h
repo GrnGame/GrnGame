@@ -3,8 +3,6 @@
 #include "../../../utils/c_cpp.h"
 #include "grngame/math/types.h"
 
-#include <angelscript.h>
-
 typedef enum
 {
     CB_ARG_NUM,
@@ -22,6 +20,8 @@ typedef struct
     } as;
 } CallbackArg;
 
+#define MAX_CALLBACKS 10
+
 #define PAD_CONNECT 0
 #define PAD_DISCONNECT 1
 #define JSON_SAVE 2
@@ -29,15 +29,20 @@ typedef struct
 
 BEGIN_DECLARATIONS
 
-void MessageCallback(const asSMessageInfo *msg, void *param);
+struct asSMessageInfo;
 
-void RegisterCallback(uint16 name);
-void CallCallBack(CallbackArg *args, uint16 name);
+void MessageCallback(const struct asSMessageInfo *msg, void *param);
 
+bool RegisterCallback(uint16 name, const char *funcDecl);
+bool CallCallBack(CallbackArg *args, uint16 name);
+
+void AngelCacheLifecycleFunctions(const char *moduleName);
 bool AngelCallOnStart();
 bool AngelCallOnUpdate(float32 delta);
 bool AngelCallOnFixedUpdate(float32 delta);
 bool AngelCallOnRender();
 bool AngelCallOnDestroy();
+
+void FreeCallbacks();
 
 END_DECLARATIONS

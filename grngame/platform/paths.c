@@ -59,7 +59,7 @@ bool FileIsLoadableScript(const char *file)
         return false;
 
     // null terminated so we can loop on it in the following loop
-    static const char *exts[] = {"wren", "das", NULL};
+    static const char *exts[] = {"as", NULL};
 
     // exts[i] will be false when it will reach NULL
     for (int32 i = 0; exts[i]; ++i)

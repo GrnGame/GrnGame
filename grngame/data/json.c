@@ -2,8 +2,7 @@
 #include "file.h"
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/assets/load.h"
-#include "grngame/bindings/wren/wren_api.h"
-#include "grngame/bindings/wren/wren_event.h"
+#include "grngame/bindings/angelscript/api/callback.h"
 #include "grngame/core/app.h"
 #include "grngame/dev/logging.h"
 #include "grngame/embedded/embedded_file_generator.h"
@@ -15,6 +14,7 @@
 #include "grngame/utils/string_compat.h"
 #include "grngame/utils/time.h"
 #include "kvec.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -298,27 +298,7 @@ void JsonSaveObjects(float64 budget)
 
         const char *key = kh_key(manager, it);
         CallbackArg args[1] = {{.type = CB_ARG_STRING, .as.string = key}};
-        CallWrenCallback(JSON_SAVE, args, 1);
-
+        CallCallBack(args, JSON_SAVE);
         json->last_save_time = current_time_sec;
     }
-}
-
-bool WriteInJsonObject(const char *key, cJSON *object)
-{
-#ifndef GRNGAME_WASM
-    JsonObject *entry = JsonObjectGet(key);
-    if (UNLIKELY(entry == NULL))
-    {
-        LOG_ERROR("Cant write in json object because %s doesnt exist.did you forget to open it?");
-        return false;
-    }
-    cJSON_Delete(entry->json);
-    entry->json = NULL;
-    entry->json = object;
-    return true;
-#else
-    LOG_WARNING("Json isnt supported on the web");
-    return false;
-#endif
 }

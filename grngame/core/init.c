@@ -2,8 +2,8 @@
 #include "data.h"
 #include "grngame/assets/asset_manager.h"
 #include "grngame/assets/embedded_file_manager.h"
-#include "grngame/bindings/wren/wren_api.h"
-#include "grngame/bindings/wren/wren_event.h"
+#include "grngame/bindings/angelscript/api/callback.h"
+#include "grngame/bindings/angelscript/api/interpretor.h"
 #include "grngame/core/app.h"
 #include "grngame/core/window.h"
 #include "grngame/data/file.h"
@@ -266,9 +266,9 @@ static void LoadControllerMappings(void)
     LOG_INFO("Loaded %d controller mappings", mapped);
 }
 
-static void HandleWrenFailure(void)
+static void HandleAngelFailure(void)
 {
-    SDL_Color red = {255, 0, 0, 255};
+    const SDL_Color red = {255, 0, 0, 255};
     RendererSetColor(red.r, red.g, red.b, red.a);
     SetTaskBarIconErrorProgress(100.0);
 }
@@ -329,21 +329,21 @@ void InitializeAssets(void)
 void InitializeScripts(void)
 {
 #ifndef GRNGAME_EMBED_ASSETS
-    if (!WrenInit())
+    if (!AngelInit("scripts/main.as"))
     {
-        HandleWrenFailure();
+        HandleAngelFailure();
         return;
     }
 
-    LOG_INFO("Wren runtime initialized successfully with script 'main.wren'");
+    LOG_INFO("Angel runtime initialized successfully with script 'main.as'");
 #else
-    if (!WrenInitFromMemory())
+    if (!AngelInitFromMemory("main.as"))
     {
-        HandleWrenFailure();
+        HandleAngelFailure();
         return;
     }
 
-    LOG_INFO("Wren runtime initialized successfully with script 'main.wren'");
+    LOG_INFO("Angel runtime initialized successfully with script 'main.as'");
 #endif
 }
 
@@ -445,7 +445,7 @@ InitResult InitAll(void)
             {.type = CB_ARG_STRING, .as.string = g_app.info.version},
         };
 
-        CallWrenCallback(GAME_DATA_NEW_VERSION, args, 2);
+        CallCallBack(args, GAME_DATA_NEW_VERSION);
     }
 
     HotReloadInit(PathFromExecutableDirectory("."));

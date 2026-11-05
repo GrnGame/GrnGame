@@ -5,7 +5,6 @@
 #include "grngame/assets/asset_manager.h"
 #include "grngame/audio/sound_manager.h"
 #include "grngame/bindings/angelscript/api/interpretor.h"
-#include "grngame/bindings/wren/wren_api.h"
 #include "grngame/core/text.h"
 #include "grngame/data/json.h"
 #include "grngame/data/sqlite.h"
@@ -20,8 +19,6 @@
 #include "thread.h"
 
 BEGIN_DECLARATIONS
-
-#define GARBAGE_COLLECTOR_TIME_TO_REFRESH 180
 
 #define FIXED_UPDATE_LOOP 30.0f
 
@@ -73,7 +70,6 @@ typedef struct
     AssetManager asset_manager;
     InputManager input_manager;
     JsonManager json_manager;
-    WrenManager wren_manager;
     AngelManager angel_manager;
     EmbeddedFileManager embedded_file_manager;
     PaletteManager palette_manager;

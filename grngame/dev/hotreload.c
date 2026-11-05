@@ -1,7 +1,6 @@
 #if defined(GRNGAME_HOT_RELOAD_ENABLE)
 #include "grngame/dev/hotreload.h"
 #include "grngame/assets/load.h"
-#include "grngame/bindings/wren/wren_api.h"
 #include "grngame/core/app.h"
 #include "grngame/dev/logging.h"
 #include "grngame/platform/paths.h"
@@ -97,7 +96,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected new script '%s'", cpath);
-                if (!(ReloadWrenScript()))
+                if (!(AngelReload("scripts/main.as")))
                     LOG_WARNING("Failed to reload script '%s'", cpath);
             }
 
@@ -131,7 +130,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected deleted script '%s'", cpath);
-                if (!ReloadWrenScript())
+                if (!AngelReload("scripts/main.as"))
                     LOG_WARNING("Failed to reload script '%s'", cpath);
             }
 
@@ -167,7 +166,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected modified script '%s'", cpath);
-                if (!ReloadWrenScript())
+                if (!AngelReload("scripts/main.as"))
                     LOG_WARNING("Failed to reload script '%s'", cpath);
             }
             // we can reload the config
@@ -233,7 +232,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected moved script '%s'", cpath);
-                if (!ReloadWrenScript())
+                if (!AngelReload("scripts/main.as"))
                     LOG_WARNING("Failed to reload script '%s'", cpath);
             }
 

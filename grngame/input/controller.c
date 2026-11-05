@@ -3,7 +3,7 @@
 #include "SDL3/SDL_gamepad.h"
 #include "SDL3/SDL_joystick.h"
 #include "SDL3/SDL_stdinc.h"
-#include "grngame/bindings/wren/wren_event.h"
+#include "grngame/bindings/angelscript/api/callback.h"
 #include "grngame/dev/logging.h"
 #include "grngame/math/math.h"
 #include "grngame/utils/attributes.h"
@@ -88,7 +88,7 @@ bool ControllerOpen(SDL_JoystickID id, int16 index)
 
     CallbackArg args[1] = {{.type = CB_ARG_NUM, .as.num = index}};
 
-    CallWrenCallback(PAD_CONNECT, args, 1);
+    CallCallBack(args, PAD_CONNECT);
 
     if (UNLIKELY(!SDL_GamepadHasAxis(gp, SDL_GAMEPAD_AXIS_LEFTX) || !SDL_GamepadHasAxis(gp, SDL_GAMEPAD_AXIS_LEFTY)))
         LOG_WARNING("Gamepad %d (%s) lacks a left analog stick.", index, name);
@@ -125,7 +125,7 @@ void ControllerClose(int16 index)
         c->id = 0;
         c->name = NULL;
         CallbackArg args[1] = {{.type = CB_ARG_NUM, .as.num = index}};
-        CallWrenCallback(PAD_DISCONNECT, args, 1);
+        CallCallBack(args, PAD_DISCONNECT);
     }
 }
 

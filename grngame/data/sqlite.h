@@ -2,7 +2,6 @@
 
 #include "grngame/math/types.h"
 #include "grngame/utils/c_cpp.h"
-#include "wren.h"
 #include <kvec.h>
 #include <sqlite3.h>
 #include <stdbool.h>
@@ -30,7 +29,7 @@ typedef struct
         {
             void *data;
             uint32 size;
-        } blob; // not exposed to Wren
+        } blob;
     } value;
 } DbValue;
 

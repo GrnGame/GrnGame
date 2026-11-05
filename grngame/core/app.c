@@ -4,9 +4,8 @@
 #include "SDL3/SDL_timer.h"
 #include "SDL3/SDL_video.h"
 #include "grngame/audio/sound.h"
-#include "grngame/bindings/wren/wren_api.h"
-
 #include "grngame/audio/sound_info.h"
+#include "grngame/bindings/angelscript/api/callback.h"
 #include "grngame/core/app.h"
 #include "grngame/core/init.h"
 #include "grngame/core/text.h"
@@ -44,7 +43,6 @@ static HOT void MainLoopIteration(void *arg);
 static COLD void MainLoop(void);
 static COLD void EnsureInitSucceeded(InitResult res);
 
-static HOT void RunGarbageCollector(void);
 static HOT void RenderFrame(void);
 static COLD void InitializeLoopState(void);
 static COLD void CleanupAppResources(void);
@@ -89,8 +87,8 @@ static COLD void EnsureInitSucceeded(const InitResult res)
 
 COLD void ShutdownScripts(void)
 {
-    WrenCallOnDestroy();
-    WrenFree();
+    AngelCallOnDestroy();
+    // AngelFree();
 }
 
 void EngineStart()
@@ -100,7 +98,7 @@ void EngineStart()
 
     const InitResult res = InitAll();
     EnsureInitSucceeded(res);
-
+    AngelCallOnStart();
     MainLoop();
 }
 
@@ -179,12 +177,6 @@ static COLD void CleanupAppResources(void)
     g_app = (App){0};
 }
 
-static HOT void RunGarbageCollector(void)
-{
-    if (UNLIKELY(g_app.info.frame_count % ((uint32)g_app.info.fps * GARBAGE_COLLECTOR_TIME_TO_REFRESH) == 0))
-        wrenCollectGarbage(g_app.wren_manager.vm);
-}
-
 static HOT void RenderFrame(void)
 {
     if (g_app.info.window_occlusion_culled)
@@ -193,7 +185,7 @@ static HOT void RenderFrame(void)
     PROFILE_ZONE_START(render_zone, "Render");
 
     RendererClear(&g_app.renderer);
-    WrenCallOnRender();
+    AngelCallOnRender();
     ApplyBlackStripes();
     RendererPresent(&g_app.renderer);
 
@@ -228,29 +220,20 @@ static HOT void MainLoopIteration(void *arg)
     if (!s_is_running)
         return;
 
-    PROFILE_FRAME_MARK();
-    PROFILE_ZONE_START(main_loop_work_zone, "MainLoop");
     float64 frame_start_time = TimeNow();
 
-    RunGarbageCollector();
     ProcessHotreloadQueue();
-    PROFILE_ZONE_START(poll_events_zone, "PollEvents");
     PollEvents();
-    PROFILE_ZONE_END(poll_events_zone);
 
-    PROFILE_ZONE_START(wren_update_zone, "Wren.OnUpdate");
-    WrenCallOnUpdate(g_app.info.dt);
-    PROFILE_ZONE_END(wren_update_zone);
+    AngelCallOnUpdate(g_app.info.dt);
 
-    PROFILE_ZONE_START(wren_fixed_zone, "Wren.OnFixedUpdate");
-    WrenCallOnFixedUpdate(FIXED_DT);
-    PROFILE_ZONE_END(wren_fixed_zone);
+    // todo : call fixed update correctly
+    AngelCallOnFixedUpdate(FIXED_DT);
 
     RenderFrame();
     ClearAll();
 
     g_app.info.frame_count++;
-    PROFILE_ZONE_END(main_loop_work_zone);
     UpdateEngineTime(frame_start_time);
 
     EngineRequestStop();

@@ -11,6 +11,8 @@
 #include "grngame/utils/c_cpp.h"
 #include <khash.h>
 
+BEGIN_DECLARATIONS
+
 typedef struct EmbeddedFile
 {
     const char *name;
@@ -48,3 +50,5 @@ bool EmbeddedFileRemove(const char *path);
 
 // memory only, any kind (also used to load Assets.pak)
 void EmbeddedFilePutMemory(EmbedKind kind, const char *path, const void *data, uint32 size);
+
+END_DECLARATIONS
