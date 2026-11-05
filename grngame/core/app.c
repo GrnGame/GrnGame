@@ -5,7 +5,8 @@
 #include "SDL3/SDL_video.h"
 #include "grngame/audio/sound.h"
 #include "grngame/audio/sound_info.h"
-#include "grngame/bindings/angelscript/api/callback.h"
+#include "grngame/bindings/api/callback.h"
+#include "grngame/bindings/api/interpretor.h"
 #include "grngame/core/app.h"
 #include "grngame/core/init.h"
 #include "grngame/core/text.h"
@@ -87,8 +88,8 @@ static COLD void EnsureInitSucceeded(const InitResult res)
 
 COLD void ShutdownScripts(void)
 {
-    AngelCallOnDestroy();
-    // AngelFree();
+    BindingsCallOnDestroy();
+    BindingsFree();
 }
 
 void EngineStart()
@@ -98,7 +99,7 @@ void EngineStart()
 
     const InitResult res = InitAll();
     EnsureInitSucceeded(res);
-    AngelCallOnStart();
+    BindingsCallOnStart();
     MainLoop();
 }
 
@@ -185,7 +186,7 @@ static HOT void RenderFrame(void)
     PROFILE_ZONE_START(render_zone, "Render");
 
     RendererClear(&g_app.renderer);
-    AngelCallOnRender();
+    BindingsCallOnRender();
     ApplyBlackStripes();
     RendererPresent(&g_app.renderer);
 
@@ -225,10 +226,10 @@ static HOT void MainLoopIteration(void *arg)
     ProcessHotreloadQueue();
     PollEvents();
 
-    AngelCallOnUpdate(g_app.info.dt);
+    BindingsCallOnUpdate(g_app.info.dt);
 
     // todo : call fixed update correctly
-    AngelCallOnFixedUpdate(FIXED_DT);
+    BindingsCallOnFixedUpdate(FIXED_DT);
 
     RenderFrame();
     ClearAll();

@@ -59,7 +59,7 @@ int32 LoadModuleFn(const char *include, const char *from, CScriptBuilder *builde
     char *path = PathFromExecutableDirectory(filename);
 
     uint32 file_size = 0;
-    auto file_content = reinterpret_cast<char *>(ReturnFileData(path, &file_size));
+    const auto file_content = reinterpret_cast<char *>(ReturnFileData(path, &file_size));
     free(path);
 
     if (!file_content)

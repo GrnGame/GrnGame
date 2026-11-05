@@ -24,6 +24,12 @@ BEGIN_DECLARATIONS
 
 #define FIXED_DT (1.0 / FIXED_UPDATE_LOOP)
 
+typedef enum
+{
+    ANGEL_SCRIPT,
+    DAS_SCRIPT,
+} SCRIPTING_LANGAGE;
+
 typedef struct AppInfo
 {
     sqlite3 *file_db;
@@ -34,6 +40,8 @@ typedef struct AppInfo
     char *version;
     char *old_version;
     char *asset_folder;
+
+    SCRIPTING_LANGAGE scripting_langage;
 
     uint16 fps;
     float32 dt;

@@ -12,7 +12,7 @@
 #include <scriptdictionary/scriptdictionary.h>
 #include <scriptstdstring/scriptstdstring.h>
 
-bool InterpretFromMemory(const char *filename)
+bool AngelInterpretFromMemory(const char *filename)
 {
     char *module_name = FileStem(filename);
 
@@ -55,13 +55,13 @@ bool InterpretFromMemory(const char *filename)
     return true;
 }
 
-bool Interpret(const char *filename)
+bool AngelInterpret(const char *filename)
 {
     char *module_name = FileStem(filename);
     char *path = PathFromExecutableDirectory(filename);
 
     uint32 file_size = 0;
-    char *file_content = reinterpret_cast<char *>(ReturnFileData(path, &file_size));
+    const auto file_content = reinterpret_cast<char *>(ReturnFileData(path, &file_size));
     free(path);
 
     if (!file_content)
@@ -143,7 +143,7 @@ bool AngelInit(const char *filename)
     engine->SetMessageCallback(asFUNCTION(MessageCallback), nullptr, asCALL_CDECL);
 
     g_app.angel_manager.engine = reinterpret_cast<void *>(engine);
-    return Interpret(filename);
+    return AngelInterpret(filename);
 }
 
 bool AngelInitFromMemory(const char *filename)
@@ -173,12 +173,13 @@ bool AngelInitFromMemory(const char *filename)
 
     g_app.angel_manager.engine = reinterpret_cast<void *>(engine);
 
-    return InterpretFromMemory(filename);
+    return AngelInterpretFromMemory(filename);
 }
 
 bool AngelFree()
 {
-    FreeCallbacks();
+    // todo : see why segfault
+    //  FreeCallbacks();
     if (auto *engine = static_cast<asIScriptEngine *>(g_app.angel_manager.engine))
     {
         engine->ShutDownAndRelease();

@@ -2,7 +2,7 @@
 #include "file.h"
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/assets/load.h"
-#include "grngame/bindings/angelscript/api/callback.h"
+#include "grngame/bindings/api/callback.h"
 #include "grngame/core/app.h"
 #include "grngame/dev/logging.h"
 #include "grngame/embedded/embedded_file_generator.h"
@@ -298,7 +298,7 @@ void JsonSaveObjects(float64 budget)
 
         const char *key = kh_key(manager, it);
         CallbackArg args[1] = {{.type = CB_ARG_STRING, .as.string = key}};
-        CallCallBack(args, JSON_SAVE);
+        BindingsCallBack(args, JSON_SAVE);
         json->last_save_time = current_time_sec;
     }
 }

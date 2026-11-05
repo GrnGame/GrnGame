@@ -2,8 +2,8 @@
 #include "data.h"
 #include "grngame/assets/asset_manager.h"
 #include "grngame/assets/embedded_file_manager.h"
-#include "grngame/bindings/angelscript/api/callback.h"
-#include "grngame/bindings/angelscript/api/interpretor.h"
+#include "grngame/bindings/api/callback.h"
+#include "grngame/bindings/api/interpretor.h"
 #include "grngame/core/app.h"
 #include "grngame/core/window.h"
 #include "grngame/data/file.h"
@@ -172,6 +172,18 @@ static bool ParseConfig(const unsigned char *memory, uint32 size)
         goto invalid;
     g_app.info.company = value.value.s;
 
+    if (!ReadConfigValue("language", memory, &value, size) || value.type != JSONV_TEXT)
+        goto invalid;
+
+    if (strcmp("angelscript", value.value.s) == 0)
+    {
+        g_app.info.scripting_langage = ANGEL_SCRIPT;
+    }
+    else
+    {
+        LOG_WARNING("scripting language : %s is not supported set angelscript to default", value.value.s);
+    }
+
     if (!ReadConfigValue("palette", memory, &value, size) ||
         (value.type != JSONV_TEXT_ARRAY && value.type != JSONV_EMPTY_ARRAY))
         goto invalid;
@@ -266,7 +278,7 @@ static void LoadControllerMappings(void)
     LOG_INFO("Loaded %d controller mappings", mapped);
 }
 
-static void HandleAngelFailure(void)
+static void HandleBindingsFailure(void)
 {
     const SDL_Color red = {255, 0, 0, 255};
     RendererSetColor(red.r, red.g, red.b, red.a);
@@ -329,21 +341,27 @@ void InitializeAssets(void)
 void InitializeScripts(void)
 {
 #ifndef GRNGAME_EMBED_ASSETS
-    if (!AngelInit("scripts/main.as"))
+    if (!BindingsInit("scripts/main.as"))
     {
-        HandleAngelFailure();
+        HandleBindingsFailure();
         return;
     }
-
-    LOG_INFO("Angel runtime initialized successfully with script 'main.as'");
+    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
+        LOG_INFO("Angel runtime initialized successfully with script 'main.as'");
+    else
+    {
+    }
 #else
-    if (!AngelInitFromMemory("main.as"))
+    if (!BindingsInitFromMemory("main.as"))
     {
-        HandleAngelFailure();
+        HandleBindingsFailure();
         return;
     }
-
-    LOG_INFO("Angel runtime initialized successfully with script 'main.as'");
+    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
+        LOG_INFO("Angel runtime initialized successfully with script 'main.as'");
+    else
+    {
+    }
 #endif
 }
 
@@ -445,7 +463,7 @@ InitResult InitAll(void)
             {.type = CB_ARG_STRING, .as.string = g_app.info.version},
         };
 
-        CallCallBack(args, GAME_DATA_NEW_VERSION);
+        BindingsCallBack(args, GAME_DATA_NEW_VERSION);
     }
 
     HotReloadInit(PathFromExecutableDirectory("."));

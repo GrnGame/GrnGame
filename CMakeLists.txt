@@ -220,6 +220,10 @@ set(GRNGAME_SOURCES
         grngame/utils/version.c
         grngame/utils/version.h
         grngame/web/web.h
+        grngame/bindings/api/callback.h
+        grngame/bindings/api/interpretor.h
+        grngame/bindings/api/callback.cpp
+        grngame/bindings/api/interpretor.cpp
 )
 
 # wasm doesn't like a double main declaration (segfault)

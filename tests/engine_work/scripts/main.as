@@ -1,23 +1,18 @@
-void OnStart()
-{
-print("on start");
+void OnStart() {
+    print("on start");
 }
 
-void OnUpdate(float dt)
-{
+void OnUpdate(float dt) {
 //print("on update");
-Exit::engine_stop();
+//Exit::engine_stop();
 }
 
-void OnFixedUpdate(float dt)
-{
+void OnFixedUpdate(float dt) {
 }
 
-void OnRender()
-{
+void OnRender() {
 }
 
-void OnDestroy()
-{
-print("ondestroy");
+void OnDestroy() {
+    print("ondestroy");
 }

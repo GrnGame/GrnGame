@@ -27,14 +27,14 @@ void MessageCallback(const asSMessageInfo *msg, void *param)
     }
 }
 
-bool RegisterCallback(uint16 name, const char *funcDecl)
+bool AngelRegisterCallback(uint16 name, const char *funcDecl)
 {
     if (UNLIKELY(name >= MAX_CALLBACKS))
         return false;
 
     auto *engine = static_cast<asIScriptEngine *>(g_app.angel_manager.engine);
 
-    asIScriptModule *mod = engine->GetModule("main");
+    const asIScriptModule *mod = engine->GetModule("main");
 
     asIScriptFunction *func = mod->GetFunctionByDecl(funcDecl);
     if (!func)
@@ -53,14 +53,14 @@ bool RegisterCallback(uint16 name, const char *funcDecl)
     return true;
 }
 
-bool CallCallBack(CallbackArg *args, uint16 name)
+bool AngellCallBack(CallbackArg *args, uint16 name)
 {
     if (UNLIKELY(name >= MAX_CALLBACKS))
         return false;
 
     if (!g_callbacks[name])
     {
-        LOG_WARNING("AngelScript: Cannot call callback function '%s'", name);
+        LOG_WARNING("AngelScript: Cannot call callback function '%u'", name);
         return false;
     }
 
@@ -79,7 +79,7 @@ bool CallCallBack(CallbackArg *args, uint16 name)
             ctx->SetArgByte(0, args->as.boolean);
             break;
         case CB_ARG_STRING:
-            ctx->SetArgObject(0, (void *)args->as.string);
+            ctx->SetArgObject(0, args->as.string);
             break;
         }
     }
@@ -90,6 +90,8 @@ bool CallCallBack(CallbackArg *args, uint16 name)
     }
 
     engine->ReturnContext(ctx);
+
+    return true;
 }
 
 void AngelCacheLifecycleFunctions(const char *moduleName)
@@ -104,7 +106,7 @@ void AngelCacheLifecycleFunctions(const char *moduleName)
     g_onDestroy = mod->GetFunctionByDecl("void OnDestroy()");
 }
 
-bool AngelCall(asIScriptFunction *g, const char *name, float32 delta, bool have_delta)
+static bool AngelCall(asIScriptFunction *g, const char *name, const float32 delta, const bool have_delta)
 {
     if (!g)
     {
@@ -136,12 +138,12 @@ bool AngelCallOnStart()
     return AngelCall(g_onStart, "OnStart()", 0, false);
 }
 
-bool AngelCallOnUpdate(float32 delta)
+bool AngelCallOnUpdate(const float32 delta)
 {
     return AngelCall(g_onUpdate, "OnUpdate()", delta, true);
 }
 
-bool AngelCallOnFixedUpdate(float32 delta)
+bool AngelCallOnFixedUpdate(const float32 delta)
 {
     return AngelCall(g_onFixedUpdate, "OnFixedUpdate()", delta, true);
 }
