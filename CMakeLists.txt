@@ -27,7 +27,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON) # lto on release
 if (MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     # when many cl work together use this
-    add_compile_options(/FS)
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/FS>)
 endif ()
 
 # wasm thread flags must also reach the dependencies, so set them before deps.cmake
