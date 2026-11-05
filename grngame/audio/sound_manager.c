@@ -1,8 +1,10 @@
 #include "sound_manager.h"
+
 #include "SDL3/SDL_error.h"
 #include "grngame/dev/logging.h"
 #include "grngame/math/types.h"
 #include "grngame/utils/attributes.h"
+#include "sound.h"
 #include <SDL3_mixer/SDL_mixer.h>
 
 COLD bool SoundManagerTryCreate(SoundManager *result)
@@ -24,5 +26,6 @@ COLD bool SoundManagerTryCreate(SoundManager *result)
 
 COLD void SoundManagerDestroy(const SoundManager *sound_manager)
 {
+    SoundShutdown();
     MIX_DestroyMixer(sound_manager->mixer);
 }

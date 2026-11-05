@@ -165,6 +165,17 @@ static COLD void CleanupAppResources(void)
     HotReloadDestroy();
     LogDestroy();
     DbClose(g_app.info.file_db);
+    DbClose(g_app.info.data_db);
+
+    // todo : factorise code
+    if (g_app.info.name)
+        free(g_app.info.name);
+    if (g_app.info.asset_folder)
+        free(g_app.info.asset_folder);
+    if (g_app.info.version)
+        free(g_app.info.version);
+    if (g_app.info.company)
+        free(g_app.info.company);
     g_app = (App){0};
 }
 

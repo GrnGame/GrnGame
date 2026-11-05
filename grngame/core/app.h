@@ -31,11 +31,11 @@ typedef struct AppInfo
     sqlite3 *file_db;
     sqlite3 *data_db;
     bool update_event_data;
-    const char *name;
-    const char *company;
-    const char *version;
-    const char *old_version;
-    const char *asset_folder;
+    char *name;
+    char *company;
+    char *version;
+    char *old_version;
+    char *asset_folder;
 
     uint16 fps;
     float32 dt;

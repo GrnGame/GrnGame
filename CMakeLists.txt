@@ -137,6 +137,11 @@ target_link_libraries(grngame PUBLIC
         hwy
         cjson
         yyjson
+        libDaScript
+)
+
+target_include_directories(grngame PUBLIC
+        "${daScript_SOURCE_DIR}/include"
 )
 
 if (IS_DESKTOP)

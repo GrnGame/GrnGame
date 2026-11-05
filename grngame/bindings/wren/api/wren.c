@@ -69,13 +69,14 @@ static bool WrenInterpretFromMemory(const char *filename)
     if (!asset)
     {
         LOG_ERROR("Failed to find script '%s' in embedded files", filename);
+        free(module_name);
         return false;
     }
 
     char *source = AddEndOfString((char *)asset->data, asset->size);
     WrenInterpretResult result = wrenInterpret(g_app.wren_manager.vm, module_name, source);
     free(source);
-
+    free(module_name);
     if (result != WREN_RESULT_SUCCESS)
     {
         LOG_ERROR("wrenInterpret failed for embedded '%s'", filename);
@@ -237,6 +238,14 @@ void WrenFree()
         {
             SafeReleaseHandle(g_app.wren_manager.vm, &g_app.wren_manager.registry.callbacks[i].handle);
             g_app.wren_manager.registry.callbacks[i].is_registered = false;
+        }
+    }
+
+    for (int i = 0; i <= 16; i++)
+    {
+        if (g_app.wren_manager.call[i])
+        {
+            wrenReleaseHandle(g_app.wren_manager.vm, g_app.wren_manager.call[i]);
         }
     }
 
