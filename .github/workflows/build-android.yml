@@ -31,10 +31,10 @@ jobs:
           cmake -S . -B build
           -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake"
           -DANDROID_ABI=${{ matrix.abi }}
-          -DANDROID_PLATFORM=android-26
+          -DANDROID_PLATFORM=android-33
           -DCMAKE_BUILD_TYPE=Release
           -DGRNGAME_EMBED_ASSETS=ON
-          
+
       - name: Build
         run: cmake --build build --config Release --target Runtime -- -j 3
 

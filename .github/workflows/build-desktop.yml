@@ -29,6 +29,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      #dascript require clang
+      - name: Use clang (linux-arm64)
+        if: matrix.platform == 'linux-arm64'
+        run: |
+          sudo apt-get install -y --no-install-recommends clang
+          echo "CC=clang" >> "$GITHUB_ENV"
+          echo "CXX=clang++" >> "$GITHUB_ENV"
+
       #sdl dependencies using SDL_X11_XCURSOR OFF going to remove somes fonctionalities
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -87,15 +95,15 @@ jobs:
         # we can maybe remove this option when dascript is already build
       - name: Build (Linux)
         if: runner.os == 'Linux'
-        run: cmake --build build --config ${{ matrix.buildtype }} -- -j 2
+        run: cmake --build build --config ${{ matrix.buildtype }} -- -j 3
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
-        run: cmake --build build --config ${{ matrix.buildtype }} -- -m:2
+        run: cmake --build build --config ${{ matrix.buildtype }}
 
       - name: Build (macOS)
         if: runner.os == 'macOS'
-        run: cmake --build build --config ${{ matrix.buildtype }} -- -j 2
+        run: cmake --build build --config ${{ matrix.buildtype }} -- -j 3
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

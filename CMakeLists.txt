@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.22)
 project(GrnGame C CXX)
 
+if (CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set(CMAKE_MACOSX_BUNDLE OFF)
+endif ()
+
 #enable ctests
 enable_testing()
 
