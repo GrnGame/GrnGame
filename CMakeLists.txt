@@ -6,9 +6,11 @@ if (CMAKE_SYSTEM_NAME STREQUAL "iOS")
 endif ()
 
 if (EMSCRIPTEN)
-    add_compile_definitions(ACCESSPERMS=0777)
+    add_compile_definitions(
+            ACCESSPERMS=0777
+            _EMSCRIPTEN_VER
+    )
 endif ()
-
 #enable ctests
 enable_testing()
 

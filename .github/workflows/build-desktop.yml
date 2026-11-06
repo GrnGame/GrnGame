@@ -92,7 +92,7 @@ jobs:
           -DGRNGAME_EMBED_ASSETS=${{ matrix.kind == 'runtime' }}
 
       - name: Build
-        run: cmake --build build --config ${{ matrix.buildtype }} --parallel
+        run: cmake --build build --config ${{ matrix.buildtype }} --parallel 2
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

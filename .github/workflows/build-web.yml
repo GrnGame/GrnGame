@@ -14,6 +14,8 @@ jobs:
 
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 5.0.7
 
       - name: Cache CMake dependencies
         uses: actions/cache@v4
