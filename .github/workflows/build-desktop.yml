@@ -85,8 +85,17 @@ jobs:
 
         # use only 3 threads because dascript compilation use a lot of memory
         # we can maybe remove this option when dascript is already build
-      - name: Build
-        run: cmake --build build --config ${{ matrix.buildtype }} -- -j 3
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: cmake --build build --config ${{ matrix.buildtype }} -- -j 2
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --build build --config ${{ matrix.buildtype }} -- -m:2
+
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: cmake --build build --config ${{ matrix.buildtype }} -- -j 2
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
