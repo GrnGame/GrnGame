@@ -34,9 +34,10 @@ jobs:
           -DANDROID_PLATFORM=android-26
           -DCMAKE_BUILD_TYPE=Release
           -DGRNGAME_EMBED_ASSETS=ON
+          -- -j 3
 
       - name: Build
-        run: cmake --build build --config Release --target Runtime --parallel
+        run: cmake --build build --config Release --target Runtime -- -j 3
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

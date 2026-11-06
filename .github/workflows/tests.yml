@@ -84,4 +84,4 @@ jobs:
           MESA_GLSL_VERSION_OVERRIDE: "450"
         run: >
           xvfb-run -a -s "-screen 0 1280x720x24"
-          cmake --build build --config Release --target run_auto_tests --parallel
+          cmake --build build --config Release --target run_auto_tests -- -j 3

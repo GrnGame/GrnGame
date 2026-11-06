@@ -46,8 +46,9 @@ jobs:
           -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO
           -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED=NO
 
+
       - name: Build
-        run: cmake --build build --config Release --parallel
+        run: cmake --build build --config Release -- -jobs 3
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

@@ -135,8 +135,8 @@ bool AngelInit(const char *filename)
         LOG_ERROR("AngelScript : impossible to save print function");
 
     engine->SetDefaultNamespace("Exit");
-    int r1 = engine->RegisterGlobalFunction("void engine_stop()", asFUNCTION(AS_EngineStop), asCALL_CDECL);
-    if (r1 < 0)
+    r = engine->RegisterGlobalFunction("void engine_stop()", asFUNCTION(AS_EngineStop), asCALL_CDECL);
+    if (r < 0)
         LOG_ERROR("AngelScript : impossible to save engine stop function");
     engine->SetDefaultNamespace("");
 

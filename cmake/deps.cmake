@@ -242,3 +242,48 @@ if (angelscript_ADDED AND NOT TARGET angelscript)
         target_sources(angelscript PRIVATE "${_as_asm_path}")
     endif ()
 endif ()
+
+
+CPMAddPackage(
+        NAME daScript
+        GITHUB_REPOSITORY BorisBat/daScript
+        GIT_TAG v0.6.5
+        #no tests
+        EXCLUDE_FROM_ALL YES
+        SYSTEM YES
+
+        OPTIONS
+        "CMAKE_BUILD_TYPE Release"
+        "BUILD_SHARED_LIBS OFF"
+        "BUILD_TESTING OFF"
+        "DAS_ENABLE_PIC ON"
+
+        #no tierces libs
+        "DAS_SQLITE_DISABLED ON"
+        "DAS_CRYPTO_DISABLED ON"
+        "DAS_PUGIXML_DISABLED ON"
+        "DAS_STBIMAGE_DISABLED ON"
+        "DAS_MESHOPTIMIZER_DISABLED ON"
+
+        "DAS_HV_DISABLED ON"
+        "DAS_GLFW_DISABLED ON"
+        "DAS_IMGUI_DISABLED ON"
+        "DAS_VULKAN_DISABLED ON"
+        "DAS_AUDIO_DISABLED ON"
+        "DAS_STDDLG_DISABLED ON"
+        "DAS_CLIPBOARD_DISABLED ON"
+
+        "DAS_FLEX_BISON_DISABLED ON"
+        "DAS_CLANG_BIND_DISABLED ON"
+        "DAS_LLVM_DISABLED ON"
+        "DAS_SMT_DISABLED ON"
+        "DAS_CUDA_DISABLED ON"
+        "DAS_METAL_DISABLED ON"
+        "DAS_ACCELERATE_DISABLED ON"
+        "DAS_TOOLS_DISABLED OFF"
+        "DAS_TREE_SITTER_DISABLED ON"
+        "DAS_TERMINAL_DISABLED ON"
+        "DAS_AOT_EXAMPLES_DISABLED ON"
+        "DAS_TUTORIAL_DISABLED ON"
+        "DAS_TESTS_DISABLED ON"
+)

@@ -11,7 +11,7 @@ struct asSMessageInfo;
 void MessageCallback(const struct asSMessageInfo *msg, void *param);
 
 bool AngelRegisterCallback(uint16 name, const char *funcDecl);
-bool AngellCallBack(CallbackArg *args, uint16 name);
+bool AngelCallBack(CallbackArg *args, uint16 name);
 
 void AngelCacheLifecycleFunctions(const char *moduleName);
 bool AngelCallOnStart();

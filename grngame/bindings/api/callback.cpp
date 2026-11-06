@@ -15,7 +15,7 @@ bool BindingsRegisterCallback(uint16 name, const char *funcDecl)
 bool BindingsCallBack(CallbackArg *args, uint16 name)
 {
     if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngellCallBack(args, name);
+        return AngelCallBack(args, name);
     else
     {
         return true;

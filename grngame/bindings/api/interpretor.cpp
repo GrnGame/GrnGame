@@ -1,4 +1,5 @@
 #include "grngame/bindings/angelscript/api/interpretor.h"
+#include "grngame/bindings/dascript/api/interpretor.h"
 #include "grngame/core/app.h"
 #include "interpretor.h"
 

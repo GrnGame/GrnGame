@@ -27,7 +27,7 @@ void MessageCallback(const asSMessageInfo *msg, void *param)
     }
 }
 
-bool AngelRegisterCallback(uint16 name, const char *funcDecl)
+bool AngelRegisterCallback(const uint16 name, const char *funcDecl)
 {
     if (UNLIKELY(name >= MAX_CALLBACKS))
         return false;
@@ -53,7 +53,7 @@ bool AngelRegisterCallback(uint16 name, const char *funcDecl)
     return true;
 }
 
-bool AngellCallBack(CallbackArg *args, uint16 name)
+bool AngelCallBack(CallbackArg *args, uint16 name)
 {
     if (UNLIKELY(name >= MAX_CALLBACKS))
         return false;

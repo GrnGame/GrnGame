@@ -113,7 +113,7 @@ if (IS_DEV)
 endif ()
 
 # grngame library
-#dont use recursive include because cmake dont recommand it
+#dont use recursive include because it's don't work on clion
 set(GRNGAME_SOURCES
         grngame/assets/asset_manager.c
         grngame/assets/asset_manager.h
@@ -224,6 +224,8 @@ set(GRNGAME_SOURCES
         grngame/bindings/api/interpretor.h
         grngame/bindings/api/callback.cpp
         grngame/bindings/api/interpretor.cpp
+        grngame/bindings/dascript/api/interpretor.h
+
 )
 
 # wasm doesn't like a double main declaration (segfault)
@@ -247,6 +249,11 @@ target_link_libraries(grngame PUBLIC
         cjson
         yyjson
         angelscript
+        libDaScript
+)
+
+target_include_directories(grngame PUBLIC
+        "${daScript_SOURCE_DIR}/include"
 )
 
 if (IS_DESKTOP)
