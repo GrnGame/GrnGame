@@ -5,6 +5,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL "iOS")
     set(CMAKE_MACOSX_BUNDLE OFF)
 endif ()
 
+if (EMSCRIPTEN)
+    add_compile_definitions(ACCESSPERMS=0777)
+endif ()
+
 #enable ctests
 enable_testing()
 
