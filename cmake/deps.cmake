@@ -289,3 +289,13 @@ CPMAddPackage(
 
         "DAS_USE_STATIC_STD_LIBS ON"
 )
+
+
+# remove dascript warning
+if (NOT MSVC)
+    foreach (_t libDaScript libDaScript_runtime libUriParser)
+        if (TARGET ${_t})
+            target_compile_options(${_t} PRIVATE -w)
+        endif ()
+    endforeach ()
+endif ()

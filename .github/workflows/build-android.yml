@@ -23,7 +23,7 @@ jobs:
           path: .cmake-cache/cpm
           key: cmake-cpm-android-${{ matrix.abi }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
 
-      #ndk is already installed
+      #ndk is already installed use version 33
       - name: Configure
         env:
           CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
@@ -36,7 +36,7 @@ jobs:
           -DGRNGAME_EMBED_ASSETS=ON
 
       - name: Build
-        run: cmake --build build --config Release --target Runtime -- -j 3
+        run: cmake --build build --config Release --target Runtime --parallel
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
