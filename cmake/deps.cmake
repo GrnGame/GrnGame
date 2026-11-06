@@ -243,7 +243,7 @@ if (angelscript_ADDED AND NOT TARGET angelscript)
     endif ()
 endif ()
 
-
+set(DAS_MODULES_INCLUDE "" CACHE STRING "" FORCE)
 CPMAddPackage(
         NAME daScript
         GITHUB_REPOSITORY BorisBat/daScript
