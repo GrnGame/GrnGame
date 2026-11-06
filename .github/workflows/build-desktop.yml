@@ -36,79 +36,79 @@ jobs:
           sudo apt-get install -y --no-install-recommends clang-15
           echo "CC=clang-15" >> "$GITHUB_ENV"
           echo "CXX=clang++-15" >> "$GITHUB_ENV"          
-          
-            #sdl dependencies using SDL_X11_XCURSOR OFF going to remove somes fonctionalities
-            - name: Install Linux dependencies
-              if: runner.os == 'Linux'
-              run: |
-                sudo apt-get update
-                sudo apt-get install -y --no-install-recommends \
-                  build-essential \
-                  git \
-                  make \
-                  pkg-config \
-                  cmake \
-                  ninja-build \
-                  gnome-desktop-testing \
-                  libasound2-dev \
-                  libpulse-dev \
-                  libaudio-dev \
-                  libfribidi-dev \
-                  libjack-dev \
-                  libsndio-dev \
-                  libx11-dev \
-                  libxext-dev \
-                  libxrandr-dev \
-                  libxcursor-dev \
-                  libxfixes-dev \
-                  libxi-dev \
-                  libxss-dev \
-                  libxtst-dev \
-                  libxkbcommon-dev \
-                  libdrm-dev \
-                  libgbm-dev \
-                  libgl1-mesa-dev \
-                  libgles2-mesa-dev \
-                  libegl1-mesa-dev \
-                  libdbus-1-dev \
-                  libibus-1.0-dev \
-                  libudev-dev \
-                  libthai-dev \
-                  libusb-1.0-0-dev
-          
-            - name: Cache CMake dependencies
-              uses: actions/cache@v4
-              with:
-                path: .cmake-cache/cpm
-                #this is the future if a cmake file change cache is delete
-                key: cmake-cpm-${{ matrix.platform }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
-          
-            - name: Configure
-              env:
-                CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
-              run: >
-                cmake -S . -B build
-                -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }}
-                -DGRNGAME_EMBED_ASSETS=${{ matrix.kind == 'runtime' }}
-          
-              # use only 3 threads because dascript compilation use a lot of memory
-              # we can maybe remove this option when dascript is already build
-            - name: Build (Linux)
-              if: runner.os == 'Linux'
-              run: cmake --build build --config ${{ matrix.buildtype }} -- -j 3
-          
-            - name: Build (Windows)
-              if: runner.os == 'Windows'
-              run: cmake --build build --config ${{ matrix.buildtype }}
-          
-            - name: Build (macOS)
-              if: runner.os == 'macOS'
-              run: cmake --build build --config ${{ matrix.buildtype }} -- -j 3
-          
-            - name: Upload artifact
-              uses: actions/upload-artifact@v4
-              with:
-                name: "${{ matrix.kind }}-${{ matrix.platform }}"
-                path: |
-                  build/embedded/release/
-                  build/runtime/release/
+
+      #sdl dependencies using SDL_X11_XCURSOR OFF going to remove somes fonctionalities
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            git \
+            make \
+            pkg-config \
+            cmake \
+            ninja-build \
+            gnome-desktop-testing \
+            libasound2-dev \
+            libpulse-dev \
+            libaudio-dev \
+            libfribidi-dev \
+            libjack-dev \
+            libsndio-dev \
+            libx11-dev \
+            libxext-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxfixes-dev \
+            libxi-dev \
+            libxss-dev \
+            libxtst-dev \
+            libxkbcommon-dev \
+            libdrm-dev \
+            libgbm-dev \
+            libgl1-mesa-dev \
+            libgles2-mesa-dev \
+            libegl1-mesa-dev \
+            libdbus-1-dev \
+            libibus-1.0-dev \
+            libudev-dev \
+            libthai-dev \
+            libusb-1.0-0-dev
+
+      - name: Cache CMake dependencies
+        uses: actions/cache@v4
+        with:
+          path: .cmake-cache/cpm
+          #this is the future if a cmake file change cache is delete
+          key: cmake-cpm-${{ matrix.platform }}-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
+
+      - name: Configure
+        env:
+          CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }}
+          -DGRNGAME_EMBED_ASSETS=${{ matrix.kind == 'runtime' }}
+
+        # use only 3 threads because dascript compilation use a lot of memory
+        # we can maybe remove this option when dascript is already build
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: cmake --build build --config ${{ matrix.buildtype }} -- -j 3
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --build build --config ${{ matrix.buildtype }}
+
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: cmake --build build --config ${{ matrix.buildtype }} -- -j 3
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "${{ matrix.kind }}-${{ matrix.platform }}"
+          path: |
+            build/embedded/release/
+            build/runtime/release/
