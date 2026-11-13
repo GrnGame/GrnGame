@@ -75,6 +75,7 @@ if __name__ == "__main__":
     file = sys.argv[1]
     dependencies = get_all_dependencies(file)
     for dependency in dependencies:
-        if dependency["name"] not in ALLOWED_DEPENDENCIES: 
+        if dependency["name"] not in ALLOWED_DEPENDENCIES:
+            print(f"Dependecie not allowed :{dependency["name"]}")
             sys.exit(1)
     sys.exit(0)

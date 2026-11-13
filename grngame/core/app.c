@@ -88,8 +88,8 @@ static COLD void EnsureInitSucceeded(const InitResult res)
 
 COLD void ShutdownScripts(void)
 {
-    BindingsCallOnDestroy();
-    BindingsFree();
+    CallOnDestroy();
+    ScriptFree();
 }
 
 void EngineStart()
@@ -99,7 +99,7 @@ void EngineStart()
 
     const InitResult res = InitAll();
     EnsureInitSucceeded(res);
-    BindingsCallOnStart();
+    CallOnStart();
     MainLoop();
 }
 
@@ -186,7 +186,7 @@ static HOT void RenderFrame(void)
     PROFILE_ZONE_START(render_zone, "Render");
 
     RendererClear(&g_app.renderer);
-    BindingsCallOnRender();
+    CallOnRender();
     ApplyBlackStripes();
     RendererPresent(&g_app.renderer);
 
@@ -226,10 +226,10 @@ static HOT void MainLoopIteration(void *arg)
     ProcessHotreloadQueue();
     PollEvents();
 
-    BindingsCallOnUpdate(g_app.info.dt);
+    CallOnUpdate(g_app.info.dt);
 
     // todo : call fixed update correctly
-    BindingsCallOnFixedUpdate(FIXED_DT);
+    CallOnFixedUpdate(FIXED_DT);
 
     RenderFrame();
     ClearAll();

@@ -298,7 +298,7 @@ void JsonSaveObjects(float64 budget)
 
         const char *key = kh_key(manager, it);
         CallbackArg args[1] = {{.type = CB_ARG_STRING, .as.string = key}};
-        BindingsCallBack(args, JSON_SAVE);
+        CallBack(args, JSON_SAVE);
         json->last_save_time = current_time_sec;
     }
 }

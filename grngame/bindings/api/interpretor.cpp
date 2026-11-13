@@ -1,64 +1,62 @@
-#include "grngame/bindings/angelscript/api/interpretor.h"
 #include "grngame/bindings/dascript/api/interpretor.h"
+#include "grngame/bindings/python/api/interpretor.h"
 #include "grngame/core/app.h"
 #include "interpretor.h"
 
-bool BindingsInterpret(const char *filename)
+bool ScriptRun(const char *filename)
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelInterpret(filename);
+    if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptRun(filename);
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+    {
+        return PyScriptRun(filename);
+    }
     else
     {
-        return true;
+        LOG_ERROR("Cannot run script in unknown scripting language");
+        return false;
     }
 }
 
-bool BindingsInterpretFromMemory(const char *filename)
+bool ScriptRunFromMemory(const char *filename)
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelInterpretFromMemory(filename);
+    if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptRunFromMemory(filename);
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+    {
+        return PyScriptRunFromMemory(filename);
+    }
     else
     {
-        return true;
+        LOG_ERROR("Cannot run script from memory in unknown scripting language");
+        return false;
+    }
+}
+bool ScriptReload(const char *filename)
+{
+    if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptReload(filename);
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+    {
+        return PyScriptReload(filename);
+    }
+    else
+    {
+        LOG_ERROR("Cannot reload script from memory in unknown scripting language");
+        return false;
     }
 }
 
-bool BindingsInit(const char *filename)
+void ScriptFree()
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelInit(filename);
-    else
+    if (g_app.info.scripting_langage == DAS_SCRIPT)
+          DaScriptFree();
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
     {
-        return true;
+         PyScriptFree();
     }
-}
-
-bool BindingsInitFromMemory(const char *filename)
-{
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelInitFromMemory(filename);
     else
     {
-        return true;
-    }
-}
-
-bool BindingsReload(const char *filename)
-{
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelReload(filename);
-    else
-    {
-        return true;
-    }
-}
-
-bool BindingsFree()
-{
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelFree();
-    else
-    {
-        return true;
+        LOG_ERROR("Cannot free script in unknown scripting language");
     }
 }

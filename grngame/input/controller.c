@@ -88,7 +88,7 @@ bool ControllerOpen(SDL_JoystickID id, int16 index)
 
     CallbackArg args[1] = {{.type = CB_ARG_NUM, .as.num = index}};
 
-    BindingsCallBack(args, PAD_CONNECT);
+    CallBack(args, PAD_CONNECT);
 
     if (UNLIKELY(!SDL_GamepadHasAxis(gp, SDL_GAMEPAD_AXIS_LEFTX) || !SDL_GamepadHasAxis(gp, SDL_GAMEPAD_AXIS_LEFTY)))
         LOG_WARNING("Gamepad %d (%s) lacks a left analog stick.", index, name);
@@ -125,7 +125,7 @@ void ControllerClose(int16 index)
         c->id = 0;
         c->name = NULL;
         CallbackArg args[1] = {{.type = CB_ARG_NUM, .as.num = index}};
-        BindingsCallBack(args, PAD_DISCONNECT);
+        CallBack(args, PAD_DISCONNECT);
     }
 }
 

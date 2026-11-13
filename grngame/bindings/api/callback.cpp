@@ -1,68 +1,95 @@
-#include "../angelscript/api/callback.h"
 #include "callback.h"
-#include "grngame/bindings/angelscript/api/callback.h"
+#include "grngame/bindings/dascript/api/callback.h"
+#include "grngame/bindings/python/api/callback.h"
 #include "grngame/core/app.h"
 
-bool BindingsRegisterCallback(uint16 name, const char *funcDecl)
+bool RegisterCallback(uint16 name, const char *funcDecl)
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelRegisterCallback(name, funcDecl);
+     if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptRegisterCallback(name, funcDecl);
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+        return PyScriptRegisterCallback(name, funcDecl);
     else
     {
-        return true;
+        LOG_ERROR("Cannot register callback in unknown scripting language");
+        return false;
     }
 }
-bool BindingsCallBack(CallbackArg *args, uint16 name)
+
+bool CallBack(CallbackArg *args, uint16 name)
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelCallBack(args, name);
+     if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptCallBack(args, name);
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+        return PyScriptCallBack(args, name);
     else
     {
-        return true;
+        LOG_ERROR("Cannot execute callback in unknown scripting language");
+        return false;
     }
 }
-bool BindingsCallOnStart()
+
+bool CallOnStart()
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelCallOnStart();
+     if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptCallOnStart();
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+        return PyScriptCallOnStart();
     else
     {
-        return true;
+        LOG_ERROR("Cannot call OnStart in unknown scripting language");
+        return false;
     }
 }
-bool BindingsCallOnUpdate(float32 delta)
+
+bool CallOnUpdate(float32 delta)
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelCallOnUpdate(delta);
+     if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptCallOnUpdate(delta);
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+        return PyScriptCallOnUpdate(delta);
     else
     {
-        return true;
+        LOG_ERROR("Cannot call OnUpdate in unknown scripting language");
+        return false;
     }
 }
-bool BindingsCallOnFixedUpdate(float32 delta)
+
+bool CallOnFixedUpdate(float32 delta)
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelCallOnFixedUpdate(delta);
+     if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptCallOnFixedUpdate(delta);
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+        return PyScriptCallOnFixedUpdate(delta);
     else
     {
-        return true;
+        LOG_ERROR("Cannot call OnFixedUpdate in unknown scripting language");
+        return false;
     }
 }
-bool BindingsCallOnRender()
+
+bool CallOnRender()
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelCallOnRender();
+     if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptCallOnRender();
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+        return PyScriptCallOnRender();
     else
     {
-        return true;
+        LOG_ERROR("Cannot call OnRender in unknown scripting language");
+        return false;
     }
 }
-bool BindingsCallOnDestroy()
+
+bool CallOnDestroy()
 {
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        return AngelCallOnDestroy();
+     if (g_app.info.scripting_langage == DAS_SCRIPT)
+        return DaScriptCallOnDestroy();
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+        return PyScriptCallOnDestroy();
     else
     {
-        return true;
+        LOG_ERROR("Cannot call OnDestroy in unknown scripting language");
+        return false;
     }
 }

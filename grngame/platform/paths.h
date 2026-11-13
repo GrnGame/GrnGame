@@ -15,7 +15,7 @@ const char *FileExtension(const char *path);
 /// Returns true if the file is an image that COULD be loaded with SDL_Image
 bool FileIsLoadableImage(const char *file);
 
-/// Returns true if the file is an image that COULd be loaded with Soloud's Wav_stream
+/// Returns true if the file is an image that COULd be loaded with SDLMIXER's Wav_stream
 bool FileIsLoadableAudio(const char *file);
 
 /// Returns true if the file can be loaded as a script

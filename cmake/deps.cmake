@@ -154,95 +154,6 @@ if (IS_DESKTOP)
     )
 endif ()
 
-
-CPMAddPackage(
-        NAME angelscript
-        URL https://github.com/anjo76/angelscript/archive/a4a4eb80eb815d44bf0bca479913c735b8ee268a.tar.gz
-        DOWNLOAD_ONLY YES
-)
-if (angelscript_ADDED AND NOT TARGET angelscript)
-    set(_sdk "${angelscript_SOURCE_DIR}/sdk")
-    file(GLOB _src "${_sdk}/angelscript/source/*.cpp")
-    add_library(angelscript STATIC ${_src}
-            "${_sdk}/add_on/scriptany/scriptany.cpp"
-            "${_sdk}/add_on/scriptarray/scriptarray.cpp"
-            "${_sdk}/add_on/scriptdictionary/scriptdictionary.cpp"
-            "${_sdk}/add_on/scriptstdstring/scriptstdstring.cpp"
-            "${_sdk}/add_on/scriptstdstring/scriptstdstring_utils.cpp"
-            "${_sdk}/add_on/scriptbuilder/scriptbuilder.cpp"
-    )
-
-    target_include_directories(angelscript PUBLIC "${_sdk}/angelscript/include" "${_sdk}/add_on")
-    set_target_properties(angelscript PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    if (MSVC)
-        target_compile_definitions(angelscript PRIVATE _CRT_SECURE_NO_WARNINGS)
-    endif ()
-
-    set(_as_asm "")
-
-    # Détection arm64 pour Apple (macOS Apple Silicon + iOS)
-    set(_as_apple_arm64 OFF)
-    if (APPLE)
-        if (CMAKE_SYSTEM_NAME STREQUAL "iOS"
-                OR CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64"
-                OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64"
-                OR (NOT CMAKE_OSX_ARCHITECTURES AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64"))
-            set(_as_apple_arm64 ON)
-        endif ()
-    endif ()
-
-    set(_as_asm "")
-    set(_as_asm_lang "")
-
-    # Normalisation de l'archi (Windows renvoie "ARM64" en majuscules)
-    string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _as_proc)
-    if (MSVC AND CMAKE_GENERATOR_PLATFORM)
-        string(TOLOWER "${CMAKE_GENERATOR_PLATFORM}" _as_proc)   # x64 / arm64 / win32
-    endif ()
-
-    # Apple arm64 (macOS Apple Silicon + iOS)
-    set(_as_apple_arm64 OFF)
-    if (APPLE)
-        if (CMAKE_SYSTEM_NAME STREQUAL "iOS"
-                OR _as_proc MATCHES "^(arm64|aarch64)$"
-                OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64"
-                OR (NOT CMAKE_OSX_ARCHITECTURES AND CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64"))
-            set(_as_apple_arm64 ON)
-        endif ()
-    endif ()
-
-    if (_as_apple_arm64)
-        enable_language(ASM)
-        set(_as_asm as_callfunc_arm64_xcode.S)
-        set(_as_asm_lang ASM)
-    elseif (EMSCRIPTEN)
-        #no asm
-    elseif (MSVC AND _as_proc MATCHES "^(amd64|x86_64|x64)$")
-        enable_language(ASM_MASM)
-        set(_as_asm as_callfunc_x64_msvc_asm.asm)
-        set(_as_asm_lang ASM_MASM)
-    elseif (MSVC AND _as_proc MATCHES "^(arm64|aarch64)$")
-        enable_language(ASM_MARMASM)
-        set(_as_asm as_callfunc_arm64_msvc.asm)
-        set(_as_asm_lang ASM_MARMASM)
-    elseif (NOT MSVC AND _as_proc MATCHES "^(aarch64|arm64)$")
-        enable_language(ASM)
-        set(_as_asm as_callfunc_arm64_gcc.S)
-        set(_as_asm_lang ASM)
-    elseif (NOT APPLE AND _as_proc MATCHES "^arm")
-        enable_language(ASM)
-        set(_as_asm as_callfunc_arm_gcc.S)
-        set(_as_asm_lang ASM)
-        set_source_files_properties("${_sdk}/angelscript/source/${_as_asm}" PROPERTIES COMPILE_FLAGS "-Wa,-mimplicit-it=always")
-    endif ()
-
-    if (_as_asm)
-        set(_as_asm_path "${_sdk}/angelscript/source/${_as_asm}")
-        set_source_files_properties("${_as_asm_path}" PROPERTIES LANGUAGE ${_as_asm_lang})
-        target_sources(angelscript PRIVATE "${_as_asm_path}")
-    endif ()
-endif ()
-
 set(DAS_MODULES_INCLUDE "" CACHE STRING "" FORCE)
 CPMAddPackage(
         NAME daScript
@@ -290,12 +201,16 @@ CPMAddPackage(
         "DAS_USE_STATIC_STD_LIBS ON"
 )
 
-
-# remove dascript warning
-if (NOT MSVC)
-    foreach (_t libDaScript libDaScript_runtime libUriParser)
-        if (TARGET ${_t})
-            target_compile_options(${_t} PRIVATE -w)
-        endif ()
-    endforeach ()
-endif ()
+CPMAddPackage(
+        NAME pocketpy
+        GITHUB_REPOSITORY pocketpy/pocketpy
+        GIT_TAG v2.2.0
+        OPTIONS
+        "PK_BUILD_STATIC_LIB ON"
+        "PK_ENABLE_MIMALLOC ON"
+        "PK_ENABLE_THREADS ON"
+        "PK_BUILD_MODULE_LZ4 OFF"
+        "PK_BUILD_MODULE_CUTE_PNG OFF"
+        "PK_BUILD_MODULE_MSGPACK OFF"
+        "PK_BUILD_MODULE_PERIPHERY OFF"
+)

@@ -29,12 +29,13 @@ typedef struct
 
 BEGIN_DECLARATIONS
 
-bool BindingsRegisterCallback(uint16 name, const char *funcDecl);
-bool BindingsCallBack(CallbackArg *args, uint16 name);
-bool BindingsCallOnStart();
-bool BindingsCallOnUpdate(float32 delta);
-bool BindingsCallOnFixedUpdate(float32 delta);
-bool BindingsCallOnRender();
-bool BindingsCallOnDestroy();
+bool RegisterCallback(uint16 name, const char *funcDecl);
+bool CallBack(CallbackArg *args, uint16 name);
+
+bool CallOnStart();
+bool CallOnUpdate(float32 delta);
+bool CallOnFixedUpdate(float32 delta);
+bool CallOnRender();
+bool CallOnDestroy();
 
 END_DECLARATIONS

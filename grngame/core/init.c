@@ -175,9 +175,13 @@ static bool ParseConfig(const unsigned char *memory, uint32 size)
     if (!ReadConfigValue("language", memory, &value, size) || value.type != JSONV_TEXT)
         goto invalid;
 
-    if (strcmp("angelscript", value.value.s) == 0)
+    if (strcmp("dascript", value.value.s) == 0)
     {
-        g_app.info.scripting_langage = ANGEL_SCRIPT;
+        g_app.info.scripting_langage = DAS_SCRIPT ;
+    }
+    else if (strcmp("python", value.value.s) == 0)
+    {
+        g_app.info.scripting_langage = PY_SCRIPT ;
     }
     else
     {
@@ -341,13 +345,13 @@ void InitializeAssets(void)
 void InitializeScripts(void)
 {
 #ifndef GRNGAME_EMBED_ASSETS
-    if (!BindingsInit("scripts/main.as"))
+    if (!ScriptRun("scripts/main.as"))
     {
         HandleBindingsFailure();
         return;
     }
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        LOG_INFO("Angel runtime initialized successfully with script 'main.as'");
+    if (g_app.info.scripting_langage == DAS_SCRIPT)
+        LOG_INFO("Dascript runtime initialized successfully with script 'main.das'");
     else
     {
     }
@@ -463,7 +467,7 @@ InitResult InitAll(void)
             {.type = CB_ARG_STRING, .as.string = g_app.info.version},
         };
 
-        BindingsCallBack(args, GAME_DATA_NEW_VERSION);
+        CallBack(args, GAME_DATA_NEW_VERSION);
     }
 
     HotReloadInit(PathFromExecutableDirectory("."));

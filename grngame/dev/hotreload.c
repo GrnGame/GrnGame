@@ -97,7 +97,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected new script '%s'", cpath);
-                if (!(BindingsReload("scripts/main.as")))
+                if (!(ScriptReload("scripts/main.as")))
                     LOG_WARNING("Failed to reload script '%s'", cpath);
             }
 
@@ -131,7 +131,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected deleted script '%s'", cpath);
-                if (!BindingsReload("scripts/main.as"))
+                if (!ScriptReload("scripts/main.as"))
                     LOG_WARNING("Failed to reload script '%s'", cpath);
             }
 
@@ -167,7 +167,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected modified script '%s'", cpath);
-                if (!BindingsReload("scripts/main.as"))
+                if (!ScriptReload("scripts/main.as"))
                     LOG_WARNING("Failed to reload script '%s'", cpath);
             }
             // we can reload the config
@@ -233,7 +233,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected moved script '%s'", cpath);
-                if (!BindingsReload("scripts/main.as"))
+                if (!ScriptReload("scripts/main.as"))
                     LOG_WARNING("Failed to reload script '%s'", cpath);
             }
 

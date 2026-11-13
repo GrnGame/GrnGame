@@ -139,12 +139,6 @@ set(GRNGAME_SOURCES
         grngame/audio/sound_info.h
         grngame/audio/sound_manager.c
         grngame/audio/sound_manager.h
-        grngame/bindings/angelscript/api/callback.cpp
-        grngame/bindings/angelscript/api/callback.h
-        grngame/bindings/angelscript/api/interpretor.cpp
-        grngame/bindings/angelscript/api/interpretor.h
-        grngame/bindings/angelscript/api/module.cpp
-        grngame/bindings/angelscript/api/module.h
         grngame/core/app.c
         grngame/core/app.h
         grngame/core/data.c
@@ -235,6 +229,13 @@ set(GRNGAME_SOURCES
         grngame/bindings/api/callback.cpp
         grngame/bindings/api/interpretor.cpp
         grngame/bindings/dascript/api/interpretor.h
+        grngame/bindings/dascript/api/interpretor.cpp
+        grngame/bindings/python/api/interpretor.h
+        grngame/bindings/python/api/interpretor.cpp
+        grngame/bindings/dascript/api/callback.h
+        grngame/bindings/python/api/callback.h
+        grngame/bindings/dascript/api/callback.cpp
+        grngame/bindings/python/api/callback.cpp
 
 )
 
@@ -258,8 +259,8 @@ target_link_libraries(grngame PUBLIC
         hwy
         cjson
         yyjson
-        angelscript
         libDaScript
+        pocketpy
 )
 
 target_include_directories(grngame PUBLIC

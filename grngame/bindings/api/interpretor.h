@@ -1,15 +1,22 @@
 #pragma once
 
 #include "../../utils/c_cpp.h"
+#include <stdbool.h>
 
 BEGIN_DECLARATIONS
 
-bool BindingsInterpret(const char *filename);
-bool BindingsInterpretFromMemory(const char *filename);
-bool BindingsInit(const char *filename);
-bool BindingsInitFromMemory(const char *filename);
-bool BindingsReload(const char *filename);
+typedef enum
+{
+    PY_SCRIPT,
+    DAS_SCRIPT,
+} SCRIPTING_LANGUAGE;
 
-bool BindingsFree();
+
+bool ScriptRun(const char *filename);
+bool ScriptRunFromMemory(const char *filename);
+
+bool ScriptReload(const char *filename);
+
+void ScriptFree();
 
 END_DECLARATIONS
