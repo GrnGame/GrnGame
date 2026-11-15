@@ -2,6 +2,7 @@
 
 #include "../../utils/c_cpp.h"
 #include "grngame/math/types.h"
+#include <stdbool.h>
 
 typedef enum
 {
