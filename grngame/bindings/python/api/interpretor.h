@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../../utils/c_cpp.h"
+#include <stdbool.h>
 
 BEGIN_DECLARATIONS
 
