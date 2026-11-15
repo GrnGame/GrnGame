@@ -231,11 +231,11 @@ set(GRNGAME_SOURCES
         grngame/bindings/dascript/api/interpretor.h
         grngame/bindings/dascript/api/interpretor.cpp
         grngame/bindings/python/api/interpretor.h
-        grngame/bindings/python/api/interpretor.cpp
+        grngame/bindings/python/api/interpretor.c
         grngame/bindings/dascript/api/callback.h
         grngame/bindings/python/api/callback.h
         grngame/bindings/dascript/api/callback.cpp
-        grngame/bindings/python/api/callback.cpp
+        grngame/bindings/python/api/callback.c
 
 )
 

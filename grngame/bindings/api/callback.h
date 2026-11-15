@@ -8,6 +8,7 @@ typedef enum
     CB_ARG_NUM,
     CB_ARG_BOOL,
     CB_ARG_STRING,
+    CB_ARG_END, // end of a array of callback args
 } CallbackArgType;
 
 typedef struct
@@ -29,7 +30,6 @@ typedef struct
 
 BEGIN_DECLARATIONS
 
-bool RegisterCallback(uint16 name, const char *funcDecl);
 bool CallBack(CallbackArg *args, uint16 name);
 
 bool CallOnStart();

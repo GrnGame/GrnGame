@@ -1,13 +1,10 @@
 #include "interpretor.h"
-
+#include "callback.h"
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/platform/paths.h"
-
-#include <cstdlib>
-
 bool PyScriptRun(const char *filename)
 {
-    char * name  = PathFromExecutableDirectory(filename);
+    char *name = PathFromExecutableDirectory(filename);
     char *module = FileStem(filename);
 
     // create interpretor
@@ -18,10 +15,9 @@ bool PyScriptRun(const char *filename)
 
     // run script from disk
 
-    free:
-        free(name);
-        free(module);
-
+free:
+    free(name);
+    free(module);
 }
 
 bool PyScriptRunFromMemory(const char *filename)
@@ -32,7 +28,7 @@ bool PyScriptRunFromMemory(const char *filename)
     uint32 size = file->size;
     char *module = FileStem(filename);
 
-    //create intepretor
+    // create intepretor
 
     // register bindings
 
@@ -40,18 +36,17 @@ bool PyScriptRunFromMemory(const char *filename)
 
     // run script from memory
 
-
-    free:
+free:
     free(module);
 }
 
-    void PyScriptFree()
-    {
-
-    }
+void PyScriptFree()
+{
+    PyScriptClearCallbacks();
+}
 
 bool PyScriptReload(const char *filename)
 {
-PyScriptFree();
+    PyScriptFree();
     return PyScriptRun(filename);
 }

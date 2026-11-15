@@ -1,24 +1,17 @@
-#include "interpretor.h"
-#include <daScript/daScript.h>
-#include "../../api/callback.h"
+#include "grngame/bindings/dascript/api/callback.h"
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/platform/paths.h"
+#include "interpretor.h"
 #include <cstdlib>
+#include <daScript/daScript.h>
 
-
-//todo make a class
+// todo make a class
 static das::SimFunction *on_update = nullptr;
 static das::SimFunction *on_start = nullptr;
 static das::SimFunction *on_fixed_update = nullptr;
 static das::SimFunction *on_render = nullptr;
 static das::SimFunction *on_destroy = nullptr;
 static das::SimFunction *callback[10] = {nullptr};
-
-
-bool DaScriptRegisterCallback(uint16 name, const char *funcDecl)
-{
-    return true;
-}
 
 bool DaScriptCallBack(CallbackArg *args, uint16 name)
 {

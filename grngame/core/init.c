@@ -177,15 +177,16 @@ static bool ParseConfig(const unsigned char *memory, uint32 size)
 
     if (strcmp("dascript", value.value.s) == 0)
     {
-        g_app.info.scripting_langage = DAS_SCRIPT ;
+        g_app.info.scripting_langage = DAS_SCRIPT;
     }
     else if (strcmp("python", value.value.s) == 0)
     {
-        g_app.info.scripting_langage = PY_SCRIPT ;
+        g_app.info.scripting_langage = PY_SCRIPT;
     }
     else
     {
-        LOG_WARNING("scripting language : %s is not supported set angelscript to default", value.value.s);
+        LOG_WARNING("scripting language : %s is not supported set python to default", value.value.s);
+        g_app.info.scripting_langage = PY_SCRIPT;
     }
 
     if (!ReadConfigValue("palette", memory, &value, size) ||
@@ -356,15 +357,18 @@ void InitializeScripts(void)
     {
     }
 #else
-    if (!BindingsInitFromMemory("scripts/main.as"))
+    if (!ScriptRunFromMemory("scripts/main.as"))
     {
         HandleBindingsFailure();
         return;
     }
-    if (g_app.info.scripting_langage == ANGEL_SCRIPT)
-        LOG_INFO("Angel runtime initialized successfully with script 'main.as'");
+    if (g_app.info.scripting_langage == DAS_SCRIPT)
+        LOG_INFO("Dascript runtime initialized successfully with script 'main.das'");
+    else if (g_app.info.scripting_langage == PY_SCRIPT)
+        LOG_INFO("Python runtime initialized successfully with script 'main.py'");
     else
     {
+        LOG_ERROR("Unknow scripting language used.");
     }
 #endif
 }

@@ -5,7 +5,6 @@
 
 BEGIN_DECLARATIONS
 
-bool DaScriptRegisterCallback(uint16 name, const char *funcDecl);
 bool DaScriptCallBack(CallbackArg *args, uint16 name);
 bool DaScriptCallOnStart();
 bool DaScriptCallOnUpdate(float32 delta);
