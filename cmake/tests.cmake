@@ -46,15 +46,6 @@ function(grn_pipeline_clean_command name out_var)
     endif ()
 endfunction()
 
-function(grn_cmd_quote out)
-    set(s "")
-    foreach (a IN LISTS ARGN)
-        string(APPEND s "\"${a}\" ")
-    endforeach ()
-    string(STRIP "${s}" s)
-    set(${out} "${s}" PARENT_SCOPE)
-endfunction()
-
 function(grn_add_test_target name)
     set(tgt "tests_${name}")
 
@@ -69,16 +60,25 @@ function(grn_add_test_target name)
     grn_pipeline_prepare_command(${name} prepare_command)
     grn_pipeline_clean_command(${name} clean_command)
 
-    grn_cmd_quote(pre_str ${prepare_command})
-    set_property(GLOBAL APPEND PROPERTY GRN_PRE_TEST_CMDS "${pre_str}")
+    add_test(NAME ${tgt}_setup
+            COMMAND ${prepare_command})
+    set_tests_properties(${tgt}_setup
+            PROPERTIES FIXTURES_SETUP fixture_${name})
+
     if (clean_command)
-        grn_cmd_quote(post_str ${clean_command})
-        set_property(GLOBAL APPEND PROPERTY GRN_POST_TEST_CMDS "${post_str}")
+        add_test(NAME ${tgt}_clean
+                COMMAND ${clean_command})
+        set_tests_properties(${tgt}_clean
+                PROPERTIES FIXTURES_CLEANUP fixture_${name})
     endif ()
 
+    # LA SOLUTION POUR LE DÉBOGUEUR CLION EST ICI :
+    # On utilise "Runtime" (la cible CMake) au lieu du chemin.
     add_test(NAME ${tgt}_run
-            COMMAND "${test_src_dir}/$<TARGET_FILE_NAME:Runtime>"
+            COMMAND Runtime
             WORKING_DIRECTORY "${test_src_dir}")
+    set_tests_properties(${tgt}_run
+            PROPERTIES FIXTURES_REQUIRED fixture_${name})
 endfunction()
 
 function(grn_setup_tests)
@@ -114,29 +114,6 @@ function(grn_setup_tests)
 
         set_tests_properties(tests_${name}_run PROPERTIES LABELS "${test_labels}")
     endforeach ()
-
-    get_property(pre_cmds GLOBAL PROPERTY GRN_PRE_TEST_CMDS)
-    get_property(post_cmds GLOBAL PROPERTY GRN_POST_TEST_CMDS)
-
-    set(content "set(CTEST_CUSTOM_PRE_TEST\n")
-    foreach (c IN LISTS pre_cmds)
-        string(APPEND content "  [==[${c}]==]\n")
-    endforeach ()
-    string(APPEND content ")\n\nset(CTEST_CUSTOM_POST_TEST\n")
-    foreach (c IN LISTS post_cmds)
-        string(APPEND content "  [==[${c}]==]\n")
-    endforeach ()
-    string(APPEND content ")\n")
-    
-    file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/CTestCustom-$<CONFIG>.cmake" CONTENT "${content}")
-
-    if (CMAKE_CONFIGURATION_TYPES)
-        set(ctest_config [=[$ENV{CMAKE_CONFIG_TYPE}]=])
-    else ()
-        set(ctest_config "${CMAKE_BUILD_TYPE}")
-    endif ()
-    file(WRITE "${CMAKE_BINARY_DIR}/CTestCustom.cmake"
-            "include(\"${CMAKE_BINARY_DIR}/CTestCustom-${ctest_config}.cmake\" OPTIONAL)\n")
 
     add_custom_target(run_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L "target_tests|auto_tests" DEPENDS build_test_deps)
     add_custom_target(run_auto_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L "auto_tests" DEPENDS build_test_deps)

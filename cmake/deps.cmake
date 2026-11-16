@@ -161,11 +161,6 @@ if (MSVC)
     add_compile_definitions(DAS_NO_GLOBAL_NEW_AND_DELETE)
 endif ()
 
-# ios error conversion without this compilation macros
-if (APPLE)
-    add_compile_options(-Wno-error -Wno-shorten-64-to-32 -Wno-missing-field-initializers)
-endif ()
-
 CPMAddPackage(
         NAME daScript
         GITHUB_REPOSITORY BorisBat/daScript
@@ -211,6 +206,15 @@ CPMAddPackage(
 
         "DAS_USE_STATIC_STD_LIBS ON"
 )
+
+# ios error conversion without this compilation macros
+if (APPLE AND TARGET libDaScript_runtime)
+    target_compile_options(libDaScript_runtime PRIVATE
+            -Wno-error
+            -Wno-shorten-64-to-32
+            -Wno-missing-field-initializers
+    )
+endif ()
 
 
 CPMAddPackage(
