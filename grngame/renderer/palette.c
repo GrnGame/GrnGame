@@ -5,7 +5,6 @@
 #include "grngame/core/app.h"
 #include "grngame/data/json.h"
 #include "grngame/dev/logging.h"
-#include "grngame/renderer/cielab.h"
 #include "kvec.h"
 #include <grngame/utils/string_compat.h>
 #include <math.h>
@@ -110,9 +109,9 @@ void PaletteParse(string_vec_t *text)
     {
         LOG_INFO("No color palette detected, set to black and white");
 
-        PaletteAddColor((SDL_Color){0, 0, 0, 255});
+        PaletteAddColor((SDL_Color){.r = 0, .g = 0, .b = 0, .a = 255});
 
-        PaletteAddColor((SDL_Color){255, 255, 255, 255});
+        PaletteAddColor((SDL_Color){.r = 255, .g = 255, .b = 255, .a = 255});
 
         return;
     }

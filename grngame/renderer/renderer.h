@@ -6,7 +6,7 @@
 BEGIN_DECLARATIONS
 
 #if PIXEL_INT_ONLY
-#define PIXEL_ALIGN(x) floor(x)
+#define PIXEL_ALIGN(x) floor((float64)x)
 #else
 #define PIXEL_ALIGN(x) (x)
 #endif

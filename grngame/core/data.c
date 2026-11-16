@@ -6,7 +6,6 @@
 #include "grngame/utils/memory.h"
 #include "grngame/utils/string_compat.h"
 #include "grngame/utils/version.h"
-#include <SDL3/SDL.h>
 #include <stdlib.h>
 
 static sqlite3 *OpenStorageDb(const char *name)

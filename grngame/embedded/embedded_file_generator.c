@@ -1,19 +1,15 @@
 #include "embedded_file_generator.h"
-
 #include "SDL3/SDL_stdinc.h"
 #include "grngame/platform/directories.h"
 #include "grngame/platform/paths.h"
-
 #include "grngame/data/file.h"
 #include <grngame/utils/string_compat.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "grngame/data/sqlite.h"
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/memory.h"
-#include "grngame/utils/version.h"
 #include "sqlite3.h"
 
 static int32 IsConfigJson(const char *path)
@@ -59,11 +55,10 @@ static void CreateEmbedSchema(sqlite3 *db)
 static bool PrepareEmbedStatements(sqlite3 *db, EmbedContext *ctx)
 {
     char sql[128 * BUFFER_SPACE];
-    bool success;
     for (int32 i = 0; i < EMBED_KIND_COUNT; ++i)
     {
         snprintf(sql, sizeof(sql), "INSERT INTO %s (path, content) VALUES (?, ?);", EMBED_TABLE_NAMES[i]);
-        success = DbStmtPrepare(db, sql, &ctx->stmts[i]);
+        bool success = DbStmtPrepare(db, sql, &ctx->stmts[i]);
         if (!success)
         {
             return false;

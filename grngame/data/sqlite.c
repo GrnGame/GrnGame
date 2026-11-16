@@ -7,7 +7,6 @@
 #include "grngame/utils/memory.h"
 #include "grngame/utils/version.h"
 #include "kvec.h"
-#include <SDL3/SDL.h>
 #include <grngame/utils/string_compat.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -38,7 +37,7 @@ static void DbBindArgs(sqlite3_stmt *stmt, DbArg *args, int32 argc)
             sqlite3_bind_text(stmt, i + 1, args[i].value.s, -1, SQLITE_TRANSIENT);
             break;
         case DATA:
-            sqlite3_bind_blob(stmt, i + 1, args[i].value.blob.data, args[i].value.blob.size, SQLITE_TRANSIENT);
+            sqlite3_bind_blob(stmt, i + 1, args[i].value.blob.data, (int32)args[i].value.blob.size, SQLITE_TRANSIENT);
             break;
         default:
             sqlite3_bind_null(stmt, i + 1);
@@ -159,6 +158,8 @@ static DbResult DbResultGet(sqlite3_stmt *stmt)
             }
             case SQLITE_NULL:
                 v.type = VOID_;
+                break;
+            default:
                 break;
             }
 

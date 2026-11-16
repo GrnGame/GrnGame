@@ -22,8 +22,6 @@ InputManager InputManagerCreate()
     return m;
 }
 
-#include "input_manager.h"
-
 void InputManagerDestroy(InputManager *manager)
 {
     if (manager == NULL)

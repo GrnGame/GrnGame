@@ -1,14 +1,10 @@
 #include "renderer.h"
 #include "../math/types.h"
 #include "SDL3/SDL_error.h"
-#include "SDL3/SDL_pixels.h"
 #include "grngame/core/app.h"
 #include "grngame/data/file.h"
 #include "grngame/dev/logging.h"
-#include "grngame/math/math.h"
-#include "grngame/platform/paths.h"
 #include "grngame/utils/attributes.h"
-#include "kvec.h"
 #include <math.h>
 #include <stdbool.h>
 

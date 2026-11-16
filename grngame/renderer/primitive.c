@@ -1,7 +1,6 @@
 #include "primitive.h"
 #include "../utils/attributes.h"
 #include "grngame/core/app.h"
-#include "grngame/math/math.h"
 #include "grngame/math/types.h"
 #include "kvec.h"
 #include "renderer.h"

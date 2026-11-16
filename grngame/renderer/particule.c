@@ -2,7 +2,6 @@
 
 #include "SDL3/SDL_stdinc.h"
 #include "grngame/core/app.h"
-#include "grngame/math/math.h"
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/clear.h"
 #include "grngame/utils/random.h"
@@ -223,10 +222,10 @@ void RenderEmitter(ParticleEmitter *emit)
 
     int32 vcount = 0;
     int32 icount = 0;
-    const int32 base_indices[6] = {0, 1, 2, 2, 3, 0};
 
     for (int32 i = 0; i < emit->capacity; i++)
     {
+        const int32 base_indices[6] = {0, 1, 2, 2, 3, 0};
         Particle *p = &emit->particles[i];
         if (!IsAlive(p))
             continue;
@@ -236,21 +235,21 @@ void RenderEmitter(ParticleEmitter *emit)
         float32 w = p->size;
         float32 h = p->size;
 
-        SDL_Color base_color = {0, 0, 0, 255};
+        SDL_Color base_color = {.r = 0, .g = 0, .b = 0, .a = 255};
         if (LIKELY(palette_size > 0))
         {
-            int32 safe_idx = glm_clamp(p->current_color_idx, 0, palette_size - 1);
+            int32 safe_idx = (int32)glm_clamp((float32)p->current_color_idx, 0, (float32)(palette_size - 1));
 
             base_color = kv_A(g_app.palette_manager.palette_elements, safe_idx);
         }
 
         uint8 alpha_val = p->current_alpha_idx;
-        SDL_FColor color = {base_color.r / 255.0f, base_color.g / 255.0f, base_color.b / 255.0f, alpha_val / 255.0f};
+        SDL_FColor color = {.r = (float32)base_color.r / 255.0f, .g = (float32)base_color.g / 255.0f, .b = (float32)base_color.b / 255.0f, .a = (float32)alpha_val / 255.0f};
 
         int32 base = vcount;
 
         verts[vcount++] =
-            (SDL_Vertex){.position = {PIXEL_ALIGN(x), PIXEL_ALIGN(y)}, .color = color, .tex_coord = {0, 0}};
+            (SDL_Vertex){.position = {.x = PIXEL_ALIGN(x), .y = PIXEL_ALIGN(y)}, .color = color, .tex_coord = {.x = 0, .y = 0}};
         verts[vcount++] =
             (SDL_Vertex){.position = {PIXEL_ALIGN(x + w), PIXEL_ALIGN(y)}, .color = color, .tex_coord = {0, 0}};
         verts[vcount++] =

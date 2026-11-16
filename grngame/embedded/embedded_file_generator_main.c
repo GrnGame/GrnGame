@@ -1,11 +1,9 @@
 #include "embedded_file_generator.h"
 #include "grngame/core/app.h"
 #include "grngame/data/json_read.h"
-#include "grngame/utils/memory.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 int main(int argc, char **argv)
 {

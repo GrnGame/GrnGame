@@ -5,7 +5,6 @@
 #include "grngame/platform/directories.h"
 #include "grngame/utils/string_compat.h"
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_system.h>
 #include <stdio.h>
 #include <stdlib.h>
 

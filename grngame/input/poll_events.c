@@ -226,6 +226,8 @@ HOT void PollEvents()
             case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
                 im->controllers[idx].trigger_r = compute_axis(event.gaxis.value, DEFAULT_DEAD_ZONE);
                 break;
+            default:
+                break;
             }
             break;
         }

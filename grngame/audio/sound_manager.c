@@ -19,7 +19,7 @@ COLD bool SoundManagerTryCreate(SoundManager *result)
         return false;
     }
 
-    *result = (SoundManager){.mixer = mixer, {0}, {.x = 0, .y = 0}, {.x = 0, .y = 0}};
+    *result = (SoundManager){.mixer = mixer, .slots = {0}, .listener = {.x = 0, .y = 0}, .half_view = {.x = 0, .y = 0}};
 
     return true;
 }

@@ -11,7 +11,7 @@ vec2s GetMousePosition()
 {
     float32 mx, my;
     SDL_GetMouseState(&mx, &my);
-    return (vec2s){{mx, my}};
+    return (vec2s){.raw = {mx, my}};
 }
 
 bool MouseLeftPressed()
@@ -58,8 +58,8 @@ float32 MouseScrollY()
 void MoveMouse(int16 x, int16 y)
 {
     uint8 coeff = WindowGetScale();
-    int32 mx = (int32)((x + g_app.info.offset_x) * coeff);
-    int32 my = (int32)((y + g_app.info.offset_y) * coeff);
+    float32 mx = (((float32)x + g_app.info.offset_x) * (float32)coeff);
+    float32 my = (((float32)y + g_app.info.offset_y) * (float32)coeff);
     SDL_WarpMouseInWindow(g_app.window, mx, my);
 }
 

@@ -1,19 +1,15 @@
 #include "json.h"
 #include "file.h"
 #include "grngame/assets/embedded_file_manager.h"
-#include "grngame/assets/load.h"
 #include "grngame/bindings/api/callback.h"
 #include "grngame/core/app.h"
 #include "grngame/dev/logging.h"
-#include "grngame/embedded/embedded_file_generator.h"
-#include "grngame/input/input_data.h"
 #include "grngame/math/types.h"
 #include "grngame/platform/paths.h"
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/clear.h"
 #include "grngame/utils/string_compat.h"
 #include "grngame/utils/time.h"
-#include "kvec.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -271,7 +267,7 @@ void JsonSaveObjects(float64 budget)
 {
     JsonManager manager = g_app.json_manager;
     uint32 current_time_sec = g_app.info.frame_count / (uint32)g_app.info.fps;
-    uint32 start_ticks = TimeNow();
+    uint32 start_ticks = (uint32)TimeNow();
 
     float64 max_time_ms = budget * 0.8;
 
@@ -291,13 +287,13 @@ void JsonSaveObjects(float64 budget)
         if (!should_save)
             continue;
 
-        uint32 elapsed_ms = TimeNow() - start_ticks;
+        uint32 elapsed_ms = (uint32)TimeNow() - start_ticks;
 
         if (!is_mandatory && elapsed_ms >= max_time_ms)
             continue;
 
         const char *key = kh_key(manager, it);
-        CallbackArg args[1] = {{.type = CB_ARG_STRING, .as.string = key}};
+        CallbackArg args[1] = {{.type = CB_ARG_STRING, .as.string = (void*)key}};
         CallBack(args, JSON_SAVE);
         json->last_save_time = current_time_sec;
     }

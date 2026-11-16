@@ -1,15 +1,10 @@
 #include "app.h"
-#include "SDL3/SDL_error.h"
-#include "SDL3/SDL_init.h"
 #include "SDL3/SDL_timer.h"
 #include "SDL3/SDL_video.h"
 #include "grngame/audio/sound.h"
-#include "grngame/audio/sound_info.h"
 #include "grngame/bindings/api/callback.h"
 #include "grngame/bindings/api/interpretor.h"
-#include "grngame/core/app.h"
 #include "grngame/core/init.h"
-#include "grngame/core/text.h"
 #include "grngame/core/thread.h"
 #include "grngame/core/window.h"
 #include "grngame/data/json.h"
@@ -17,13 +12,10 @@
 #include "grngame/dev/hotreload.h"
 #include "grngame/dev/logging.h"
 #include "grngame/dev/tracy.h"
-#include "grngame/input/input_data.h"
 #include "grngame/input/poll_events.h"
-#include "grngame/math/math.h"
 #include "grngame/math/types.h"
 #include "grngame/platform/check_type.h"
 #include "grngame/renderer/palette.h"
-#include "grngame/renderer/primitive.h"
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/clear.h"
 #include "grngame/utils/random.h"
@@ -271,7 +263,7 @@ void ReloadConfig(void)
     WindowApplyConfig(&g_app.info);
     if (g_app.info.enable_palette)
         PaletteReload();
-    LOG_INFO("sucessfuly reload config");
+    LOG_INFO("successfully reload config");
 }
 
 App g_app;

@@ -6,12 +6,9 @@
 #include "cglm/util.h"
 #include "grngame/bindings/api/callback.h"
 #include "grngame/dev/logging.h"
-#include "grngame/math/math.h"
 #include "grngame/utils/attributes.h"
-#include <SDL3/SDL_events.h>
 #include <grngame/utils/string_compat.h>
 #include <math.h>
-#include <stdio.h>
 
 // sdl wrappent
 SDL_Gamepad *GamepadOpen(SDL_JoystickID id)

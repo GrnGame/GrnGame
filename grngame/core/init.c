@@ -18,10 +18,7 @@
 #include "grngame/renderer/palette.h"
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/taskbar_icon.h"
-#include "grngame/utils/time.h"
-#include "grngame/utils/version.h"
 #include "kvec.h"
-#include "text.h"
 #include <SDL3/SDL.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -287,10 +284,10 @@ static void HandleBindingsFailure(void)
 {
     const SDL_Color red = {255, 0, 0, 255};
     RendererSetColor(red.r, red.g, red.b, red.a);
-    SetTaskBarIconErrorProgress(100.0);
+    SetTaskBarIconErrorProgress(100.0f);
 }
 
-InitResult InitializeWindow(void)
+static InitResult InitializeWindow(void)
 {
     g_app.info.offset_x = 0;
     g_app.info.offset_y = 0;
@@ -308,7 +305,7 @@ InitResult InitializeWindow(void)
     return INIT_OK;
 }
 
-InitResult InitializeManagers(void)
+static InitResult InitializeManagers(void)
 {
     g_app.asset_manager = AssetManagerCreate();
     g_app.input_manager = InputManagerCreate();
@@ -319,12 +316,12 @@ InitResult InitializeManagers(void)
     return INIT_OK;
 }
 
-void InitializeJson(void)
+static void InitializeJson(void)
 {
     g_app.json_manager = JsonManagerCreate();
 }
 
-void InitializePalette(void)
+static void InitializePalette(void)
 {
     InitLinearLut();
     g_app.palette_manager = PaletteManagerCreate();
@@ -332,7 +329,7 @@ void InitializePalette(void)
         PaletteParse(&g_app.info.palette);
 }
 
-void InitializeAssets(void)
+static void InitializeAssets(void)
 {
     char *asset_path = PathFromExecutableDirectory(g_app.info.asset_folder);
 #ifndef GRNGAME_EMBED_ASSETS
@@ -343,7 +340,7 @@ void InitializeAssets(void)
     free(asset_path);
 }
 
-void InitializeScripts(void)
+static void InitializeScripts(void)
 {
 #ifndef GRNGAME_EMBED_ASSETS
     if (!ScriptRun("scripts/main.as"))

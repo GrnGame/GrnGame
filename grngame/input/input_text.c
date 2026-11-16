@@ -20,7 +20,7 @@ void InputTextClear()
     LOG_INFO("Text input clear");
 }
 
-void InputTextPutChar(const char text)
+static void InputTextPutChar(const char text)
 {
     InputManager *im = &g_app.input_manager;
     kv_push(char, im->text_input, text);

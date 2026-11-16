@@ -4,7 +4,6 @@
 #include "grngame/math/types.h"
 #include <grngame/utils/string_compat.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +21,7 @@ void *LoadFile(const char *name, uint32 *size)
     if (size != NULL)
         *size = (uint32)loaded_size;
     if (!data)
-        LOG_ERROR("Cant load file :%s error:", name, SDL_GetError());
+        LOG_ERROR("Cant load file :%s error:%s", name, SDL_GetError());
     return data;
 }
 
@@ -30,7 +29,7 @@ bool SaveFile(const char *name, const void *data, uint32 size)
 {
     bool ok = SDL_SaveFile(name, data, size);
     if (!ok)
-        LOG_ERROR("Cant save file: %s error:", name, SDL_GetError());
+        LOG_ERROR("Cant save file: %s error:%s", name, SDL_GetError());
     return ok;
 }
 
@@ -39,7 +38,7 @@ SDL_IOStream *IOFromFile(const char *file, const char *mode)
 {
     SDL_IOStream *io = SDL_IOFromFile(file, mode);
     if (!io)
-        LOG_ERROR("Cant get io from file :%s in mode %s error :", file, mode, SDL_GetError());
+        LOG_ERROR("Cant get io from file :%s in mode %s error :%s", file, mode, SDL_GetError());
     return io;
 }
 
@@ -63,7 +62,7 @@ bool CloseIO(SDL_IOStream *io)
 {
     bool ok = SDL_CloseIO(io);
     if (!ok)
-        LOG_ERROR("Cant close io error:", SDL_GetError());
+        LOG_ERROR("Cant close io error:%s", SDL_GetError());
     return ok;
 }
 

@@ -3,8 +3,6 @@
 #include "filter.h"
 #include "grngame/core/app.h"
 #include "grngame/dev/logging.h"
-#include "grngame/math/math.h"
-#include <SDL3/SDL.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <math.h>
 #include <string.h>
@@ -86,6 +84,7 @@ static bool SlotEnsureTrack(SoundSlot *slot)
 static void SDLCALL FilterCallback(void *userdata, MIX_Track *track, const SDL_AudioSpec *spec, float32 *pcm,
                                    int samples)
 {
+    (void)track;
     FilterChainProcess((FilterChain *)userdata, pcm, samples, spec->channels);
 }
 

@@ -131,9 +131,8 @@ static bool LoadTableFrom(sqlite3 *db, const char *label, EmbedKind kind)
     char sql[128 * BUFFER_SPACE];
     snprintf(sql, sizeof(sql), "SELECT path, content FROM %s;", EmbedKindTable(kind));
 
-    bool success;
     DbResult res;
-    success = DataFetch(db, sql, &res);
+    bool success = DataFetch(db, sql, &res);
 
     bool ok = success;
     for (uint32 i = 0; ok && i < (uint32)kv_size(res.rows); ++i)
@@ -161,7 +160,7 @@ static bool AssetsPakTableExists(const char *name)
     return exists;
 }
 
-bool EmbeddedDbHasValidSchema()
+static bool EmbeddedDbHasValidSchema()
 {
     for (int32 i = 0; i < EMBED_KIND_COUNT; ++i)
     {
@@ -207,7 +206,6 @@ bool EmbeddedFileExists(const char *path)
     return EmbeddedFileGet(path) != NULL;
 }
 
-const char *EmbedKindTable(EmbedKind kind);
 
 uint32 EmbeddedFileManagerGetCounts(EmbedKind kind)
 {
@@ -221,9 +219,8 @@ uint32 EmbeddedFileManagerGetTotalCount()
 
 static bool GameDataExec(const char *sql, DbArg *args, int32 arg_count)
 {
-    bool prepared;
     DbStmt stmt;
-    prepared = DbStmtPrepare(g_app.info.data_db, sql, &stmt);
+    bool prepared = DbStmtPrepare(g_app.info.data_db, sql, &stmt);
     if (!prepared)
     {
         LOG_ERROR("Cant prepare statement on game.data");

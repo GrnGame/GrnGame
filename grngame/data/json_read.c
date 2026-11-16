@@ -1,7 +1,6 @@
 #include "json_read.h"
 #include "file.h"
 #include "grngame/dev/logging.h"
-#include "grngame/input/input_data.h"
 #include "grngame/math/types.h"
 #include "grngame/platform/paths.h"
 #include "grngame/utils/attributes.h"

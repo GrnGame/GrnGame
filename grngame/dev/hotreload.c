@@ -29,6 +29,10 @@ static SDL_Mutex *g_queue_mutex = NULL;
 static void watch_callback(dmon_watch_id watch_id, dmon_action action, const char *rootdir, const char *filepath,
                            const char *oldfilepath, void *user)
 {
+    (void)watch_id;
+    (void)rootdir;
+    (void)user;
+
     if (!filepath)
         return;
 

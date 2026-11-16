@@ -81,7 +81,7 @@ bool TextDraw(const Font *font, const char *text, vec2s position, int32 space_be
     }
 
     Sprite sprite = {
-        .w = font->size_of_case.x, .h = font->size_of_case.y, .tex = tex, .find = true, .name = font->name};
+        .w = (uint16)font->size_of_case.x, .h = (uint16)font->size_of_case.y, .tex = tex, .find = true, .name = font->name};
 
     TextLayout l = {
         .start_x = position.x,

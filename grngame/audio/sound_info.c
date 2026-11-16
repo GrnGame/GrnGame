@@ -6,7 +6,7 @@ SoundInfo SoundInfoDefault()
     SoundInfo info = {0};
     info.volume = 1.0f;
     info.pitch = 1.0f;
-    info.position = (vec2s){NAN, NAN};
+    info.position = (vec2s){.x=NAN, .y=NAN};
     return info;
 }
 
