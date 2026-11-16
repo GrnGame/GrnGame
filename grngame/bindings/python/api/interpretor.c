@@ -18,6 +18,8 @@ bool PyScriptRun(const char *filename)
 free:
     free(name);
     free(module);
+
+    return true;
 }
 
 bool PyScriptRunFromMemory(const char *filename)
@@ -38,6 +40,8 @@ bool PyScriptRunFromMemory(const char *filename)
 
 free:
     free(module);
+
+    return true;
 }
 
 void PyScriptFree()

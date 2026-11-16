@@ -1,5 +1,5 @@
-#include <daScript/daScript.h>
 #include "interpretor.h"
+#include <daScript/daScript.h>
 
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/bindings/dascript/api/callback.h"
@@ -22,6 +22,8 @@ bool DaScriptRun(const char *filename)
 free:
     free(name);
     free(module);
+
+    return true;
 }
 
 bool DaScriptRunFromMemory(const char *filename)
@@ -42,6 +44,8 @@ bool DaScriptRunFromMemory(const char *filename)
 
 free:
     free(module);
+
+    return true;
 }
 
 void DaScriptFree()
