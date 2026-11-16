@@ -377,6 +377,6 @@ target_link_libraries(Runtime PRIVATE grngame)
 # tests
 include(cmake/tests.cmake)
 grn_setup_tests(
-        TARGET_TESTS engine_work
-        AUTO_TESTS
+        TARGET_TESTS
+        AUTO_TESTS engine_work
 )
