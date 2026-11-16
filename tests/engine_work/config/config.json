@@ -9,11 +9,10 @@
   "maximised": false,
   "bordered": true,
   "forceUniverseScale": false,
-  "assetFolder": "assets",
   "enable_palette": false,
   "palette": [],
-  "name": "My game",
+  "name": "My prout",
   "version": "1.0.0",
   "company": "my.society.com",
-  "language": "angelscript"
+  "language": "dascript"
 }

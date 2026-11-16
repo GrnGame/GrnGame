@@ -3,6 +3,7 @@
 
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/bindings/dascript/api/callback.h"
+#include "grngame/core/app.h"
 #include "grngame/platform/paths.h"
 #include <cstdlib>
 
@@ -30,6 +31,11 @@ bool DaScriptRunFromMemory(const char *filename)
 {
 
     const EmbeddedFile *file = EmbeddedFileGet(filename);
+    if (file == NULL)
+    {
+        LOG_ERROR("Failed to find %s in %s", filename, ASSETS_PAK);
+        return false;
+    }
     const char *name = file->name;
     uint32 size = file->size;
     char *module = FileStem(filename);

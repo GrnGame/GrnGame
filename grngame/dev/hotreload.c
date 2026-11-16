@@ -24,6 +24,13 @@ static void HotReloadDestroyQueue()
     kv_destroy(g_app.queue);
 }
 
+static void ReloadMainScript(const char *changed_file)
+{
+    const char *main_file = GetMainFile();
+    if (!ScriptReload(main_file))
+        LOG_WARNING("Failed to reload script '%s' after change of '%s'", main_file, changed_file);
+}
+
 static SDL_Mutex *g_queue_mutex = NULL;
 
 static void watch_callback(dmon_watch_id watch_id, dmon_action action, const char *rootdir, const char *filepath,
@@ -101,8 +108,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected new script '%s'", cpath);
-                if (!(ScriptReload("scripts/main.as")))
-                    LOG_WARNING("Failed to reload script '%s'", cpath);
+                ReloadMainScript(cpath);
             }
 
             if (FileIsLoadableAudio(cpath))
@@ -135,8 +141,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected deleted script '%s'", cpath);
-                if (!ScriptReload("scripts/main.as"))
-                    LOG_WARNING("Failed to reload script '%s'", cpath);
+                ReloadMainScript(cpath);
             }
 
             if (FileIsLoadableAudio(cpath))
@@ -166,13 +171,12 @@ void ProcessHotreloadQueue(void)
         case MODIFIED: {
             // logs always modified
             if (strstr(cpath, "grngame.log") == NULL)
-                LOG_DEBUG("File modified '%s'", cpath);
+                continue;
 
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected modified script '%s'", cpath);
-                if (!ScriptReload("scripts/main.as"))
-                    LOG_WARNING("Failed to reload script '%s'", cpath);
+                ReloadMainScript(cpath);
             }
             // we can reload the config
             if (strstr(cpath, "config.json") != NULL)
@@ -237,8 +241,7 @@ void ProcessHotreloadQueue(void)
             if (FileIsLoadableScript(cpath))
             {
                 LOG_INFO("Detected moved script '%s'", cpath);
-                if (!ScriptReload("scripts/main.as"))
-                    LOG_WARNING("Failed to reload script '%s'", cpath);
+                ReloadMainScript(cpath);
             }
 
             if (FileIsLoadableAudio(cpath))

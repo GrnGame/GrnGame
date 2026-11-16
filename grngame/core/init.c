@@ -85,8 +85,8 @@ static InitResult SetSDLMetadata(void)
 
 static bool ReadConfigValue(const char *key, const unsigned char *memory, JsonValue *value, uint32 size)
 {
-    *value =
-        memory == NULL ? JsonReadValueFromDirectory(CONFIG, key) : JsonReadValueFromMemory(CONFIG, key, memory, size);
+    *value = memory == NULL ? JsonReadValueFromDirectory(CONFIG_FILE, key)
+                            : JsonReadValueFromMemory(CONFIG_FILE, key, memory, size);
     return value->type != JSONV_VOID;
 }
 
@@ -157,10 +157,6 @@ static bool ParseConfig(const unsigned char *memory, uint32 size)
         goto invalid;
     g_app.info.name = value.value.s;
 
-    if (!ReadConfigValue("assetFolder", memory, &value, size) || value.type != JSONV_TEXT)
-        goto invalid;
-    g_app.info.asset_folder = value.value.s;
-
     if (!ReadConfigValue("version", memory, &value, size) || value.type != JSONV_TEXT)
         goto invalid;
     g_app.info.version = value.value.s;
@@ -200,7 +196,7 @@ static bool ParseConfig(const unsigned char *memory, uint32 size)
 // first time of my life used a goto , but best choice here because used specific code error will be bloated the code
 invalid:
     JsonValueFree(&value);
-    LOG_ERROR("Failed to read configuration value from %s", CONFIG);
+    LOG_ERROR("Failed to read configuration value from %s", CONFIG_FILE);
     return false;
 }
 
@@ -208,7 +204,7 @@ static InitResult LoadAppConfig()
 {
     if (!ParseConfig(NULL, 0))
     {
-        LOG_ERROR("%s", "Failed to parse config.json : somes parameters arent here");
+        LOG_ERROR("%s", "Failed to parse : somes parameters arent here");
         return INIT_CONFIG_FAILED;
     }
     return INIT_OK;
@@ -216,16 +212,16 @@ static InitResult LoadAppConfig()
 
 static InitResult LoadAppConfigEmbedded()
 {
-    const EmbeddedFile *asset = EmbeddedFileGet("config/config.json");
+    const EmbeddedFile *asset = EmbeddedFileGet(CONFIG_FILE);
     if (!asset)
     {
-        LOG_ERROR("%s", "Failed to get config.json in Assets.pak.Did you delete it before package your app ?");
+        LOG_ERROR("Failed to get %s in %s.Did you delete it before package your app ?", CONFIG_FILE, ASSETS_PAK);
         return INIT_CONFIG_FAILED;
     }
 
     if (!ParseConfig(asset->data, asset->size))
     {
-        LOG_ERROR("%s", "Failed to parse config.json : somes parameters arent here");
+        LOG_ERROR("Failed to parse %s : somes parameters arent here", CONFIG_FILE);
         return INIT_CONFIG_FAILED;
     }
     return INIT_OK;
@@ -244,17 +240,17 @@ static SDL_IOStream *LoadControllerDatabase(void)
 {
 #ifdef GRNGAME_EMBED_ASSETS
     {
-        const EmbeddedFile *asset = EmbeddedFileGet("data/gamecontrollerdb.txt");
+        const EmbeddedFile *asset = EmbeddedFileGet(DATA_GAME_DB);
         if (!asset)
         {
-            LOG_ERROR("Failed to get gamecontrollerdb.txt in Assets.pak,did you delete it before package your app?");
+            LOG_ERROR("Failed to get %s in Assets.pak,did you delete it before package your app?", DATA_GAME_DB);
             return NULL;
         }
         return SDL_IOFromConstMem(asset->data, asset->size);
     }
 #else
 
-    char *path = PathFromExecutableDirectory("data/gamecontrollerdb.txt");
+    char *path = PathFromExecutableDirectory(DATA_GAME_DB);
     SDL_IOStream *stream = SDL_IOFromFile(path, "rb");
     free(path);
     return stream;
@@ -331,7 +327,7 @@ static void InitializePalette(void)
 
 static void InitializeAssets(void)
 {
-    char *asset_path = PathFromExecutableDirectory(g_app.info.asset_folder);
+    char *asset_path = PathFromExecutableDirectory(ASSET_FOLDER);
 #ifndef GRNGAME_EMBED_ASSETS
     AssetManagerLoadFolder(asset_path);
 #else
@@ -342,32 +338,21 @@ static void InitializeAssets(void)
 
 static void InitializeScripts(void)
 {
-#ifndef GRNGAME_EMBED_ASSETS
-    if (!ScriptRun("scripts/main.as"))
-    {
-        HandleBindingsFailure();
-        return;
-    }
-    if (g_app.info.scripting_langage == DAS_SCRIPT)
-        LOG_INFO("Dascript runtime initialized successfully with script 'main.das'");
-    else
-    {
-    }
+    const char *main_file = GetMainFile();
+
+#ifdef GRNGAME_EMBED_ASSETS
+    bool success = ScriptRunFromMemory(main_file);
 #else
-    if (!ScriptRunFromMemory("scripts/main.as"))
+    bool success = ScriptRun(main_file);
+#endif
+
+    if (!success)
     {
         HandleBindingsFailure();
         return;
     }
-    if (g_app.info.scripting_langage == DAS_SCRIPT)
-        LOG_INFO("Dascript runtime initialized successfully with script 'main.das'");
-    else if (g_app.info.scripting_langage == PY_SCRIPT)
-        LOG_INFO("Python runtime initialized successfully with script 'main.py'");
-    else
-    {
-        LOG_ERROR("Unknow scripting language used.");
-    }
-#endif
+
+    LOG_INFO("Runtime initialized successfully with script: %s", main_file);
 }
 
 InitResult InitAll(void)
@@ -389,7 +374,7 @@ InitResult InitAll(void)
 #elif GRNGAME_EMBED_ASSETS
 #ifdef GRNGAME_ANDROID
     g_app.embedded_file_manager = EmbeddedFileManagerCreate();
-    char *storage = PathFromAndroidStorage("Assets.pak");
+    char *storage = PathFromAndroidStorage(ASSETS_PAK);
     if (!MoveFile_(storage, ASSETS_PAK))
     {
         free(storage);
@@ -400,7 +385,7 @@ InitResult InitAll(void)
     free(storage);
 #else
     g_app.embedded_file_manager = EmbeddedFileManagerCreate();
-    g_app.info.file_db = DbCreate("Assets.pak");
+    g_app.info.file_db = DbCreate(ASSETS_PAK);
 
 #endif
 
@@ -454,7 +439,7 @@ InitResult InitAll(void)
     {
         if (!ApplyDbVersion(g_app.info.data_db, g_app.info.version))
         {
-            LOG_ERROR("Failed to store new version for game.data :'%s'", g_app.info.version);
+            LOG_ERROR("Failed to store new version for %s :'%s'", SAVE_FILE, g_app.info.version);
             g_app.info.update_event_data = false;
         }
     }

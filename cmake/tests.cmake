@@ -2,83 +2,58 @@ if (IS_DESKTOP)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
 endif ()
 
-set(GRN_PIPELINE_SCRIPTS "${CMAKE_SOURCE_DIR}/scripts/test")
-
-
-function(grn_pipeline_prepare_command name out_var)
-    set(test_dir "${CMAKE_SOURCE_DIR}/tests/${name}")
-
-    if (GRNGAME_EMBED_ASSETS)
-        set(${out_var}
-                ${Python3_EXECUTABLE} "${GRN_PIPELINE_SCRIPTS}/embedded_pipeline.py"
-                "${test_dir}"
-                "${CMAKE_SOURCE_DIR}"
-                "${GRNGAME_OUTPUT_DIR}/embedded/$<LOWER_CASE:$<CONFIG>>"
-                "$<TARGET_FILE:Runtime>"
-                PARENT_SCOPE)
-    else ()
-        set(${out_var}
-                ${Python3_EXECUTABLE} "${GRN_PIPELINE_SCRIPTS}/dev_pipeline.py"
-                "prepare"
-                "${test_dir}"
-                "${CMAKE_SOURCE_DIR}"
-                "$<TARGET_FILE:Runtime>"
-                PARENT_SCOPE)
-    endif ()
-endfunction()
-
-function(grn_pipeline_clean_command name out_var)
-    set(test_dir "${CMAKE_SOURCE_DIR}/tests/${name}")
-
-    if (GRNGAME_EMBED_ASSETS)
-        set(${out_var}
-                ${Python3_EXECUTABLE} "${GRN_PIPELINE_SCRIPTS}/embedded_clean.py"
-                "${test_dir}"
-                "$<TARGET_FILE:Runtime>"
-                PARENT_SCOPE)
-    else ()
-        set(${out_var}
-                ${Python3_EXECUTABLE} "${GRN_PIPELINE_SCRIPTS}/dev_pipeline.py"
-                "clean"
-                "${test_dir}"
-                "$<TARGET_FILE:Runtime>"
-                PARENT_SCOPE)
-    endif ()
-endfunction()
-
+# one executable per test, built into build/tests/<name>, with its files prepared by a python script
 function(grn_add_test_target name)
     set(tgt "tests_${name}")
-
-    # test only on desktop
-    if (NOT IS_DESKTOP)
-        message(STATUS "You need to be on desktop to run tests!")
-        return()
+    if (TARGET ${tgt})
+        return() # same test listed in both lists
     endif ()
 
-    set(test_src_dir "${CMAKE_SOURCE_DIR}/tests/${name}")
+    set(scripts "${CMAKE_SOURCE_DIR}/scripts/test")
+    set(build_dir "${CMAKE_BINARY_DIR}/tests/${name}")
 
-    grn_pipeline_prepare_command(${name} prepare_command)
-    grn_pipeline_clean_command(${name} clean_command)
+    # same sources as the runtime
+    add_executable(${tgt} "${CMAKE_SOURCE_DIR}/runtime/main.c")
+    target_link_libraries(${tgt} PRIVATE grngame)
+    set_target_properties(${tgt} PROPERTIES
+            OUTPUT_NAME "Runtime-${GRNGAME_TAG}"
+            RUNTIME_OUTPUT_DIRECTORY "${build_dir}")
 
-    add_test(NAME ${tgt}_setup
-            COMMAND ${prepare_command})
-    set_tests_properties(${tgt}_setup
-            PROPERTIES FIXTURES_SETUP fixture_${name})
-
-    if (clean_command)
-        add_test(NAME ${tgt}_clean
-                COMMAND ${clean_command})
-        set_tests_properties(${tgt}_clean
-                PROPERTIES FIXTURES_CLEANUP fixture_${name})
+    # prepare the test folder before each build of the test:
+    #  - dev: link assets, std and data
+    #  - embedded: build Assets.pak with the Embedded generator, which is NOT a target of this
+    #    configuration (it is built by the dev configuration into GRNGAME_OUTPUT_DIR/embedded)
+    if (GRNGAME_EMBED_ASSETS)
+        set(prepare_cmd ${Python3_EXECUTABLE} "${scripts}/embedded_pipeline.py"
+                "tests/${name}" "${build_dir}" "${CMAKE_SOURCE_DIR}"
+                "${GRNGAME_OUTPUT_DIR}/embedded/$<LOWER_CASE:$<CONFIG>>")
+    else ()
+        set(prepare_cmd ${Python3_EXECUTABLE} "${scripts}/dev_pipeline.py"
+                "tests/${name}" "${build_dir}")
     endif ()
 
-    # LA SOLUTION POUR LE DÉBOGUEUR CLION EST ICI :
-    # On utilise "Runtime" (la cible CMake) au lieu du chemin.
-    add_test(NAME ${tgt}_run
-            COMMAND Runtime
-            WORKING_DIRECTORY "${test_src_dir}")
-    set_tests_properties(${tgt}_run
-            PROPERTIES FIXTURES_REQUIRED fixture_${name})
+    add_custom_target(${tgt}_prepare COMMAND ${prepare_cmd} VERBATIM)
+    add_dependencies(${tgt} ${tgt}_prepare)
+
+    add_test(NAME ${tgt} COMMAND "$<TARGET_FILE:${tgt}>" WORKING_DIRECTORY "${build_dir}")
+endfunction()
+
+# runs the given tests one after the other, in listed order
+function(grn_add_group_target group)
+    set(commands)
+    set(exes)
+    foreach (name IN LISTS ARGN)
+        list(APPEND exes tests_${name})
+        list(APPEND commands COMMAND ${CMAKE_COMMAND} -E chdir
+                "${CMAKE_BINARY_DIR}/tests/${name}" "$<TARGET_FILE:tests_${name}>")
+    endforeach ()
+
+    if (commands)
+        add_custom_target(${group} ${commands} USES_TERMINAL VERBATIM)
+        add_dependencies(${group} ${exes})
+    else ()
+        add_custom_target(${group} COMMAND ${CMAKE_COMMAND} -E echo "No tests in ${group}")
+    endif ()
 endfunction()
 
 function(grn_setup_tests)
@@ -87,34 +62,22 @@ function(grn_setup_tests)
     endif ()
     cmake_parse_arguments(ARG "" "" "TARGET_TESTS;AUTO_TESTS" ${ARGN})
 
-    set(deps Runtime)
-    if (TARGET Embedded)
-        list(APPEND deps Embedded)
-    endif ()
-
-    if (NOT TARGET build_test_deps)
-        add_custom_target(build_test_deps DEPENDS ${deps})
-    endif ()
-
-    set(all_tests ${ARG_TARGET_TESTS} ${ARG_AUTO_TESTS})
-    if (all_tests)
-        list(REMOVE_DUPLICATES all_tests)
-    endif ()
-
-    foreach (name IN LISTS all_tests)
+    foreach (name IN LISTS ARG_TARGET_TESTS ARG_AUTO_TESTS)
         grn_add_test_target(${name})
-
-        set(test_labels "")
-        if ("${name}" IN_LIST ARG_TARGET_TESTS)
-            list(APPEND test_labels "target_tests")
-        endif ()
-        if ("${name}" IN_LIST ARG_AUTO_TESTS)
-            list(APPEND test_labels "auto_tests")
-        endif ()
-
-        set_tests_properties(tests_${name}_run PROPERTIES LABELS "${test_labels}")
     endforeach ()
 
-    add_custom_target(run_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L "target_tests|auto_tests" DEPENDS build_test_deps)
-    add_custom_target(run_auto_tests COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L "auto_tests" DEPENDS build_test_deps)
+    # ctest labels, a test listed in both lists gets both (ctest -L auto_tests)
+    foreach (name IN LISTS ARG_TARGET_TESTS)
+        set_property(TEST tests_${name} APPEND PROPERTY LABELS "target_tests")
+    endforeach ()
+    foreach (name IN LISTS ARG_AUTO_TESTS)
+        set_property(TEST tests_${name} APPEND PROPERTY LABELS "auto_tests")
+    endforeach ()
+
+    grn_add_group_target(tests ${ARG_TARGET_TESTS})
+    grn_add_group_target(auto_tests ${ARG_AUTO_TESTS})
+
+    # delete every generated test folder (they are recreated by the prepare step)
+    add_custom_target(tests_clean_all
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "${CMAKE_BINARY_DIR}/tests")
 endfunction()

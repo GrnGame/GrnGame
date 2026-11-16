@@ -33,7 +33,6 @@ typedef struct AppInfo
     char *company;
     char *version;
     char *old_version;
-    char *asset_folder;
 
     SCRIPTING_LANGUAGE scripting_langage;
 
@@ -86,16 +85,27 @@ void EngineSetStop();
 COLD void ShutdownScripts(void);
 void ReloadConfig(void);
 
+// todo: moove
+const char *GetMainFile(void);
+
 extern App g_app;
 extern bool request_stop;
 
 #define STD "std"
 
-#define CONFIG "config/config.json"
-
-#define METADATA "metadata.json"
+#define CONFIG_FILE "config/config.json"
+#define CONFIG_FOLDER "config"
 
 #define ASSETS_PAK "Assets.pak"
 #define SAVE_FILE "game.data"
+
+#define MAIN_FILE_PY "scripts/main.py"
+#define MAIN_FILE_DAS "scripts/main.das"
+
+#define ASSET_FOLDER "assets"
+
+#define DATA_FOLDER "data"
+
+#define DATA_GAME_DB "data/gamecontrollerdb.txt"
 
 END_DECLARATIONS

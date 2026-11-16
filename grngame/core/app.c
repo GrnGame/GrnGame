@@ -161,8 +161,6 @@ static COLD void CleanupAppResources(void)
     // todo : factorise code
     if (g_app.info.name)
         free(g_app.info.name);
-    if (g_app.info.asset_folder)
-        free(g_app.info.asset_folder);
     if (g_app.info.version)
         free(g_app.info.version);
     if (g_app.info.company)
@@ -255,8 +253,6 @@ static COLD void MainLoop(void)
 
 void ReloadConfig(void)
 {
-
-    PROFILE_FUNCTION("Reload");
     InitAppConfig();
     LogDestroy();
     LogInit(LOG_TO_CONSOLE);
@@ -266,4 +262,20 @@ void ReloadConfig(void)
     LOG_INFO("successfully reload config");
 }
 
+// todo : moove
+const char *GetMainFile(void)
+{
+    switch (g_app.info.scripting_langage)
+    {
+    case DAS_SCRIPT:
+        return MAIN_FILE_DAS;
+
+    case PY_SCRIPT:
+        return MAIN_FILE_PY;
+
+    default:
+        LOG_ERROR("Unknown scripting language used. Set main file to: %s", MAIN_FILE_PY);
+        return MAIN_FILE_PY;
+    }
+}
 App g_app;

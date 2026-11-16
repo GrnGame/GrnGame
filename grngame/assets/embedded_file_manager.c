@@ -166,7 +166,7 @@ static bool EmbeddedDbHasValidSchema()
     {
         if (!AssetsPakTableExists(EmbedKindTable((EmbedKind)i)))
         {
-            LOG_ERROR("Assets.pak: missing table '%s'", EmbedKindTable((EmbedKind)i));
+            LOG_ERROR("%s: missing table '%s'", ASSETS_PAK, EmbedKindTable((EmbedKind)i));
             return false;
         }
     }
@@ -177,13 +177,13 @@ bool EmbeddedFileManagerLoadAssetsPak()
 {
     if (!EmbeddedDbHasValidSchema())
     {
-        LOG_ERROR("%s", "Assets.pak structure isn't correct");
+        LOG_ERROR("%s structure isn't correct", ASSETS_PAK);
         return false;
     }
 
     for (int32 i = 0; i < EMBED_KIND_COUNT; ++i)
     {
-        if (!LoadTableFrom(g_app.info.file_db, "Assets.pak", (EmbedKind)i))
+        if (!LoadTableFrom(g_app.info.file_db, ASSETS_PAK, (EmbedKind)i))
             return false;
     }
     return true;
@@ -191,7 +191,7 @@ bool EmbeddedFileManagerLoadAssetsPak()
 
 bool EmbeddedFileManagerLoadGameData()
 {
-    return LoadTableFrom(g_app.info.data_db, "game.data", GAME_DATA_KIND);
+    return LoadTableFrom(g_app.info.data_db, SAVE_FILE, GAME_DATA_KIND);
 }
 
 const EmbeddedFile *EmbeddedFileGet(const char *path)
@@ -205,7 +205,6 @@ bool EmbeddedFileExists(const char *path)
 {
     return EmbeddedFileGet(path) != NULL;
 }
-
 
 uint32 EmbeddedFileManagerGetCounts(EmbedKind kind)
 {
@@ -223,7 +222,7 @@ static bool GameDataExec(const char *sql, DbArg *args, int32 arg_count)
     bool prepared = DbStmtPrepare(g_app.info.data_db, sql, &stmt);
     if (!prepared)
     {
-        LOG_ERROR("Cant prepare statement on game.data");
+        LOG_ERROR("Cant prepare statement on %s", SAVE_FILE);
         return false;
     }
 
@@ -231,7 +230,7 @@ static bool GameDataExec(const char *sql, DbArg *args, int32 arg_count)
     DbStmtFree(&stmt);
 
     if (!ok)
-        LOG_ERROR("Cant run statement on game.data");
+        LOG_ERROR("Cant run statement on %s", SAVE_FILE);
     return ok;
 }
 

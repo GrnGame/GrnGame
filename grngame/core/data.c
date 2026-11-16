@@ -37,7 +37,7 @@ static bool CreateGameDataFile(const char *path, const char *version)
 
 bool InstallGameData(void)
 {
-    char *path = PathFromStorage("game.data");
+    char *path = PathFromStorage(SAVE_FILE);
     if (!path)
         return false;
 
@@ -89,7 +89,7 @@ static bool DetectGameDataVersionChange(const char *path)
 
 bool InitGameData(void)
 {
-    char *path = PathFromStorage("game.data");
+    char *path = PathFromStorage(SAVE_FILE);
     if (!path)
         return false;
 
@@ -98,10 +98,10 @@ bool InitGameData(void)
     if (!ok)
         return false;
 
-    g_app.info.data_db = OpenStorageDb("game.data");
+    g_app.info.data_db = OpenStorageDb(SAVE_FILE);
     if (!g_app.info.data_db)
     {
-        LOG_ERROR("Cannot open game.data");
+        LOG_ERROR("Cannot open %s", SAVE_FILE);
         return false;
     }
 

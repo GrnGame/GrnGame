@@ -7,18 +7,18 @@
 
 int main(int argc, char **argv)
 {
-    JsonValue v = JsonReadValue("config/config.json", "version");
+    JsonValue v = JsonReadValue(CONFIG_FILE, "version");
     if (v.type != JSONV_TEXT)
     {
-        LOG_ERROR("Failed to read version section in %s", "config/config.json");
+        LOG_ERROR("Failed to read version section in %s", CONFIG_FILE);
         JsonValueFree(&v);
         return false;
     }
     const char *version = v.value.s;
     if (argc == 1)
     {
-        const char *dirs[] = {"assets", "data", "std", "config"};
-        CreateEmbeddedFileDb(4, dirs, "Assets.pak", version);
+        const char *dirs[] = {ASSET_FOLDER, DATA_FOLDER, STD, CONFIG_FOLDER};
+        CreateEmbeddedFileDb(4, dirs, ASSETS_PAK, version);
     }
     else if (argc < 3)
     {
@@ -30,6 +30,5 @@ int main(int argc, char **argv)
         CreateEmbeddedFileDb(argc - 2, (const char **)(argv + 2), argv[1], version);
     }
     JsonValueFree(&v);
-
     return 0;
 }
