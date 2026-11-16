@@ -157,6 +157,20 @@ if (IS_DESKTOP)
 endif ()
 
 set(DAS_MODULES_INCLUDE "" CACHE STRING "" FORCE)
+
+# on MT mode there are 2 declarations of new and delete
+if (MSVC)
+add_compile_definitions(DAS_NO_GLOBAL_NEW_AND_DELETE)
+endif ()
+
+# ios error conversion without this compilation macros
+if(APPLE)
+    target_compile_options(libDaScript_runtime PRIVATE
+            -Wno-error
+            -Wno-shorten-64-to-32
+            -Wno-missing-field-initializers)
+endif()
+
 CPMAddPackage(
         NAME daScript
         GITHUB_REPOSITORY BorisBat/daScript
