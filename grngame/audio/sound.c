@@ -1,4 +1,5 @@
 #include "sound.h"
+#include "cglm/util.h"
 #include "filter.h"
 #include "grngame/core/app.h"
 #include "grngame/dev/logging.h"
@@ -139,8 +140,8 @@ static bool SlotApplyPan(SoundSlot *slot, float32 pan)
         return true;
     }
 
-    pan = CLAMP(pan, -1.0f, 1.0f);
-    MIX_StereoGains gains = {1.0f - MAX(pan, 0.0f), 1.0f + MIN(pan, 0.0f)};
+    pan = glm_clamp(pan, -1.0f, 1.0f);
+    MIX_StereoGains gains = {1.0f - glm_max(pan, 0.0f), 1.0f + glm_min(pan, 0.0f)};
     if (!MIX_SetTrackStereo(slot->track, &gains))
     {
         LOG_WARNING("Failed to apply sound pan: %s", SDL_GetError());
@@ -153,8 +154,8 @@ static MIX_Point3D ToSoundSpace(vec2s world)
 {
     SoundManager *manager = Manager();
     vec2s listener = manager->listener;
-    float32 half_width = MAX(manager->half_view.x, 1.0f);
-    float32 half_height = MAX(manager->half_view.y, 1.0f);
+    float32 half_width = glm_max(manager->half_view.x, 1.0f);
+    float32 half_height = glm_max(manager->half_view.y, 1.0f);
 
     MIX_Point3D point = {(world.x - listener.x) / half_width, (world.y - listener.y) / half_height, -SOUND_DEPTH};
     return point;
@@ -205,7 +206,7 @@ static bool SlotConfigure(SoundSlot *slot, MIX_Audio *audio, const char *name, c
         LOG_WARNING("Failed to set volume for sound '%s': %s", name, SDL_GetError());
         return false;
     }
-    if (!MIX_SetTrackFrequencyRatio(slot->track, CLAMP(info->pitch, SOUND_PITCH_MIN, SOUND_PITCH_MAX)))
+    if (!MIX_SetTrackFrequencyRatio(slot->track, glm_clamp(info->pitch, SOUND_PITCH_MIN, SOUND_PITCH_MAX)))
     {
         LOG_WARNING("Failed to set pitch for sound '%s': %s", name, SDL_GetError());
         return false;

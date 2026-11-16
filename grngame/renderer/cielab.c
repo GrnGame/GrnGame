@@ -4,6 +4,7 @@
 #include "grngame/math/math.h"
 #include "kvec.h"
 #include <math.h>
+#include <cglm/cglm.h>
 
 static float32 srgb_linear_lut[256];
 
@@ -101,7 +102,7 @@ HOT static float32 CalculateCIEDE2000(const ColorLAB *color1, const ColorLAB *co
     float32 h1_prime = 0.0;
     if (b1 != 0 || a1_prime != 0)
     {
-        h1_prime = RAD2DEG(atan2(b1, a1_prime));
+        h1_prime = glm_deg(atan2(b1, a1_prime));
         if (h1_prime < 0.0)
             h1_prime += 360.0;
     }
@@ -109,7 +110,7 @@ HOT static float32 CalculateCIEDE2000(const ColorLAB *color1, const ColorLAB *co
     float32 h2_prime = 0.0;
     if (b2 != 0 || a2_prime != 0)
     {
-        h2_prime = RAD2DEG(atan2(b2, a2_prime));
+        h2_prime = glm_deg(atan2(b2, a2_prime));
         if (h2_prime < 0.0)
             h2_prime += 360.0;
     }
@@ -134,7 +135,7 @@ HOT static float32 CalculateCIEDE2000(const ColorLAB *color1, const ColorLAB *co
         }
     }
 
-    float32 delta_H_prime = 2.0 * sqrt(c1_prime * c2_prime) * sin(DEG2RAD(delta_h_prime) / 2.0);
+    float32 delta_H_prime = 2.0 * sqrt(c1_prime * c2_prime) * sin(glm_deg(delta_h_prime) / 2.0);
 
     float32 L_prime_avg = (l1 + l2) / 2.0;
     float32 C_prime_avg = (c1_prime + c2_prime) / 2.0;
@@ -155,13 +156,13 @@ HOT static float32 CalculateCIEDE2000(const ColorLAB *color1, const ColorLAB *co
             h_prime_avg = (h1_prime + h2_prime - 360.0) / 2.0;
         }
     }
-    float32 T = 1.0 - 0.17 * cos(DEG2RAD(h_prime_avg - 30.0)) + 0.24 * cos(DEG2RAD(2.0 * h_prime_avg)) +
-                0.32 * cos(DEG2RAD(3.0 * h_prime_avg + 6.0)) - 0.20 * cos(DEG2RAD(4.0 * h_prime_avg - 63.0));
+    float32 T = 1.0 - 0.17 * cos(glm_deg(h_prime_avg - 30.0)) + 0.24 * cos(glm_deg(2.0 * h_prime_avg)) +
+                0.32 * cos(glm_deg(3.0 * h_prime_avg + 6.0)) - 0.20 * cos(glm_deg(4.0 * h_prime_avg - 63.0));
 
     float32 delta_theta = 30.0 * exp(-pow((h_prime_avg - 275.0) / 25.0, 2.0));
     float32 C_prime_avg7 = pow(C_prime_avg, 7.0);
     float32 R_c = 2.0 * sqrt(C_prime_avg7 / (C_prime_avg7 + 6103515625.0));
-    float32 R_t = -sin(DEG2RAD(2.0 * delta_theta)) * R_c;
+    float32 R_t = -sin(glm_deg(2.0 * delta_theta)) * R_c;
     float32 L_minus_50_sq = pow(L_prime_avg - 50.0, 2.0);
     float32 S_L = 1.0 + ((0.015 * L_minus_50_sq) / sqrt(20.0 + L_minus_50_sq));
     float32 S_C = 1.0 + 0.045 * C_prime_avg;
@@ -178,7 +179,7 @@ int32 FindBestPaletteColorCIEDE2000(ColorLAB *target_pixel)
     int32 size = (int32)kv_size(g_app.palette_manager.palette_elements_lab);
 
     int32 best_index = 0;
-    float32 best_score = 9999999.0;
+    float32 best_score = 9999999.0f;
     for (int32 i = 0; i < size; i++)
     {
         ColorLAB *candidate_lab = &kv_A(g_app.palette_manager.palette_elements_lab, i);

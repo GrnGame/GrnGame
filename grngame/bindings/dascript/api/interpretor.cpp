@@ -1,5 +1,5 @@
-#include "interpretor.h"
 #include <daScript/daScript.h>
+#include "interpretor.h"
 
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/bindings/dascript/api/callback.h"

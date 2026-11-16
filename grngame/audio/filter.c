@@ -1,9 +1,12 @@
 #include "filter.h"
+
+#include "cglm/util.h"
 #include "grngame/math/math.h"
 #include "grngame/math/types.h"
 #include "grngame/utils/clear.h"
 #include <SDL3/SDL.h>
 #include <stdlib.h>
+#include <math.h>
 
 typedef struct
 {
@@ -23,7 +26,7 @@ struct FilterChain
     int32 channels;
 };
 
-FilterDef FilterEcho(float32 delay, float32 decay, float32 wet)
+FilterDef FilterEcho(const float32 delay, const float32 decay, const float32 wet)
 {
     FilterDef def = {.type = FILTER_ECHO};
     def.echo.delay = delay;
@@ -32,7 +35,7 @@ FilterDef FilterEcho(float32 delay, float32 decay, float32 wet)
     return def;
 }
 
-FilterDef FilterBassboost(float32 boost)
+FilterDef FilterBassboost(const float32 boost)
 {
     FilterDef def = {.type = FILTER_BASSBOOST};
     def.bassboost.boost = boost;
@@ -41,9 +44,9 @@ FilterDef FilterBassboost(float32 boost)
 
 static void NodeInitEcho(FilterNode *node, const FilterDef *def, const SDL_AudioSpec *spec)
 {
-    float32 delay = CLAMP(def->echo.delay, ECHO_DELAY_MIN, ECHO_DELAY_MAX);
-    node->amount = CLAMP(def->echo.decay, 0.0f, ECHO_DECAY_MAX);
-    node->length = (int32)(delay * spec->freq);
+    float32 delay = glm_clamp(def->echo.delay, ECHO_DELAY_MIN, ECHO_DELAY_MAX);
+    node->amount = glm_clamp(def->echo.decay, 0.0f, ECHO_DECAY_MAX);
+    node->length = (int32)((int32)delay * spec->freq);
 
     node->wet = def->echo.wet;
 
@@ -55,7 +58,7 @@ static void NodeInitBass(FilterNode *node, const FilterDef *def, const SDL_Audio
 {
     node->amount = def->bassboost.boost;
     // bass formule
-    node->coeff = 1.0f - EXP(-2.0f * pi * BASS_CUTOFF_HZ / (float32)spec->freq);
+    node->coeff = 1.0f - expf(-2.0f * (float32)GLM_PI * BASS_CUTOFF_HZ / (float32)spec->freq);
     node->memory = malloc(spec->channels * sizeof(float32));
     CLEAR_ARRAY(node->memory, 0, spec->channels);
 }
@@ -74,19 +77,19 @@ static void NodeInit(FilterNode *node, const FilterDef *def, const SDL_AudioSpec
     }
 }
 
-static void NodeFree(FilterNode *node)
+static void NodeFree(const FilterNode *node)
 {
     free(node->memory);
 }
 
-static void NodeProcessEcho(FilterNode *node, float32 *pcm, int32 frames, int32 channels)
+static void NodeProcessEcho(FilterNode *node, float32 *pcm, const int32 frames, const int32 channels)
 {
     for (int32 i = 0; i < frames; i++)
     {
         float32 *tap = &node->memory[node->pos * channels];
         for (int32 c = 0; c < channels; c++)
         {
-            float32 in = pcm[i * channels + c];
+            const float32 in = pcm[i * channels + c];
             pcm[i * channels + c] = in + tap[c] * node->wet;
             tap[c] = in + tap[c] * node->amount;
         }
@@ -94,13 +97,13 @@ static void NodeProcessEcho(FilterNode *node, float32 *pcm, int32 frames, int32 
     }
 }
 
-static void NodeProcessBass(FilterNode *node, float32 *pcm, int32 frames, int32 channels)
+static void NodeProcessBass(const FilterNode *node, float32 *pcm, const int32 frames, const int32 channels)
 {
     for (int32 i = 0; i < frames; i++)
     {
         for (int32 c = 0; c < channels; c++)
         {
-            float32 in = pcm[i * channels + c];
+            const float32 in = pcm[i * channels + c];
             node->memory[c] += node->coeff * (in - node->memory[c]);
             pcm[i * channels + c] = in + node->memory[c] * node->amount;
         }
@@ -120,7 +123,7 @@ static void NodeProcess(FilterNode *node, float32 *pcm, int32 frames, int32 chan
     }
 }
 
-FilterChain *FilterChainCreate(const FilterDef *defs, int32 count, const SDL_AudioSpec *spec)
+FilterChain *FilterChainCreate(const FilterDef *defs, const int32 count, const SDL_AudioSpec *spec)
 {
     if (!defs || count <= 0 || !spec)
         return NULL;
@@ -151,12 +154,12 @@ void FilterChainDestroy(FilterChain *chain)
     free(chain);
 }
 
-void FilterChainProcess(FilterChain *chain, float32 *pcm, int32 samples, int32 channels)
+void FilterChainProcess(const FilterChain *chain, float32 *pcm, const int32 samples, const int32 channels)
 {
     if (channels <= 0 || channels > chain->channels)
         return;
 
-    int32 frames = samples / channels;
+    const int32 frames = samples / channels;
     for (int32 i = 0; i < chain->count; i++)
         NodeProcess(&chain->nodes[i], pcm, frames, channels);
 }

@@ -41,6 +41,6 @@ FilterDef FilterBassboost(float32 boost);
 
 FilterChain *FilterChainCreate(const FilterDef *defs, int32 count, const SDL_AudioSpec *spec);
 void FilterChainDestroy(FilterChain *chain);
-void FilterChainProcess(FilterChain *chain, float32 *pcm, int32 samples, int32 channels);
+void FilterChainProcess(const FilterChain *chain, float32 *pcm, int32 samples, int32 channels);
 
 END_DECLARATIONS

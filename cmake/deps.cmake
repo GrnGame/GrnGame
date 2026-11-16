@@ -3,7 +3,9 @@ set(FETCHCONTENT_QUIET OFF)
 
 if (EMSCRIPTEN)
     set(_grn_sdl_pthreads ${GRNGAME_WASM_THREADS})
+    set(_grn_mimalloc "OFF")
 else ()
+    set(_grn_mimalloc "ON")
     set(_grn_sdl_pthreads ON)
 endif ()
 
@@ -201,13 +203,14 @@ CPMAddPackage(
         "DAS_USE_STATIC_STD_LIBS ON"
 )
 
+
 CPMAddPackage(
         NAME pocketpy
         GITHUB_REPOSITORY pocketpy/pocketpy
         GIT_TAG v2.2.0
         OPTIONS
         "PK_BUILD_STATIC_LIB ON"
-        "PK_ENABLE_MIMALLOC ON"
+        "PK_ENABLE_MIMALLOC ${_grn_mimalloc}"
         "PK_ENABLE_THREADS ON"
         "PK_BUILD_MODULE_LZ4 OFF"
         "PK_BUILD_MODULE_CUTE_PNG OFF"

@@ -139,7 +139,7 @@ static DbResult DbResultGet(sqlite3_stmt *stmt)
             {
             case SQLITE_INTEGER:
                 v.type = INTEGER;
-                v.value.i = sqlite3_column_int64(stmt, i);
+                v.value.i = (int32)sqlite3_column_int64(stmt, i);
                 break;
             case SQLITE_FLOAT:
                 v.type = FLOAT_;
@@ -296,13 +296,13 @@ bool ReadSqliteVersion(const char *path, int32 *out)
 
 bool ApplyDbPragmas(sqlite3 *db)
 {
-    if (!DataWrite(db, "PRAGMA journal_mode = OFF;"))
+    if (!DataWrite(db, "PRAGMA journal_mode = WAL   ;"))
     {
         LOG_ERROR("Can't write database journal_mode");
         return false;
     }
 
-    if (!DataWrite(db, "PRAGMA synchronous = OFF;"))
+    if (!DataWrite(db, "PRAGMA synchronous = NORMAL;"))
     {
         LOG_ERROR("Can't write database synchronous");
         return false;

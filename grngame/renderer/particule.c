@@ -8,6 +8,7 @@
 #include "grngame/utils/random.h"
 #include "kvec.h"
 #include <math.h>
+#include "cglm/cglm.h"
 
 static bool IsAlive(const Particle *p)
 {
@@ -27,7 +28,7 @@ ParticleEmitter ParticleEmitterCreate(int32 capacity)
 
     emit.lifetime = 1.0f;
     emit.direction = 0.0f;
-    emit.spread = 2.0f * (float32)pi;
+    emit.spread = 2.0f * (float32)GLM_PI;
     emit.initial_velocity = 60.0f;
     emit.damping = 1.0f;
     emit.scale_start = 4.0f;
@@ -136,12 +137,12 @@ static void UpdateParticle(ParticleEmitter *restrict emit, Particle *restrict p,
     float32 t = p->age / p->lifetime;
     float32 curve = emit->scale_amount_curve;
     float32 shaped_t = curve > 0.0f ? powf(t, curve) : t;
-    p->size = Math_Lerp(emit->scale_start, emit->scale_end, shaped_t);
+    p->size = glm_lerp(emit->scale_start, emit->scale_end, shaped_t);
     if (p->size < 1.0f)
         p->size = 1.0f;
 
-    p->current_color_idx = Math_LerpInt(emit->color_start, emit->color_end, t);
-    p->current_alpha_idx = Math_LerpInt(emit->alpha_start, emit->alpha_end, shaped_t);
+    p->current_color_idx = (int32)glm_lerp((float32)emit->color_start, (float32)emit->color_end, t);
+    p->current_alpha_idx = (int32)glm_lerp((float32)emit->alpha_start, (float32)emit->alpha_end, shaped_t);
 }
 
 void UpdateEmitter(ParticleEmitter *emit, float32 dt)
@@ -151,7 +152,7 @@ void UpdateEmitter(ParticleEmitter *emit, float32 dt)
 
     if (emit->local_coords)
     {
-        vec2s delta = {{emit->position.x - emit->previous_position.x, emit->position.y - emit->previous_position.y}};
+        const vec2s delta = {{emit->position.x - emit->previous_position.x, emit->position.y - emit->previous_position.y}};
         if (delta.x != 0.0f || delta.y != 0.0f)
         {
             for (int32 i = 0; i < emit->capacity; i++)
@@ -238,7 +239,8 @@ void RenderEmitter(ParticleEmitter *emit)
         SDL_Color base_color = {0, 0, 0, 255};
         if (LIKELY(palette_size > 0))
         {
-            int32 safe_idx = CLAMP(p->current_color_idx, 0, palette_size - 1);
+            int32 safe_idx = glm_clamp(p->current_color_idx, 0, palette_size - 1);
+
             base_color = kv_A(g_app.palette_manager.palette_elements, safe_idx);
         }
 

@@ -6,12 +6,12 @@
 #include "kvec.h"
 #include "renderer.h"
 #include <math.h>
+#include <cglm/cglm.h>
 
 static inline void SetColorFromPalette(int32 c_idx, uint8 a)
 {
-    int32 palette_size = (int32)kv_size(g_app.palette_manager.palette_elements);
-
-    int32 safe_c = CLAMP(c_idx, 0, palette_size - 1);
+    const int32 palette_size = (int32)kv_size(g_app.palette_manager.palette_elements);
+    const int32 safe_c = (int32)glm_clamp((float32)c_idx, 0, (float32)palette_size - 1);
     SDL_Color base_color = kv_A(g_app.palette_manager.palette_elements, safe_c);
 
     RendererSetColor(base_color.r, base_color.g, base_color.b, a);

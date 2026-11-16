@@ -1,9 +1,10 @@
+#include <daScript/daScript.h>
 #include "grngame/bindings/dascript/api/callback.h"
 #include "grngame/assets/embedded_file_manager.h"
 #include "grngame/platform/paths.h"
 #include "interpretor.h"
 #include <cstdlib>
-#include <daScript/daScript.h>
+
 
 // todo make a class
 static das::SimFunction *on_update = nullptr;

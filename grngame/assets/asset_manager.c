@@ -15,7 +15,6 @@
 #include "kvec.h"
 #include <stdlib.h>
 
-static void AddTextureToArray(const char *path, void *user_data);
 static void AddAssetFileToArray(const char *path, void *user_data);
 static void LoadTaskWorker(void *data);
 static void LoadFilesMultithreaded(void);
