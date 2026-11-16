@@ -11,9 +11,8 @@ function(grn_add_test_target name)
 
     set(scripts "${CMAKE_SOURCE_DIR}/scripts/test")
     set(build_dir "${CMAKE_BINARY_DIR}/tests/${name}")
-
-    # same sources as the runtime
-    add_executable(${tgt} "${CMAKE_SOURCE_DIR}/runtime/main.c")
+    # same sources as the runtime, not part of "all" (built only when tests are requested)
+    add_executable(${tgt} EXCLUDE_FROM_ALL "${CMAKE_SOURCE_DIR}/runtime/main.c")
     target_link_libraries(${tgt} PRIVATE grngame)
     set_target_properties(${tgt} PROPERTIES
             OUTPUT_NAME "Runtime-${GRNGAME_TAG}"

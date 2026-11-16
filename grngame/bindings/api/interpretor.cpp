@@ -50,10 +50,10 @@ bool ScriptReload(const char *filename)
 void ScriptFree()
 {
     if (g_app.info.scripting_langage == DAS_SCRIPT)
-          DaScriptFree();
+        DaScriptFree();
     else if (g_app.info.scripting_langage == PY_SCRIPT)
     {
-         PyScriptFree();
+        PyScriptFree();
     }
     else
     {

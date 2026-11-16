@@ -13,5 +13,4 @@ static inline float64 Average(float64_vec_t vec)
     return sum / (uint32)kv_size(vec);
 }
 
-
 #define MB (1024 * 1024)

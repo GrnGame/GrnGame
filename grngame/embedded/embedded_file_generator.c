@@ -1,16 +1,16 @@
 #include "embedded_file_generator.h"
 #include "SDL3/SDL_stdinc.h"
+#include "grngame/data/file.h"
+#include "grngame/data/sqlite.h"
 #include "grngame/platform/directories.h"
 #include "grngame/platform/paths.h"
-#include "grngame/data/file.h"
+#include "grngame/utils/attributes.h"
+#include "grngame/utils/memory.h"
+#include "sqlite3.h"
 #include <grngame/utils/string_compat.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "grngame/data/sqlite.h"
-#include "grngame/utils/attributes.h"
-#include "grngame/utils/memory.h"
-#include "sqlite3.h"
 
 static int32 IsConfigJson(const char *path)
 {

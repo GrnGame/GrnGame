@@ -2,8 +2,8 @@
 #include "SDL3/SDL_pixels.h"
 #include "grngame/core/app.h"
 #include "kvec.h"
-#include <math.h>
 #include <cglm/cglm.h>
+#include <math.h>
 
 static float32 srgb_linear_lut[256];
 
@@ -22,7 +22,7 @@ void InitLinearLut()
 static float32 PivotXYZ(float32 n)
 {
     float32 epsilon = 216.0f / 24389.0f;
-    float32 kappa = 24389.0f/ 27.0f;
+    float32 kappa = 24389.0f / 27.0f;
 
     if (n > epsilon)
     {
@@ -161,7 +161,7 @@ HOT static float32 CalculateCIEDE2000(const ColorLAB *color1, const ColorLAB *co
     float32 delta_theta = 30.0f * expf(-powf((h_prime_avg - 275.0f) / 25.0f, 2.0f));
     float32 C_prime_avg7 = powf(C_prime_avg, 7.0f);
     float32 R_c = 2.0f * sqrtf(C_prime_avg7 / (C_prime_avg7 + 6103515625.0f));
-    float32 R_t = -sinf(glm_deg(2.0f* delta_theta)) * R_c;
+    float32 R_t = -sinf(glm_deg(2.0f * delta_theta)) * R_c;
     float32 L_minus_50_sq = powf(L_prime_avg - 50.0f, 2.0f);
     float32 S_L = 1.0f + ((0.015f * L_minus_50_sq) / sqrtf(20.0f + L_minus_50_sq));
     float32 S_C = 1.0f + 0.045f * C_prime_avg;

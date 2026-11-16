@@ -4,8 +4,8 @@
 #include "grngame/math/types.h"
 #include "kvec.h"
 #include "renderer.h"
-#include <math.h>
 #include <cglm/cglm.h>
+#include <math.h>
 
 static inline void SetColorFromPalette(int32 c_idx, uint8 a)
 {

@@ -1,13 +1,13 @@
 #include "particule.h"
 
 #include "SDL3/SDL_stdinc.h"
+#include "cglm/cglm.h"
 #include "grngame/core/app.h"
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/clear.h"
 #include "grngame/utils/random.h"
 #include "kvec.h"
 #include <math.h>
-#include "cglm/cglm.h"
 
 static bool IsAlive(const Particle *p)
 {
@@ -151,7 +151,8 @@ void UpdateEmitter(ParticleEmitter *emit, float32 dt)
 
     if (emit->local_coords)
     {
-        const vec2s delta = {{emit->position.x - emit->previous_position.x, emit->position.y - emit->previous_position.y}};
+        const vec2s delta = {
+            {emit->position.x - emit->previous_position.x, emit->position.y - emit->previous_position.y}};
         if (delta.x != 0.0f || delta.y != 0.0f)
         {
             for (int32 i = 0; i < emit->capacity; i++)
@@ -244,12 +245,15 @@ void RenderEmitter(ParticleEmitter *emit)
         }
 
         uint8 alpha_val = p->current_alpha_idx;
-        SDL_FColor color = {.r = (float32)base_color.r / 255.0f, .g = (float32)base_color.g / 255.0f, .b = (float32)base_color.b / 255.0f, .a = (float32)alpha_val / 255.0f};
+        SDL_FColor color = {.r = (float32)base_color.r / 255.0f,
+                            .g = (float32)base_color.g / 255.0f,
+                            .b = (float32)base_color.b / 255.0f,
+                            .a = (float32)alpha_val / 255.0f};
 
         int32 base = vcount;
 
-        verts[vcount++] =
-            (SDL_Vertex){.position = {.x = PIXEL_ALIGN(x), .y = PIXEL_ALIGN(y)}, .color = color, .tex_coord = {.x = 0, .y = 0}};
+        verts[vcount++] = (SDL_Vertex){
+            .position = {.x = PIXEL_ALIGN(x), .y = PIXEL_ALIGN(y)}, .color = color, .tex_coord = {.x = 0, .y = 0}};
         verts[vcount++] =
             (SDL_Vertex){.position = {PIXEL_ALIGN(x + w), PIXEL_ALIGN(y)}, .color = color, .tex_coord = {0, 0}};
         verts[vcount++] =

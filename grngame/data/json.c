@@ -293,7 +293,7 @@ void JsonSaveObjects(float64 budget)
             continue;
 
         const char *key = kh_key(manager, it);
-        CallbackArg args[1] = {{.type = CB_ARG_STRING, .as.string = (void*)key}};
+        CallbackArg args[1] = {{.type = CB_ARG_STRING, .as.string = (void *)key}};
         CallBack(args, JSON_SAVE);
         json->last_save_time = current_time_sec;
     }

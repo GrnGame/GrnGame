@@ -5,8 +5,8 @@
 #include "grngame/math/types.h"
 #include "grngame/utils/clear.h"
 #include <SDL3/SDL.h>
-#include <stdlib.h>
 #include <math.h>
+#include <stdlib.h>
 
 typedef struct
 {

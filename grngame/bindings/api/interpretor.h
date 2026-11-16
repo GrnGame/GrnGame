@@ -11,7 +11,6 @@ typedef enum
     DAS_SCRIPT,
 } SCRIPTING_LANGUAGE;
 
-
 bool ScriptRun(const char *filename);
 bool ScriptRunFromMemory(const char *filename);
 

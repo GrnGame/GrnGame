@@ -37,9 +37,13 @@ bool SpriteDraw(Sprite s, uint16 frame, float32 x, float32 y, uint8 c, int16 r, 
         return false;
     }
 
-    SDL_FRect src = {.x = (float32)((frame % cols) * s.w), .y = (float32)((frame / cols) * s.h), .w = (float32)s.w, .h = (float32)s.h};
+    SDL_FRect src = {.x = (float32)((frame % cols) * s.w),
+                     .y = (float32)((frame / cols) * s.h),
+                     .w = (float32)s.w,
+                     .h = (float32)s.h};
     SDL_FRect dst = {.x = PIXEL_ALIGN(x + g_app.info.offset_x),
-                     .y = PIXEL_ALIGN(y + g_app.info.offset_y), .w = (float32)(s.w * c),
+                     .y = PIXEL_ALIGN(y + g_app.info.offset_y),
+                     .w = (float32)(s.w * c),
                      .h = (float32)(s.h * c)};
     SDL_FPoint center = {.x = dst.w / 2.0f, .y = dst.h / 2.0f};
 
