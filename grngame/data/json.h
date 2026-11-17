@@ -3,13 +3,12 @@
 #include "grngame/math/types.h"
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/macro.h"
-#include "grngame/utils/memory.h"
 #include <cJSON.h>
 #include <khash.h>
 #include <kvec.h>
 #include <stdbool.h>
 
-#define JSON_PATH_MAX_LEN 1024 * BUFFER_SPACE
+#define JSON_PATH_MAX_LEN 1024
 
 typedef struct
 {

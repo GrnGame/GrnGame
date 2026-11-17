@@ -1,5 +1,6 @@
 #include "paths.h"
 #include "grngame/core/app.h"
+#include "grngame/data/file.h"
 #include "grngame/dev/logging.h"
 #include "grngame/math/types.h"
 #include "grngame/platform/directories.h"
@@ -40,8 +41,7 @@ bool FileIsLoadableImage(const char *file)
         return false;
 
     // null terminated so we can loop on it in the following loop
-    static const char *exts[] = {"bmp", "gif", "jpg", "jpeg", "lbm",  "pcx",  "png", "pnm", "pbm", "pgm", "ppm",
-                                 "qoi", "svg", "tga", "tif",  "tiff", "webp", "xcf", "xpm", "xv",  NULL};
+    static const char *exts[] = {"jpg", "jpeg", "png", NULL};
 
     // exts[i] will be false when it will reach NULL
     for (int32 i = 0; exts[i]; ++i)
@@ -60,6 +60,23 @@ bool FileIsLoadableScript(const char *file)
     // null terminated so we can loop on it in the following loop
     // todo : remove py or das if config language is py or das
     static const char *exts[] = {"das", "py", NULL};
+
+    // exts[i] will be false when it will reach NULL
+    for (int32 i = 0; exts[i]; ++i)
+        if (strcasecmp(ext, exts[i]) == 0)
+            return true;
+
+    return false;
+}
+
+bool FileIsLoadableQOI(const char *file)
+{
+    const char *ext = FileExtension(file);
+    if (!*ext) // if the string is empty that means there is no extension and it cant be determined
+        return false;
+
+    // null terminated so we can loop on it in the following loop
+    static const char *exts[] = {"qoi", NULL};
 
     // exts[i] will be false when it will reach NULL
     for (int32 i = 0; exts[i]; ++i)
@@ -189,4 +206,25 @@ char *PathFromStorage(const char *file)
 #else
     return strdup(file);
 #endif
+}
+
+const char *SetExtensionToX(const char *path, const char *ext)
+{
+    static char out_buf[MAX_PATH];
+
+    const char *dot = strrchr(path, '.');
+    const char *slash = strrchr(path, '/');
+
+    bool has_extension = (dot != NULL) && (slash == NULL || dot > slash);
+
+    uint32 base_len = has_extension ? (uint32)(dot - path) : (uint32)strlen(path);
+    uint32 ext_len = (uint32)strlen(ext);
+
+    if (UNLIKELY(base_len + ext_len + 1 > sizeof(out_buf)))
+        return path;
+
+    memcpy(out_buf, path, base_len);
+    memcpy(out_buf + base_len, ext, ext_len + 1);
+
+    return out_buf;
 }

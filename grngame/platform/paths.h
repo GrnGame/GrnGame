@@ -1,9 +1,12 @@
 #pragma once
+#include "grngame/math/types.h"
 #include "grngame/utils/c_cpp.h"
 #include <stdbool.h>
 #include <stddef.h>
 
 BEGIN_DECLARATIONS
+
+#define MAX_PATH 1024
 
 // Returns a malloc'd string that is the filename stem of the path
 // If you give it assets/boss.wav, it returns boss
@@ -30,6 +33,8 @@ bool FileIsLoadableJson(const char *file);
 /// Returns true if the file can loaded as a tff
 bool FileIsLoadableTtf(const char *file);
 
+bool FileIsLoadableQOI(const char *file);
+
 /// Returns the path starting from the path of the executable where we added relative. You must free it.
 /// For example , if your exe is in ~/chouffe and relative is assets/folder, it returns ~/chouffe/assets/folder
 char *PathFromExecutableDirectory(const char *relative);
@@ -39,5 +44,8 @@ char *PathFromStorage(const char *file);
 
 /// need to free
 char *PathFromAndroidStorage(const char *file);
+
+// return a new name file with new extension
+const char *SetExtensionToX(const char *path, const char *ext);
 
 END_DECLARATIONS

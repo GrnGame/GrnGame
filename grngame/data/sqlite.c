@@ -4,7 +4,6 @@
 #include "grngame/dev/logging.h"
 #include "grngame/math/types.h"
 #include "grngame/utils/attributes.h"
-#include "grngame/utils/memory.h"
 #include "grngame/utils/version.h"
 #include "kvec.h"
 #include <grngame/utils/string_compat.h>
@@ -303,7 +302,7 @@ bool ApplyDbPragmas(sqlite3 *db)
         return false;
     }
 
-    if (!DataWrite(db, "PRAGMA synchronous = NORMAL;"))
+    if (!DataWrite(db, "PRAGMA synchronous = OFF;"))
     {
         LOG_ERROR("Can't write database synchronous");
         return false;
@@ -326,7 +325,7 @@ bool ApplyDbVersion(sqlite3 *db, const char *version)
         fprintf(stdout, "Format version is incorrect please use major.minor.fix");
         return false;
     }
-    char sql[64 * BUFFER_SPACE];
+    char sql[64];
     snprintf(sql, sizeof(sql), "PRAGMA user_version = %d;", ver);
     if (!DataWrite(db, sql))
     {

@@ -22,6 +22,7 @@
 #include "grngame/utils/time.h"
 #include "kvec.h"
 #include "message.h"
+#include "grngame/renderer/texture.h"
 
 #ifdef GRNGAME_WASM
 #include "grngame/web/web.h"
@@ -173,14 +174,10 @@ static HOT void RenderFrame(void)
     if (g_app.info.window_occlusion_culled)
         return;
 
-    PROFILE_ZONE_START(render_zone, "Render");
-
     RendererClear(&g_app.renderer);
     CallOnRender();
     ApplyBlackStripes();
     RendererPresent(&g_app.renderer);
-
-    PROFILE_ZONE_END(render_zone);
 }
 
 static void UpdateEngineTime(const float64 frame_start_time)

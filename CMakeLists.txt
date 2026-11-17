@@ -213,7 +213,6 @@ set(GRNGAME_SOURCES
         grngame/utils/clear.c
         grngame/utils/clear.h
         grngame/utils/macro.h
-        grngame/utils/memory.h
         grngame/utils/random.c
         grngame/utils/random.h
         grngame/utils/string_compat.h

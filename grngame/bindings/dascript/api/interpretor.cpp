@@ -19,8 +19,8 @@ bool DaScriptRun(const char *filename)
 
     // run script from disk
 
-free:
-    free(name);
+    free:
+        free(name);
     free(module);
 
     return true;
@@ -47,8 +47,8 @@ bool DaScriptRunFromMemory(const char *filename)
 
     // run script from memory
 
-free:
-    free(module);
+    free:
+        free(module);
 
     return true;
 }

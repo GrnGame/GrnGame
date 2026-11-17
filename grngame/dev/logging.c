@@ -11,7 +11,7 @@ static int32 WriteMeta(struct haclog_handler *handler, haclog_meta_info_t *meta)
 {
     const char *level = haclog_level_to_str(meta->loc->level);
 
-    char filename[256 * BUFFER_SPACE];
+    char filename[256];
     haclog_path_basename(meta->loc->file, filename, sizeof(filename));
 
     struct tm t;

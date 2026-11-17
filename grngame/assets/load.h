@@ -7,7 +7,7 @@
 #include <SDL3/SDL_surface.h>
 #include <stdbool.h>
 
-#define AUDIO_PREDECODE_SIZE_THRESHOLD (5 * MB)
+#define AUDIO_PREDECODE_SIZE_THRESHOLD (0.2f * MB)
 
 BEGIN_DECLARATIONS
 

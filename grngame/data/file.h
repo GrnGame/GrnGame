@@ -3,10 +3,9 @@
 #include "SDL3/SDL_iostream.h"
 #include "grngame/math/types.h"
 #include "grngame/utils/c_cpp.h"
-#include "grngame/utils/memory.h"
 #include <stdbool.h>
 
-#define MAX_PATH_ 1024 * BUFFER_SPACE
+#define MAX_PATH_ 1024
 
 BEGIN_DECLARATIONS
 

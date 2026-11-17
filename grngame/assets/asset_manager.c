@@ -115,7 +115,7 @@ static void AddAssetFileToArray(const char *path, void *user_data)
 {
     int32 *count = (int32 *)user_data;
 
-    if (!FileIsLoadableImage(path) && !FileIsLoadableAudio(path))
+    if (!(FileIsLoadableImage(path) || FileIsLoadableQOI(path)) && !FileIsLoadableAudio(path))
         return;
 
     if (count)

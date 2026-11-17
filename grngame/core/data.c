@@ -3,7 +3,6 @@
 #include "grngame/data/sqlite.h"
 #include "grngame/dev/logging.h"
 #include "grngame/platform/paths.h"
-#include "grngame/utils/memory.h"
 #include "grngame/utils/string_compat.h"
 #include "grngame/utils/version.h"
 #include <stdlib.h>
@@ -72,7 +71,7 @@ static bool DetectGameDataVersionChange(const char *path)
 
     if (version_changed)
     {
-        char stored_str[64 * BUFFER_SPACE];
+        char stored_str[64];
         if (!ParseVersionToString(stored_version, stored_str, sizeof(stored_str)))
         {
             LOG_ERROR("Cannot read game.data version");

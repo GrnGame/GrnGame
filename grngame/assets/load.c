@@ -19,31 +19,26 @@ static bool RegisterSound(char *key, MIX_Audio *stream);
 static bool LoadTextureSurface(const char *file, SDL_Surface **surface)
 {
 #ifdef GRNGAME_EMBED_ASSETS
+    const EmbeddedFile *asset = EmbeddedFileGet(file);
+    if (UNLIKELY(!asset))
     {
-        const EmbeddedFile *asset = EmbeddedFileGet(file);
-
-        if (!asset)
-        {
-            LOG_WARNING("Embedded texture file '%s' was not found", file);
-            return false;
-        }
-
-        SDL_IOStream *io = SDL_IOFromConstMem(asset->data, asset->size);
-
-        if (!io)
-        {
-            LOG_WARNING("Failed to create IO stream for texture file '%s', SDL error: '%s'", file, SDL_GetError());
-            return false;
-        }
-
-        *surface = IMG_Load_IO(io, true);
+        LOG_WARNING("Embedded texture file '%s' was not found", file);
+        return false;
     }
-#else
 
+    SDL_IOStream *io = SDL_IOFromConstMem(asset->data, asset->size);
+    if (UNLIKELY(!io))
+    {
+        LOG_WARNING("Failed to create IO stream for texture file '%s', SDL error: '%s'", file, SDL_GetError());
+        return false;
+    }
+
+    *surface = IMG_Load_IO(io, true);
+#else
     *surface = IMG_Load(file);
 #endif
 
-    if (!*surface)
+    if (UNLIKELY(!*surface))
     {
         LOG_WARNING("Failed to load texture file '%s', SDL error: '%s'", file, SDL_GetError());
         return false;
@@ -55,7 +50,7 @@ static bool LoadTextureSurface(const char *file, SDL_Surface **surface)
 #define LUT_EMPTY -1
 
 static int16 lut_table[32 * 64 * 32];
-static bool lut_table_init;
+static bool lut_table_init = false;
 
 static inline uint16 RGB888TORGB565(const SDL_Color *c)
 {
@@ -68,48 +63,73 @@ void InitPaletteRemapLUT(void)
     lut_table_init = true;
 }
 
-static HOT void ApplyPaletteRemap(SDL_Surface *surface)
+static void ClearPaletteRemapCache(void)
 {
+    lut_table_init = false;
+}
 
-    SDL_Color *palette = g_app.palette_manager.palette_elements.a;
+static HOT void ApplyPaletteRemap(SDL_Surface *restrict surface)
+{
+    const SDL_Color *restrict palette = g_app.palette_manager.palette_elements.a;
+    const int32 palette_count = (int32)kv_size(g_app.palette_manager.palette_elements);
 
-    int32 palette_count = (int32)kv_size(g_app.palette_manager.palette_elements);
+    const int32 w = surface->w;
+    const int32 h = surface->h;
+    const int32 pitch = surface->pitch;
+    uint8 *restrict base_pixels = (uint8 *)surface->pixels;
 
-    for (int32 y = 0; y < surface->h; ++y)
+    for (int32 y = 0; y < h; ++y)
     {
-        SDL_Color *row = (SDL_Color *)((uint8 *)surface->pixels + y * surface->pitch);
+        SDL_Color *restrict row = (SDL_Color *)(base_pixels + y * pitch);
 
-        for (int32 x = 0; x < surface->w; ++x)
+        for (int32 x = 0; x < w; ++x)
         {
-            SDL_Color *pixel = &row[x];
+            SDL_Color *restrict pixel = &row[x];
 
             if (UNLIKELY(pixel->a == 0))
                 continue;
 
             uint16 key = RGB888TORGB565(pixel);
+
             int16 idx = lut_table[key];
 
-            if (idx == LUT_EMPTY)
+            if (UNLIKELY(idx == LUT_EMPTY))
             {
                 ColorLAB lab = RgbToLab(pixel);
-
                 int32 best = FindBestPaletteColorCIEDE2000(&lab);
 
-                if (best < 0 || best >= palette_count)
+                if (UNLIKELY(best < 0 || best >= palette_count))
                     continue;
 
                 idx = (int16)best;
-
                 lut_table[key] = idx;
             }
 
             SDL_Color color = palette[idx];
-
             pixel->r = color.r;
             pixel->g = color.g;
             pixel->b = color.b;
         }
     }
+}
+static SDL_Texture *CreateConfiguredTexture(SDL_Surface *surface, const char *name_for_log)
+{
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(g_app.renderer.renderer, surface);
+    if (UNLIKELY(!texture))
+    {
+        LOG_WARNING("Failed to create texture for '%s', SDL error: '%s'", name_for_log, SDL_GetError());
+        return NULL;
+    }
+
+    if (UNLIKELY(!SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST) ||
+                 !SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)))
+    {
+        LOG_WARNING("Failed to configure texture '%s', SDL error: '%s'", name_for_log, SDL_GetError());
+        SDL_DestroyTexture(texture);
+        return NULL;
+    }
+
+    return texture;
 }
 
 static bool RegisterTexture(char *key, SDL_Texture *texture, SDL_Surface *surface, int16 width, int16 height)
@@ -128,10 +148,7 @@ static bool RegisterTexture(char *key, SDL_Texture *texture, SDL_Surface *surfac
         SDL_DestroySurface(kh_value(map, k).surface);
     }
 
-    Texture tex = {.texture = texture, .surface = surface, .w = width, .h = height};
-
-    kh_value(map, k) = tex;
-
+    kh_value(map, k) = (Texture){.texture = texture, .surface = surface, .w = width, .h = height};
     return true;
 }
 
@@ -144,7 +161,7 @@ bool LoadFileParallel(const char *file, LoadResult *result)
         result->is_sound = true;
         result->key = FileStem(file);
 
-        if (!LoadSoundStream(file, &result->stream))
+        if (UNLIKELY(!LoadSoundStream(file, &result->stream)))
         {
             free(result->key);
             result->key = NULL;
@@ -155,23 +172,30 @@ bool LoadFileParallel(const char *file, LoadResult *result)
         return true;
     }
 
-    if (FileIsLoadableImage(file))
+    if (FileIsLoadableImage(file) || FileIsLoadableQOI(file))
     {
         result->is_sound = false;
         result->key = FileStem(file);
 
-        SDL_Surface *surface = NULL;
-        if (!LoadTextureSurface(file, &surface))
+        SDL_Surface *raw_surface = NULL;
+        if (UNLIKELY(!LoadTextureSurface(file, &raw_surface)))
         {
             free(result->key);
             result->key = NULL;
             return false;
         }
-        if (g_app.info.enable_palette)
-        {
-            SDL_Surface *rgba = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
-            SDL_DestroySurface(surface);
 
+        SDL_Surface *rgba = NULL;
+
+        // everys files in embedded is at rgba32 for optimisation
+        if (raw_surface->format == SDL_PIXELFORMAT_RGBA32)
+        {
+            rgba = raw_surface;
+        }
+        else
+        {
+            rgba = SDL_ConvertSurface(raw_surface, SDL_PIXELFORMAT_RGBA32);
+            SDL_DestroySurface(raw_surface);
             if (UNLIKELY(!rgba))
             {
                 LOG_WARNING("Failed to convert texture file '%s', SDL error: '%s'", file, SDL_GetError());
@@ -179,17 +203,27 @@ bool LoadFileParallel(const char *file, LoadResult *result)
                 result->key = NULL;
                 return false;
             }
+        }
 
-            result->surface_copy = SDL_DuplicateSurface(rgba);
+        if (g_app.info.enable_palette)
+        {
+            result->surface_copy = rgba;
+            SDL_Surface *remapped = SDL_DuplicateSurface(rgba);
+            if (UNLIKELY(!remapped))
+            {
+                SDL_DestroySurface(rgba);
+                free(result->key);
+                result->key = NULL;
+                return false;
+            }
 
-            ApplyPaletteRemap(rgba);
-            result->pixels = rgba;
+            ApplyPaletteRemap(remapped);
+            result->pixels = remapped;
         }
         else
         {
-            result->surface_copy = SDL_DuplicateSurface(surface);
-
-            result->pixels = surface;
+            result->surface_copy = rgba;
+            result->pixels = rgba;
         }
 
         result->success = true;
@@ -202,38 +236,24 @@ bool LoadFileParallel(const char *file, LoadResult *result)
 
 bool RegisterTextureResult(LoadResult *res)
 {
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(g_app.renderer.renderer, res->pixels);
-    SDL_DestroySurface(res->pixels);
+    int16 tex_w = (int16)res->pixels->w;
+    int16 tex_h = (int16)res->pixels->h;
 
-    if (!texture)
+    SDL_Texture *texture = CreateConfiguredTexture(res->pixels, res->key);
+
+    if (res->pixels != res->surface_copy)
     {
-        LOG_WARNING("Failed to create texture for '%s', SDL error: '%s'", res->key, SDL_GetError());
+        SDL_DestroySurface(res->pixels);
+    }
+
+    if (UNLIKELY(!texture))
+    {
         SDL_DestroySurface(res->surface_copy);
         free(res->key);
         return false;
     }
 
-    float32 tex_w, tex_h;
-    if (!SDL_GetTextureSize(texture, &tex_w, &tex_h))
-    {
-        LOG_WARNING("Failed to get texture size for '%s', SDL error: '%s'", res->key, SDL_GetError());
-        SDL_DestroyTexture(texture);
-        SDL_DestroySurface(res->surface_copy);
-        free(res->key);
-        return false;
-    }
-
-    if (!SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST) ||
-        !SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND))
-    {
-        LOG_WARNING("Failed to configure texture '%s', SDL error: '%s'", res->key, SDL_GetError());
-        SDL_DestroyTexture(texture);
-        SDL_DestroySurface(res->surface_copy);
-        free(res->key);
-        return false;
-    }
-
-    if (!RegisterTexture(res->key, texture, res->surface_copy, (int16)tex_w, (int16)tex_h))
+    if (UNLIKELY(!RegisterTexture(res->key, texture, res->surface_copy, tex_w, tex_h)))
     {
         SDL_DestroyTexture(texture);
         SDL_DestroySurface(res->surface_copy);
@@ -247,48 +267,41 @@ bool RegisterTextureResult(LoadResult *res)
 
 bool RegisterSoundResult(LoadResult *res)
 {
-    if (!RegisterSound(res->key, res->stream))
+    if (UNLIKELY(!RegisterSound(res->key, res->stream)))
     {
         MIX_DestroyAudio(res->stream);
         free(res->key);
         return false;
     }
 
-    LOG_DEBUG("Loaded sound file '%s' (parallel)", res->key);
+    LOG_DEBUG("Loaded sound file '%s'", res->key);
     return true;
 }
 
 static bool LoadSoundStream(const char *file, MIX_Audio **stream)
 {
 #ifdef GRNGAME_EMBED_ASSETS
+    const EmbeddedFile *asset = EmbeddedFileGet(file);
+    if (UNLIKELY(!asset))
     {
-        const EmbeddedFile *asset = EmbeddedFileGet(file);
+        LOG_WARNING("Embedded sound file '%s' was not found", file);
+        return false;
+    }
 
-        if (!asset)
-        {
-            LOG_WARNING("Embedded sound file '%s' was not found", file);
-            return false;
-        }
-        // TODO WRAPPER
-        SDL_IOStream *io = SDL_IOFromConstMem(asset->data, asset->size);
-        if (!io)
-        {
-            LOG_WARNING("Failed to create IO stream for sound file '%s', SDL error: '%s'", file, SDL_GetError());
-            return false;
-        }
-        if (asset->size < AUDIO_PREDECODE_SIZE_THRESHOLD)
-            *stream = MIX_LoadAudio_IO(g_app.sound_manager.mixer, io, true, true);
-        else
-            *stream = MIX_LoadAudio_IO(g_app.sound_manager.mixer, io, false, true);
-    }
-#else
+    SDL_IOStream *io = SDL_IOFromConstMem(asset->data, asset->size);
+    if (UNLIKELY(!io))
     {
-        // only memory in dev
-        *stream = MIX_LoadAudio(g_app.sound_manager.mixer, file, false);
+        LOG_WARNING("Failed to create IO stream for sound file '%s', SDL error: '%s'", file, SDL_GetError());
+        return false;
     }
+
+    bool predecode = (asset->size < (int32)AUDIO_PREDECODE_SIZE_THRESHOLD);
+    *stream = MIX_LoadAudio_IO(g_app.sound_manager.mixer, io, predecode, true);
+#else
+    *stream = MIX_LoadAudio(g_app.sound_manager.mixer, file, false);
 #endif
 
-    if (!*stream)
+    if (UNLIKELY(!*stream))
     {
         LOG_WARNING("Failed to load sound file '%s', SDL error: '%s'", file, SDL_GetError());
         return false;
@@ -308,28 +321,25 @@ static bool RegisterSound(char *key, MIX_Audio *stream)
     {
         free((char *)kh_key(map, k));
         kh_key(map, k) = key;
-
         MIX_DestroyAudio(kh_value(map, k));
     }
 
     kh_value(map, k) = stream;
-
     return true;
 }
 
 bool LoadSoundFile(const char *file)
 {
     char *key = FileStem(file);
-
     MIX_Audio *stream = NULL;
 
-    if (!LoadSoundStream(file, &stream))
+    if (UNLIKELY(!LoadSoundStream(file, &stream)))
     {
         free(key);
         return false;
     }
 
-    if (!RegisterSound(key, stream))
+    if (UNLIKELY(!RegisterSound(key, stream)))
     {
         MIX_DestroyAudio(stream);
         free(key);
@@ -341,74 +351,12 @@ bool LoadSoundFile(const char *file)
 
 bool LoadTextureFile(const char *file)
 {
-    char *key = FileStem(file);
-
-    SDL_Surface *surface = NULL;
-
-    if (!LoadTextureSurface(file, &surface))
+    LoadResult res = {0};
+    if (UNLIKELY(!LoadFileParallel(file, &res) || res.is_sound))
     {
-        free(key);
         return false;
     }
-
-    SDL_Surface *rgba = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA32);
-
-    SDL_DestroySurface(surface);
-
-    if (UNLIKELY(!rgba))
-    {
-        LOG_WARNING("Failed to convert texture file '%s', SDL error: '%s'", file, SDL_GetError());
-        free(key);
-        return false;
-    }
-
-    SDL_Surface *surface_copy = SDL_DuplicateSurface(rgba);
-
-    ApplyPaletteRemap(rgba);
-
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(g_app.renderer.renderer, rgba);
-
-    SDL_DestroySurface(rgba);
-
-    if (!texture)
-    {
-        LOG_WARNING("Failed to create texture for '%s', SDL error: '%s'", file, SDL_GetError());
-        SDL_DestroySurface(surface_copy);
-        free(key);
-        return false;
-    }
-
-    float32 tex_w;
-    float32 tex_h;
-
-    if (!SDL_GetTextureSize(texture, &tex_w, &tex_h))
-    {
-        LOG_WARNING("Failed to get texture size for '%s', SDL error: '%s'", file, SDL_GetError());
-        SDL_DestroyTexture(texture);
-        SDL_DestroySurface(surface_copy);
-        free(key);
-        return false;
-    }
-
-    if (!SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST) ||
-        !SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND))
-    {
-        LOG_WARNING("Failed to configure texture '%s', SDL error: '%s'", file, SDL_GetError());
-        SDL_DestroyTexture(texture);
-        SDL_DestroySurface(surface_copy);
-        free(key);
-        return false;
-    }
-
-    if (!RegisterTexture(key, texture, surface_copy, (int16)tex_w, (int16)tex_h))
-    {
-        SDL_DestroyTexture(texture);
-        SDL_DestroySurface(surface_copy);
-        free(key);
-        return false;
-    }
-
-    return true;
+    return RegisterTextureResult(&res);
 }
 
 bool UnloadSoundFile(const char *file)
@@ -416,12 +364,10 @@ bool UnloadSoundFile(const char *file)
     khash_t(SoundMap) *map = g_app.asset_manager.sound_map;
 
     char *key = FileStem(file);
-
     khiter_t k = kh_get(SoundMap, map, key);
-
     free(key);
 
-    if (k == kh_end(map))
+    if (UNLIKELY(k == kh_end(map)))
     {
         LOG_WARNING("Sound file '%s' is not loaded", file);
         return false;
@@ -429,7 +375,6 @@ bool UnloadSoundFile(const char *file)
 
     MIX_DestroyAudio(kh_value(map, k));
     free((char *)kh_key(map, k));
-
     kh_del(SoundMap, map, k);
 
     return true;
@@ -449,13 +394,7 @@ bool UnloadAllSoundFiles(void)
     }
 
     kh_clear(SoundMap, map);
-
     return true;
-}
-
-static void ClearPaletteRemapCache(void)
-{
-    lut_table_init = false;
 }
 
 bool ReloadTextureWithPalette(const char *file)
@@ -466,47 +405,33 @@ bool ReloadTextureWithPalette(const char *file)
     khiter_t k = kh_get(TextureMap, map, key);
     free(key);
 
-    if (k == kh_end(map))
+    if (UNLIKELY(k == kh_end(map)))
     {
         LOG_WARNING("Texture file '%s' is not loaded", file);
         return false;
     }
 
     Texture *tex = &kh_value(map, k);
-
-    if (!tex->surface)
+    if (UNLIKELY(!tex->surface))
     {
         LOG_WARNING("Texture file '%s' has no source surface", file);
         return false;
     }
 
-    SDL_Surface *rgba = SDL_ConvertSurface(tex->surface, SDL_PIXELFORMAT_RGBA32);
-
-    if (!rgba)
+    SDL_Surface *rgba = SDL_DuplicateSurface(tex->surface);
+    if (UNLIKELY(!rgba))
     {
-        LOG_WARNING("Failed to convert texture file '%s', SDL error: '%s'", file, SDL_GetError());
+        LOG_WARNING("Failed to duplicate texture surface '%s', SDL error: '%s'", file, SDL_GetError());
         return false;
     }
 
     ApplyPaletteRemap(rgba);
 
-    SDL_Texture *new_texture = SDL_CreateTextureFromSurface(g_app.renderer.renderer, rgba);
-
+    SDL_Texture *new_texture = CreateConfiguredTexture(rgba, file);
     SDL_DestroySurface(rgba);
 
-    if (!new_texture)
-    {
-        LOG_WARNING("Failed to create texture for '%s', SDL error: '%s'", file, SDL_GetError());
+    if (UNLIKELY(!new_texture))
         return false;
-    }
-
-    if (!SDL_SetTextureScaleMode(new_texture, SDL_SCALEMODE_NEAREST) ||
-        !SDL_SetTextureBlendMode(new_texture, SDL_BLENDMODE_BLEND))
-    {
-        LOG_WARNING("Failed to configure texture '%s', SDL error: '%s'", file, SDL_GetError());
-        SDL_DestroyTexture(new_texture);
-        return false;
-    }
 
     SDL_DestroyTexture(tex->texture);
     tex->texture = new_texture;
@@ -522,7 +447,7 @@ bool UnloadTextureFile(const char *file)
     khiter_t k = kh_get(TextureMap, map, key);
     free(key);
 
-    if (k == kh_end(map))
+    if (UNLIKELY(k == kh_end(map)))
     {
         LOG_WARNING("Texture file '%s' is not loaded", file);
         return false;
@@ -531,7 +456,6 @@ bool UnloadTextureFile(const char *file)
     SDL_DestroyTexture(kh_value(map, k).texture);
     SDL_DestroySurface(kh_value(map, k).surface);
     free((char *)kh_key(map, k));
-
     kh_del(TextureMap, map, k);
 
     return true;
@@ -552,27 +476,22 @@ bool UnloadAllTextureFiles(void)
     }
 
     kh_clear(TextureMap, map);
-
     return true;
 }
 
 static void ReloadTaskWorker(void *data)
 {
     ReloadTask *task = (ReloadTask *)data;
-
     SDL_Surface *rgba = NULL;
 
-    if (task->tex->surface)
+    if (LIKELY(task->tex->surface != NULL))
     {
-        rgba = SDL_ConvertSurface(task->tex->surface, SDL_PIXELFORMAT_RGBA32);
-
-        if (rgba)
+        rgba = SDL_DuplicateSurface(task->tex->surface);
+        if (LIKELY(rgba != NULL))
             ApplyPaletteRemap(rgba);
     }
 
     task->results[task->index].remapped = rgba;
-
-    free(task);
 }
 
 bool ReloadAllTexturesWithPalette(void)
@@ -581,17 +500,25 @@ bool ReloadAllTexturesWithPalette(void)
     InitPaletteRemapLUT();
 
     khash_t(TextureMap) *map = g_app.asset_manager.texture_map;
-
     int32 count = (int32)kh_size(map);
 
     if (count == 0)
         return true;
 
-    Texture **texture_ptrs = malloc(sizeof(Texture *) * count);
-    ReloadResult *results = malloc(count * sizeof(ReloadResult));
-
-    CLEAR_PTR(results, 0);
+    Texture **texture_ptrs = malloc((uint32)count * sizeof(Texture *));
+    ReloadResult *results = malloc((uint32)count * sizeof(ReloadResult));
     CLEAR_ARRAY(texture_ptrs, 0, count);
+    CLEAR_ARRAY(results, 0, count);
+
+    ReloadTask *tasks = malloc((uint32)count * sizeof(ReloadTask));
+
+    if (UNLIKELY(!texture_ptrs || !results || !tasks))
+    {
+        free(texture_ptrs);
+        free(results);
+        free(tasks);
+        return false;
+    }
 
     int32 idx = 0;
     for (khiter_t k = kh_begin(map); k != kh_end(map); ++k)
@@ -602,14 +529,9 @@ bool ReloadAllTexturesWithPalette(void)
         Texture *tex = &kh_value(map, k);
         texture_ptrs[idx] = tex;
 
-        ReloadTask *task = malloc(sizeof(ReloadTask));
+        tasks[idx] = (ReloadTask){.tex = tex, .results = results, .index = idx};
 
-        task->tex = tex;
-        task->results = results;
-        task->index = idx;
-
-        ThreadManagerPush(ReloadTaskWorker, task);
-
+        ThreadManagerPush(ReloadTaskWorker, &tasks[idx]);
         idx++;
     }
 
@@ -617,54 +539,44 @@ bool ReloadAllTexturesWithPalette(void)
 
     bool success = true;
 
-    for (int32 i = 0; i < count; ++i)
+    for (int32 i = 0; i < idx; ++i)
     {
         SDL_Surface *rgba = results[i].remapped;
         Texture *tex = texture_ptrs[i];
 
-        if (!rgba)
+        if (UNLIKELY(!rgba || !tex))
         {
             LOG_WARNING("Failed to remap texture at index %d", i);
+            if (rgba)
+                SDL_DestroySurface(rgba);
             success = false;
             continue;
         }
 
-        SDL_Texture *new_texture = SDL_CreateTextureFromSurface(g_app.renderer.renderer, rgba);
-
-        SDL_DestroySurface(rgba);
-
-        if (!new_texture)
+        if (LIKELY(tex->texture != NULL))
         {
-            LOG_WARNING("Failed to create texture while reloading palette, SDL error: '%s'", SDL_GetError());
-            success = false;
-            continue;
-        }
-
-        if (!SDL_SetTextureScaleMode(new_texture, SDL_SCALEMODE_NEAREST) ||
-            !SDL_SetTextureBlendMode(new_texture, SDL_BLENDMODE_BLEND))
-        {
-            LOG_WARNING("Failed to configure texture while reloading palette, SDL error: '%s'", SDL_GetError());
-            SDL_DestroyTexture(new_texture);
-            success = false;
-            continue;
-        }
-
-        if (UNLIKELY(tex != NULL))
-        {
-            if (tex->texture != NULL)
+            if (UNLIKELY(!SDL_UpdateTexture(tex->texture, NULL, rgba->pixels, rgba->pitch)))
             {
-                SDL_DestroyTexture(tex->texture);
+                LOG_WARNING("Failed to update texture while reloading palette, SDL error: '%s'", SDL_GetError());
+                success = false;
             }
-            tex->texture = new_texture;
+            SDL_DestroySurface(rgba);
         }
         else
         {
-            LOG_WARNING("Missing texture while reloading palette at index %d", i);
-            SDL_DestroyTexture(new_texture);
-            success = false;
+            SDL_Texture *new_texture = CreateConfiguredTexture(rgba, "reload_palette");
+            SDL_DestroySurface(rgba);
+
+            if (UNLIKELY(!new_texture))
+            {
+                success = false;
+                continue;
+            }
+            tex->texture = new_texture;
         }
     }
 
+    free(tasks);
     free(texture_ptrs);
     free(results);
 

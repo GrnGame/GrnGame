@@ -5,12 +5,13 @@
 #include "grngame/platform/directories.h"
 #include "grngame/platform/paths.h"
 #include "grngame/utils/attributes.h"
-#include "grngame/utils/memory.h"
 #include "sqlite3.h"
 #include <grngame/utils/string_compat.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "qoi.h"
+#include "SDL3_image/SDL_image.h"
 
 static int32 IsConfigJson(const char *path)
 {
@@ -42,7 +43,7 @@ static sqlite3 *OpenFreshEmbeddedDb(const char *output_path)
 
 static void CreateEmbedSchema(sqlite3 *db)
 {
-    char sql[256 * BUFFER_SPACE];
+    char sql[256];
 
     for (int32 i = 0; i < EMBED_KIND_COUNT; ++i)
     {
@@ -54,7 +55,7 @@ static void CreateEmbedSchema(sqlite3 *db)
 
 static bool PrepareEmbedStatements(sqlite3 *db, EmbedContext *ctx)
 {
-    char sql[128 * BUFFER_SPACE];
+    char sql[128];
     for (int32 i = 0; i < EMBED_KIND_COUNT; ++i)
     {
         snprintf(sql, sizeof(sql), "INSERT INTO %s (path, content) VALUES (?, ?);", EMBED_TABLE_NAMES[i]);
@@ -73,11 +74,43 @@ static void FreeEmbedStatements(EmbedContext *ctx)
         DbStmtFree(&ctx->stmts[i]);
 }
 
+static unsigned char *ContentToQoi(const unsigned char *content, uint32 in_size, uint32 *out_size)
+{
+    *out_size = 0;
+
+    SDL_IOStream *io = SDL_IOFromConstMem(content, in_size);
+    if (!io)
+        return NULL;
+
+    SDL_Surface *raw_surf = IMG_Load_IO(io, true);
+    if (!raw_surf)
+        return NULL;
+
+    SDL_Surface *rgba = SDL_ConvertSurface(raw_surf, SDL_PIXELFORMAT_RGBA32);
+    SDL_DestroySurface(raw_surf);
+    if (!rgba)
+        return NULL;
+
+    qoi_desc desc = {
+        .width = (unsigned int)rgba->w, .height = (unsigned int)rgba->h, .channels = 4, .colorspace = QOI_SRGB};
+
+    int32 encoded_len = 0;
+    unsigned char *qoi_buf = (unsigned char *)qoi_encode(rgba->pixels, &desc, &encoded_len);
+
+    SDL_DestroySurface(rgba);
+
+    if (qoi_buf)
+        *out_size = (uint32)encoded_len;
+
+    return qoi_buf;
+}
+
 static void EmbedFileCallback(const char *path, void *userdata)
 {
     EmbedContext *ctx = (EmbedContext *)userdata;
 
     EmbedKind kind = ClassifyFile(path);
+
     if (kind == EMBED_KIND_NONE)
         return;
 
@@ -89,12 +122,30 @@ static void EmbedFileCallback(const char *path, void *userdata)
         return;
     }
 
+    if (kind == EMBED_KIND_ASSET && FileIsLoadableImage(path) && !FileIsLoadableQOI(path))
+    {
+        uint32 new_size = 0;
+        unsigned char *new_content = ContentToQoi(content, size, &new_size);
+        free(content);
+
+        if (UNLIKELY(!new_content))
+        {
+            fprintf(stderr, "[EmbeddedFile] Failed to convert image to QOI: %s\n", path);
+            return;
+        }
+
+        content = new_content;
+        size = new_size;
+        path = SetExtensionToX(path, ".qoi");
+    }
+
     DbArg args[2];
     args[0].type = TEXT;
     args[0].value.s = path;
     args[1].type = DATA;
     args[1].value.blob.data = content;
     args[1].value.blob.size = size;
+
     DbStmtRun(&ctx->stmts[kind], args, 2);
 
     free(content);

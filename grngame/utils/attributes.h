@@ -1,7 +1,5 @@
 #pragma once
 
-#include "grngame/utils/memory.h"
-
 #include "grngame/dev/logging.h"
 #include <stdio.h>
 #include <stdlib.h>
