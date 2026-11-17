@@ -161,9 +161,9 @@ if (MSVC)
     add_compile_definitions(DAS_NO_GLOBAL_NEW_AND_DELETE)
 endif ()
 
-if (IOS)
-    target_compile_definitions(libDaScript_runtime PRIVATE DAS_CRASH_HANDLER_PLATFORM_SUPPORTED=0)
-endif ()
+if(IOS)
+    add_compile_definitions(DAS_CRASH_HANDLER_PLATFORM_SUPPORTED=0)
+endif()
 
 CPMAddPackage(
         NAME daScript
