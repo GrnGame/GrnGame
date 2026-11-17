@@ -19,6 +19,9 @@
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/taskbar_icon.h"
 #include "kvec.h"
+#include "grngame/utils/time.h"
+#include "grngame/math/types.h"
+
 #include <SDL3/SDL.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -357,7 +360,8 @@ static void InitializeScripts(void)
 
 InitResult InitAll(void)
 {
-    PROFILE_FUNCTION("initialization");
+
+    float64 start = TimeNow();
 
     g_app = (App){0};
 
@@ -459,6 +463,10 @@ InitResult InitAll(void)
     HotReloadInit(PathFromExecutableDirectory("."));
 
     LOG_INFO("All engine subsystems initialized");
+
+    float64 end = TimeNow();
+
+    LOG_DEBUG("Init in :%f", end - start);
 
     return INIT_OK;
 }

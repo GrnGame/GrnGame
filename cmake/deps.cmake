@@ -161,6 +161,10 @@ if (MSVC)
     add_compile_definitions(DAS_NO_GLOBAL_NEW_AND_DELETE)
 endif ()
 
+if (IOS)
+    target_compile_definitions(libDaScript_runtime PRIVATE DAS_CRASH_HANDLER_PLATFORM_SUPPORTED=0)
+endif ()
+
 CPMAddPackage(
         NAME daScript
         GITHUB_REPOSITORY BorisBat/daScript
@@ -214,6 +218,7 @@ if (APPLE AND TARGET libDaScript_runtime)
             -Wno-shorten-64-to-32
             -Wno-missing-field-initializers
     )
+
 endif ()
 
 
