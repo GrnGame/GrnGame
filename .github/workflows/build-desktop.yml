@@ -101,3 +101,18 @@ jobs:
           path: |
             build/embedded/release/
             build/runtime/release/
+
+      # uploads artefacts for tests on linux in desktop
+      - name: Pack workspace for tests
+        if: matrix.platform == 'linux-x64' && matrix.kind == 'desktop'
+        run: >
+          tar -czf "$RUNNER_TEMP/tests-build-linux-x64.tar.gz"
+          --exclude=.git -C "$GITHUB_WORKSPACE" .
+
+      - name: Upload workspace for tests
+        if: matrix.platform == 'linux-x64' && matrix.kind == 'desktop'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tests-build-linux-x64
+          path: ${{ runner.temp }}/tests-build-linux-x64.tar.gz
+          retention-days: 1

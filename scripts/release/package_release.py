@@ -32,12 +32,6 @@ PLATFORMS = [
     "windows-arm64"
 ]
 
-# ---------------------------------------------------------------------------
-# Artefacts CI (noms des upload-artifact dans build-*.yml) -> dossier artifacts/
-# Format : <variante>-<plateforme>
-#   desktop-* : binaire desktop (embed assets = OFF)
-#   runtime-* : runtime embarque (embed assets = ON)
-# ---------------------------------------------------------------------------
 DESKTOP_ARTIFACTS = {
     "linux-x64": "desktop-linux-x64",
     "linux-arm64": "desktop-linux-arm64",

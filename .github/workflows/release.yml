@@ -12,10 +12,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      # download only binary artefacts not build folders (for test)
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
+          pattern: "{desktop,runtime}-*"
 
       - name: Package zips and build staging
         run: python3 scripts/release/package_release.py "${{ github.ref_name }}"

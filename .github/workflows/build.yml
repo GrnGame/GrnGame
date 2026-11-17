@@ -2,8 +2,8 @@ name: Build
 
 on:
   push:
-    branches: ["**"]
-    tags: ["v*.*.*"]
+    branches: [ "**" ]
+    tags: [ "v*.*.*" ]
   pull_request:
 
 jobs:
@@ -12,36 +12,36 @@ jobs:
     uses: ./.github/workflows/format.yml
 
   build:
-    name: Build desktop
+    name: level1
     uses: ./.github/workflows/build-desktop.yml
 
   build-web:
-    name: Build web
+    name: level1
     uses: ./.github/workflows/build-web.yml
 
   build-android:
-    name: Build android
+    name: level1
     uses: ./.github/workflows/build-android.yml
 
   build-ios:
-    name: Build ios
+    name: level1
     uses: ./.github/workflows/build-ios.yml
 
   tests:
-    name: tests
+    name: level2
     permissions:
       contents: write
-    #needs: [build]
+    needs: [ build ]
     uses: ./.github/workflows/tests.yml
 
   dynamic:
-    name: Dynamic libs check
-    needs: [build]
+    name: level2
+    needs: [ build ]
     uses: ./.github/workflows/dynamic-libs.yml
 
   release:
-    name: Release
-    needs: [build, build-web, build-android, build-ios]
+    name: level3
+    needs: [ build, build-web, build-android, build-ios, dynamic, tests ]
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write

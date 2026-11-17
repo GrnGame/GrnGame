@@ -6,74 +6,28 @@ on:
 jobs:
   auto-tests:
     runs-on: ubuntu-22.04
-    name: "auto tests / desktop / linux-x64"
+    name: "auto tests / linux-x64"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Download build for tests
+        uses: actions/download-artifact@v4
         with:
-          python-version: "3.x"
+          name: tests-build-linux-x64
+          path: ${{ runner.temp }}/tests-artifact
 
-      #sdl dependencies using SDL_X11_XCURSOR OFF going to remove somes fonctionalities
-      - name: Install Linux dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            git \
-            make \
-            pkg-config \
-            cmake \
-            ninja-build \
-            gnome-desktop-testing \
-            libasound2-dev \
-            libpulse-dev \
-            libaudio-dev \
-            libfribidi-dev \
-            libjack-dev \
-            libsndio-dev \
-            libx11-dev \
-            libxext-dev \
-            libxrandr-dev \
-            libxcursor-dev \
-            libxfixes-dev \
-            libxi-dev \
-            libxss-dev \
-            libxtst-dev \
-            libxkbcommon-dev \
-            libdrm-dev \
-            libgbm-dev \
-            libgl1-mesa-dev \
-            libgles2-mesa-dev \
-            libegl1-mesa-dev \
-            libdbus-1-dev \
-            libibus-1.0-dev \
-            libudev-dev \
-            libthai-dev \
-            libusb-1.0-0-dev
-
-      - name: Cache CMake dependencies
-        uses: actions/cache@v4
-        with:
-          path: .cmake-cache/cpm
-          key: cmake-cpm-tests-linux-x64-${{ hashFiles('CMakeLists.txt', 'cmake/*.cmake') }}
+      # tar restores original timestamps, so nothing gets rebuilt
+      - name: Extract build
+        run: >
+          tar -xzf "$RUNNER_TEMP/tests-artifact/tests-build-linux-x64.tar.gz"
+          -C "$GITHUB_WORKSPACE"
 
       - name: Setup Virtual Display
         run: |
-          sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             xvfb libgl1-mesa-dri libglx-mesa0 libegl1 libgles2 mesa-vulkan-drivers
-
-      - name: Configure
-        env:
-          CPM_SOURCE_CACHE: ${{ github.workspace }}/.cmake-cache/cpm
-        run: >
-          cmake -S . -B build
-          -DCMAKE_BUILD_TYPE=Release
-          -DGRNGAME_EMBED_ASSETS=OFF
 
       - name: Run auto tests
         env:
