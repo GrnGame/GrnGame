@@ -162,7 +162,7 @@ if (MSVC)
 endif ()
 
 if (IOS)
-    target_compile_definitions(libDaScript_runtime PRIVATE DAS_CRASH_HANDLER_PLATFORM_SUPPORTED=0)
+    add_compile_definitions(DAS_USE_BASE_CRASH_HANDLER=0)
 endif ()
 
 CPMAddPackage(
