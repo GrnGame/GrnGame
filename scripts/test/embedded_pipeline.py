@@ -2,6 +2,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
 from helper import copy_path, populate, remove_path, find_embedded
 
 ASSETS_PAK = "Assets.pak"

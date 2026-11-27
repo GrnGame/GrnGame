@@ -1,7 +1,7 @@
 import os
+import shutil
 import subprocess
 import sys
-import shutil
 from pathlib import Path
 
 OS = {"Linux": "linux", "Windows": "windows", "macOS": "macos"}

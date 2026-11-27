@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <title>GrnGame</title>
-    <link rel="icon" type="image/png" href="logo.png">
+    <link href="logo.png" rel="icon" type="image/png">
     <style>
         * {
             margin: 0;
@@ -89,69 +89,69 @@
 </head>
 
 <body>
-    <!-- lock right click -->
-    <canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
+<!-- lock right click -->
+<canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="0"></canvas>
 
-    <div id="loader">
-        <img id="loader-logo" src="logo.png" alt="">
-        <div id="loader-text"></div>
-    </div>
+<div id="loader">
+    <img alt="" id="loader-logo" src="logo.png">
+    <div id="loader-text"></div>
+</div>
 
-    <script>
-        var loader = document.getElementById("loader");
-        var loaderText = document.getElementById("loader-text");
+<script>
+    var loader = document.getElementById("loader");
+    var loaderText = document.getElementById("loader-text");
 
-        function showLoaderError(message) {
-            loader.classList.remove("hidden");
-            loader.classList.add("error");
-            loaderText.textContent = message;
-        }
+    function showLoaderError(message) {
+        loader.classList.remove("hidden");
+        loader.classList.add("error");
+        loaderText.textContent = message;
+    }
 
-        function preloadFile(name) {
-            var dep = "preload " + name;
-            addRunDependency(dep);
+    function preloadFile(name) {
+        var dep = "preload " + name;
+        addRunDependency(dep);
 
-            fetch(name)
-                .then(function (response) {
-                    if (!response.ok)
-                        throw new Error("HTTP " + response.status);
-                    return response.arrayBuffer();
-                })
-                .then(function (buffer) {
-                    FS.writeFile("/" + name, new Uint8Array(buffer));
-                })
-                .catch(function (err) {
-                    showLoaderError("Failed to load " + name + " (" + err.message + ")");
-                })
-                .finally(function () {
-                    removeRunDependency(dep);
-                });
-        }
+        fetch(name)
+            .then(function (response) {
+                if (!response.ok)
+                    throw new Error("HTTP " + response.status);
+                return response.arrayBuffer();
+            })
+            .then(function (buffer) {
+                FS.writeFile("/" + name, new Uint8Array(buffer));
+            })
+            .catch(function (err) {
+                showLoaderError("Failed to load " + name + " (" + err.message + ")");
+            })
+            .finally(function () {
+                removeRunDependency(dep);
+            });
+    }
 
-        var Module = {
-            canvas: document.getElementById("canvas"),
+    var Module = {
+        canvas: document.getElementById("canvas"),
 
-            preRun: [
-                function () {
-                    preloadFile("Assets.pak");
-                    preloadFile("metadata.json");
-                }
-            ],
-
-            postRun: [
-                function () {
-                    loader.classList.add("hidden");
-                    Module.canvas.focus();
-                }
-            ],
-
-            onAbort: function (what) {
-                showLoaderError("error: " + what);
+        preRun: [
+            function () {
+                preloadFile("Assets.pak");
+                preloadFile("metadata.json");
             }
-        };
-    </script>
-    <!-- you can change name here if you rename your file  -->
-    <script async src="Runtime-wasm-x86-releaseembedded.js"></script>
+        ],
+
+        postRun: [
+            function () {
+                loader.classList.add("hidden");
+                Module.canvas.focus();
+            }
+        ],
+
+        onAbort: function (what) {
+            showLoaderError("error: " + what);
+        }
+    };
+</script>
+<!-- you can change name here if you rename your file  -->
+<script async src="Runtime-wasm-x86-releaseembedded.js"></script>
 </body>
 
 </html>

@@ -167,7 +167,7 @@ static HOT void RenderFrame(void)
 
     RendererClear(&g_app.renderer);
     CallOnRender();
-    TextureDraw("Escalier", 10, 10, 10, 0, 255);
+    TextureDraw("Escalier", 10, 10, 10, 30, 255);
     TextureDraw("PILLIER1", 10, 10, 10, 0, 120);
     ApplyBlackStripes();
     RendererPresent(&g_app.renderer);

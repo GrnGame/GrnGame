@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-#this file is expimental and havent been tested 
+# this file is expimental and havent been tested
 
 from __future__ import annotations
+
 import argparse
 import json
 import re
@@ -10,7 +11,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-
 
 ORIENTATIONS = {
     "landscape": [
@@ -27,15 +27,16 @@ ORIENTATIONS = {
 
 # size standard 
 SIZE_ICON = 1024
-#sdk version min
-SDK_VERSION  = "26.2"
-#chmod standard macos
+# sdk version min
+SDK_VERSION = "26.2"
+# chmod standard macos
 CHMOD = 755
-CHMOD_BASE_8  =0o755
+CHMOD_BASE_8 = 0o755
 
 
 class Fail(Exception):
     pass
+
 
 def execute_command(cmd: list[str], cwd: Path | None = None) -> str:
     try:
@@ -47,10 +48,12 @@ def execute_command(cmd: list[str], cwd: Path | None = None) -> str:
     except subprocess.CalledProcessError as e:
         raise Fail(f"{cmd[0]} failed: {(e.stderr or e.stdout).strip()}")
 
+
 def as_path(value: str) -> Path:
     return Path(value.strip()).expanduser()
 
-def ask_user(value, question: str, default: str | None = None, check=None) ->None:
+
+def ask_user(value, question: str, default: str | None = None, check=None) -> None:
     while True:
         if not value:
             suffix = f" [{default}]" if default else ""
@@ -75,7 +78,8 @@ def ask_user(value, question: str, default: str | None = None, check=None) ->Non
 def check_bundle_id(v: str) -> str:
     if not re.fullmatch(r"[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+", v):
         raise Fail("invalid bundle ID (example: com.mystudio.mygame).")
-    return v.strip().lower() # macos standard
+    return v.strip().lower()  # macos standard
+
 
 def check_team_id(v: str) -> str:
     v = v.strip().upper()
@@ -83,11 +87,13 @@ def check_team_id(v: str) -> str:
         raise Fail("the Team ID must be 10 characters (capital letters and digits).")
     return v
 
+
 def check_orientation(v: str) -> str:
     v = v.strip().lower()
     if v not in ORIENTATIONS:
         raise Fail("choose landscape, portrait or both.")
     return v
+
 
 def check_dist(v: str) -> Path:
     d = as_path(v)
@@ -99,6 +105,7 @@ def check_dist(v: str) -> Path:
         raise Fail(f"no Runtime* file found in {d}")
 
     return d
+
 
 def check_icon(v: str) -> Path:
     p = as_path(v)
@@ -157,7 +164,7 @@ def write_icon(icon: Path, work: Path) -> None:
 
 def write_project(args, safe_name: str, work: Path, has_privacy: bool) -> None:
     sources = [
-        {"path": "stub.c"}, # factisse file 
+        {"path": "stub.c"},  # factisse file
         {"path": "Assets.xcassets"},
         {"path": "Assets.pak", "buildPhase": "resources"},
     ]

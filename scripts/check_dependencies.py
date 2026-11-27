@@ -61,6 +61,7 @@ def get_all_dependencies(file_path: str) -> list:
         data = json.load(file)
 
     dependencies = []
+
     def walk(deps):
         for dep in deps:
             dependencies.append(dep)

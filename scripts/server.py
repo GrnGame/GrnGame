@@ -3,6 +3,7 @@ import socketserver
 
 PORT = 8000
 
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/':
@@ -16,8 +17,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         super().end_headers()
 
+
 class ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
+
 
 with ThreadingHTTPServer(("", PORT), Handler) as httpd:
     print(f"server on : http://localhost:{PORT}")
