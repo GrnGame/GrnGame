@@ -17,7 +17,7 @@ typedef struct
 } Renderer;
 
 bool RendererTryCreate(SDL_Window *window, Renderer *renderer);
-
+void SetPixelArtFilter(SDL_Texture *tex);
 bool RendererClear(const Renderer *renderer);
 bool RendererPresent(const Renderer *renderer);
 bool RendererSetColor(uint8 r, uint8 g, uint8 b, uint8 a);

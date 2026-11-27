@@ -8,6 +8,7 @@
 #include "grngame/utils/string_compat.h"
 #include "kvec.h"
 #include "yyjson.h"
+#include "grngame/core/app.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -62,25 +63,68 @@ static bool JsonFillArray(yyjson_val *arr, JsonValue *out)
     return false;
 }
 
-static JsonValue JsonReadValueFromText(const char *file, const char *key, const char *text, uint32 size)
+JsonDoc JsonOpenFromMemory(const char *file, const unsigned char *text, uint32 size)
+{
+    JsonDoc json;
+    CLEAR_PTR(&json, 0);
+
+    if (UNLIKELY(text == NULL))
+    {
+        LOG_ERROR("Impossible to get content from %s", file);
+        return json;
+    }
+
+    yyjson_read_err err;
+    json.doc = yyjson_read_opts((char *)text, size, 0, NULL, &err);
+
+    if (UNLIKELY(json.doc == NULL))
+    {
+        LOG_ERROR("Impossible to parse %s: %s (pos %zu)", file, err.msg, err.pos);
+        return json;
+    }
+
+    json.file = strdup(file);
+    return json;
+}
+
+JsonDoc JsonOpen(const char *file)
+{
+    JsonDoc json;
+    CLEAR_PTR(&json, 0);
+
+    char *text = (char *)FileLoad(file, NULL);
+    if (UNLIKELY(text == NULL))
+    {
+        LOG_ERROR("Impossible to get content from %s", file);
+        return json;
+    }
+
+    json = JsonOpenFromMemory(file, (const unsigned char *)text, (uint32)strlen(text));
+    free(text);
+    return json;
+}
+
+JsonDoc JsonOpenFromDirectory(const char *path)
+{
+    char *full_path = PathFromExecutableDirectory(path);
+    JsonDoc json = JsonOpen(full_path);
+    free(full_path);
+    return json;
+}
+
+JsonValue JsonReadValue(const JsonDoc *json, const char *key)
 {
     JsonValue result;
     CLEAR_PTR(&result, 0);
-    yyjson_read_err err;
-    yyjson_doc *doc = yyjson_read_opts((char *)text, size, 0, NULL, &err);
 
-    if (UNLIKELY(doc == NULL))
-    {
-        LOG_ERROR("Impossible to parse %s: %s (pos %zu)", file, err.msg, err.pos);
+    if (UNLIKELY(json == NULL || json->doc == NULL))
         return result;
-    }
-    yyjson_val *root = yyjson_doc_get_root(doc);
 
+    yyjson_val *root = yyjson_doc_get_root(json->doc);
     yyjson_val *val = yyjson_obj_get(root, key);
 
     if (val != NULL)
     {
-
         if (yyjson_is_bool(val))
         {
             result.type = JSONV_BOOL;
@@ -89,7 +133,7 @@ static JsonValue JsonReadValueFromText(const char *file, const char *key, const 
         else if (yyjson_is_int(val))
         {
             result.type = JSONV_INTEGER;
-            result.value.i = yyjson_get_sint(val);
+            result.value.i = (int32)yyjson_get_sint(val);
         }
         else if (yyjson_is_real(val))
         {
@@ -105,51 +149,24 @@ static JsonValue JsonReadValueFromText(const char *file, const char *key, const 
         {
             if (!JsonFillArray(val, &result))
             {
-                LOG_WARNING("Json array in %s is not homogeneous", file);
+                LOG_WARNING("Json array in %s is not homogeneous", json->file);
                 CLEAR_PTR(&result, 0);
             }
         }
     }
 
-    yyjson_doc_free(doc);
     return result;
 }
 
-JsonValue JsonReadValue(const char *file, const char *key)
+void JsonClose(JsonDoc *json)
 {
-    char *text = (char *)ReturnFileData(file, NULL);
+    if (json == NULL)
+        return;
 
-    if (UNLIKELY(text == NULL))
-    {
-        LOG_ERROR("Impossible to get content from %s", file);
-        JsonValue result;
-        CLEAR_PTR(&result, 0);
-        return result;
-    }
-
-    JsonValue result = JsonReadValueFromText(file, key, text, (uint32)strlen(text));
-    free(text);
-    return result;
-}
-
-JsonValue JsonReadValueFromDirectory(const char *path, const char *key)
-{
-    char *full_path = PathFromExecutableDirectory(path);
-    JsonValue v = JsonReadValue(full_path, key);
-    free(full_path);
-    return v;
-}
-
-JsonValue JsonReadValueFromMemory(const char *file, const char *key, const unsigned char *text, uint32 size)
-{
-    if (UNLIKELY(text == NULL))
-    {
-        LOG_ERROR("Impossible to get content from %s", file);
-        JsonValue result;
-        CLEAR_PTR(&result, 0);
-        return result;
-    }
-    return JsonReadValueFromText(file, key, (const char *)text, size);
+    if (json->doc != NULL)
+        yyjson_doc_free(json->doc);
+    free(json->file);
+    CLEAR_PTR(json, 0);
 }
 
 void JsonValueFree(JsonValue *v)

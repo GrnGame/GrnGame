@@ -3,7 +3,6 @@
 #include "cielab.h"
 #include "grngame/assets/load.h"
 #include "grngame/core/app.h"
-#include "grngame/data/json.h"
 #include "grngame/dev/logging.h"
 #include "kvec.h"
 #include <grngame/utils/string_compat.h>
@@ -11,7 +10,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-// todo move
+// todo: move
 void PaletteFreeStringVec(string_vec_t *vec)
 {
     if (UNLIKELY(vec == NULL))
@@ -51,10 +50,10 @@ void PaletteManagerDestroy(PaletteManager *manager)
     }
 }
 
-void PaletteAddColor(SDL_Color color)
+void PaletteAddColor(PaletteManager *manager, SDL_Color color)
 {
-    kv_push(SDL_Color, g_app.palette_manager.palette_elements, color);
-    kv_push(ColorLAB, g_app.palette_manager.palette_elements_lab, RgbToLab(&color));
+    kv_push(SDL_Color, manager->palette_elements, color);
+    kv_push(ColorLAB, manager->palette_elements_lab, RgbToLab(&color));
 }
 
 static Uint8 HexToU8(const char *hex)
@@ -64,7 +63,7 @@ static Uint8 HexToU8(const char *hex)
     return (Uint8)strtol(buf, NULL, 16);
 }
 
-SDL_Color ColorFromHex(const char *hex)
+SDL_Color ColorFromHex(PaletteManager *manager, const char *hex)
 {
     SDL_Color color = {255, 255, 255, 255};
 
@@ -80,7 +79,7 @@ SDL_Color ColorFromHex(const char *hex)
         return color;
     }
 
-    khash_t(ColorHex) *h = g_app.palette_manager.palette_hex_hash;
+    khash_t(ColorHex) *h = manager->palette_hex_hash;
 
     khiter_t k = kh_get(ColorHex, h, hex);
 
@@ -103,15 +102,15 @@ SDL_Color ColorFromHex(const char *hex)
     return color;
 }
 
-void PaletteParse(string_vec_t *text)
+void PaletteParse(PaletteManager *manager, string_vec_t *text)
 {
     if (kv_size(*text) == 0)
     {
         LOG_INFO("No color palette detected, set to black and white");
 
-        PaletteAddColor((SDL_Color){.r = 0, .g = 0, .b = 0, .a = 255});
+        PaletteAddColor(manager, (SDL_Color){.r = 0, .g = 0, .b = 0, .a = 255});
 
-        PaletteAddColor((SDL_Color){.r = 255, .g = 255, .b = 255, .a = 255});
+        PaletteAddColor(manager, (SDL_Color){.r = 255, .g = 255, .b = 255, .a = 255});
 
         return;
     }
@@ -122,29 +121,7 @@ void PaletteParse(string_vec_t *text)
 
         if (LIKELY(color != NULL))
         {
-            PaletteAddColor(ColorFromHex(color));
+            PaletteAddColor(manager, ColorFromHex(manager, color));
         }
-    }
-}
-
-void PaletteReload()
-{
-    PaletteManagerDestroy(&g_app.palette_manager);
-    PaletteFreeStringVec(&g_app.info.palette);
-    g_app.palette_manager = PaletteManagerCreate();
-    PaletteParse(&g_app.info.palette);
-    ReloadAllTexturesWithPalette();
-}
-
-void PaletteRead()
-{
-    for (int32 i = 0; i < (int32)kv_size(g_app.palette_manager.palette_elements); i++)
-    {
-        SDL_Color color = kv_A(g_app.palette_manager.palette_elements, i);
-        LOG_INFO("color r,g,b %d :%d,%d,%d,%d", i, color.r, color.g, color.b, color.a);
-    }
-    for (int32 i = 0; i < (int32)kv_size(g_app.info.palette); i++)
-    {
-        LOG_INFO("color palette hex : %s", kv_A(g_app.info.palette, i));
     }
 }

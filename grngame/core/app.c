@@ -7,7 +7,6 @@
 #include "grngame/core/init.h"
 #include "grngame/core/thread.h"
 #include "grngame/core/window.h"
-#include "grngame/data/json.h"
 #include "grngame/data/sqlite.h"
 #include "grngame/dev/hotreload.h"
 #include "grngame/dev/logging.h"
@@ -67,15 +66,10 @@ static COLD void EnsureInitSucceeded(const InitResult res)
         exit(3);
     }
 
-    if (UNLIKELY(res == INIT_OPEN_GAME_DATA_FAILED))
+    if (UNLIKELY(res == INIT_DATA_FAILED))
     {
-        MessageBoxWindow("Failed to open game data.");
+        MessageBoxWindow("Failed to open data.");
         exit(4);
-    }
-    if (UNLIKELY(res == INIT_METADATA_FAILED))
-    {
-        MessageBoxWindow("Failed to read metadata.");
-        exit(5);
     }
 }
 
@@ -149,15 +143,12 @@ static COLD void CleanupAppResources(void)
     InputManagerDestroy(&g_app.input_manager);
     AssetManagerDestroy(&g_app.asset_manager);
 #ifdef GRNGAME_EMBED_ASSETS
-    EmbeddedFileManagerDestroy(&g_app.embedded_file_manager);
+    CookerFileManagerDestroy(&g_app.cooker_file_manager);
 #endif
     SoundManagerDestroy(&g_app.sound_manager);
     ThreadManagerDestroy(&g_app.thread_manager);
-    JsonManagerDestroy(g_app.json_manager);
     HotReloadDestroy();
     LogDestroy();
-    DbClose(g_app.info.file_db);
-    DbClose(g_app.info.data_db);
 
     // todo : factorise code
     if (g_app.info.name)
@@ -176,6 +167,8 @@ static HOT void RenderFrame(void)
 
     RendererClear(&g_app.renderer);
     CallOnRender();
+    TextureDraw("Escalier", 10, 10, 10, 0, 255);
+    TextureDraw("PILLIER1", 10, 10, 10, 0, 120);
     ApplyBlackStripes();
     RendererPresent(&g_app.renderer);
 }
@@ -187,7 +180,6 @@ static void UpdateEngineTime(const float64 frame_start_time)
     if (frame_elapsed_time < target_frame_time)
     {
         float64 remaining_time = target_frame_time - frame_elapsed_time;
-        JsonSaveObjects(remaining_time);
         frame_elapsed_time = TimeNow() - frame_start_time;
 
         if (frame_elapsed_time < target_frame_time)
@@ -254,8 +246,6 @@ void ReloadConfig(void)
     LogDestroy();
     LogInit(LOG_TO_CONSOLE);
     WindowApplyConfig(&g_app.info);
-    if (g_app.info.enable_palette)
-        PaletteReload();
     LOG_INFO("successfully reload config");
 }
 

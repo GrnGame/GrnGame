@@ -1,7 +1,6 @@
 #pragma once
 #include "SDL3_mixer/SDL_mixer.h"
 #include "asset_manager.h"
-#include "embedded_file_manager.h"
 #include "grngame/math/math.h"
 #include "grngame/utils/c_cpp.h"
 #include <SDL3/SDL_surface.h>

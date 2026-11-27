@@ -1,56 +1,38 @@
-#include "SDL3/SDL.h"
-#include "SDL3/SDL_iostream.h"
+#include "file.h"
+
 #include "grngame/dev/logging.h"
-#include "grngame/math/types.h"
-#include <grngame/utils/string_compat.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 bool PathInfo(const char *path, SDL_PathInfo *info)
 {
     return SDL_GetPathInfo(path, info);
 }
 
-// todo return a bool
-void *LoadFile(const char *name, uint32 *size)
+bool PathRemove(const char *path)
 {
-    size_t loaded_size = 0;
-    void *data = SDL_LoadFile(name, &loaded_size);
-    if (size != NULL)
-        *size = (uint32)loaded_size;
-    if (!data)
-        LOG_ERROR("Cant load file :%s error:%s", name, SDL_GetError());
-    return data;
-}
-
-bool SaveFile(const char *name, const void *data, uint32 size)
-{
-    bool ok = SDL_SaveFile(name, data, size);
+    bool ok = SDL_RemovePath(path);
     if (!ok)
-        LOG_ERROR("Cant save file: %s error:%s", name, SDL_GetError());
+        LOG_ERROR("Cant remove path: %s error: %s", path, SDL_GetError());
     return ok;
 }
 
-// todo : return a bool
-SDL_IOStream *IOFromFile(const char *file, const char *mode)
+SDL_IOStream *IOOpen(const char *path, const char *mode)
 {
-    SDL_IOStream *io = SDL_IOFromFile(file, mode);
-    if (!io)
-        LOG_ERROR("Cant get io from file :%s in mode %s error :%s", file, mode, SDL_GetError());
+    SDL_IOStream *io = SDL_IOFromFile(path, mode);
+    if (io == NULL)
+        LOG_ERROR("Cant open: %s mode: %s error: %s", path, mode, SDL_GetError());
     return io;
 }
 
-bool WriteIO(SDL_IOStream *io, const void *data, uint32 size)
+bool IOClose(SDL_IOStream *io)
 {
-    bool ok = (SDL_WriteIO(io, data, size) == size);
+    bool ok = SDL_CloseIO(io);
     if (!ok)
-        LOG_ERROR("Cant write io error: %s", SDL_GetError());
+        LOG_ERROR("Cant close io error: %s", SDL_GetError());
     return ok;
 }
 
-bool ReadIO(SDL_IOStream *io, void *data, uint32 size)
+bool IORead(SDL_IOStream *io, void *data, uint32 size)
 {
     bool ok = (SDL_ReadIO(io, data, size) == size);
     if (!ok && SDL_GetIOStatus(io) != SDL_IO_STATUS_EOF)
@@ -58,112 +40,141 @@ bool ReadIO(SDL_IOStream *io, void *data, uint32 size)
     return ok;
 }
 
-bool CloseIO(SDL_IOStream *io)
+bool IOWrite(SDL_IOStream *io, const void *data, uint32 size)
 {
-    bool ok = SDL_CloseIO(io);
+    bool ok = (SDL_WriteIO(io, data, size) == size);
     if (!ok)
-        LOG_ERROR("Cant close io error:%s", SDL_GetError());
+        LOG_ERROR("Cant write io error: %s", SDL_GetError());
     return ok;
 }
 
-bool RemovePath(const char *path)
+bool IOSeek(SDL_IOStream *io, uint32 offset, SDL_IOWhence whence)
 {
-    if (!SDL_RemovePath(path))
+    bool ok = (SDL_SeekIO(io, offset, whence) >= 0);
+    if (!ok)
+        LOG_ERROR("Cant seek io error: %s", SDL_GetError());
+    return ok;
+}
+
+bool IOSize(SDL_IOStream *io, uint32 *size_out)
+{
+    int32 size = (int32)SDL_GetIOSize(io);
+    if (size < 0)
     {
-        LOG_ERROR("Cant remove path of: %s error:%s", path, SDL_GetError());
+        LOG_ERROR("Invalid io size error: %s", SDL_GetError());
         return false;
     }
+    *size_out = (uint32)size;
     return true;
 }
 
-bool FileExist(const char *name)
+bool IOTell(SDL_IOStream *io, uint32 *pos_out)
 {
-    SDL_PathInfo info;
-    return PathInfo(name, &info) && info.type == SDL_PATHTYPE_FILE;
-}
-
-// dont use sdl api because we need to free data with sdl_free
-unsigned char *ReturnFileData(const char *name, uint32 *size_out)
-{
-    FILE *file = fopen(name, "rb");
-    if (file == NULL)
+    int32 pos = SDL_TellIO(io);
+    if (pos < 0)
     {
-        LOG_ERROR("File %s doesn't exist", name);
-        return NULL;
-    }
-
-    if (fseek(file, 0, SEEK_END) != 0)
-    {
-        LOG_ERROR("Unable to seek in file %s", name);
-        fclose(file);
-        return NULL;
-    }
-
-    long size = ftell(file);
-    if (size < 0)
-    {
-        LOG_ERROR("Invalid file size for %s", name);
-        fclose(file);
-        return NULL;
-    }
-
-    if (fseek(file, 0, SEEK_SET) != 0)
-    {
-        LOG_ERROR("Unable to rewind file %s", name);
-        fclose(file);
-        return NULL;
-    }
-
-    uint32 file_size = (uint32)size;
-    unsigned char *buffer = malloc(file_size + 1);
-
-    uint32 read_count = (uint32)fread(buffer, 1, file_size, file);
-    fclose(file);
-
-    buffer[read_count] = '\0';
-
-    if (size_out != NULL)
-        *size_out = (uint32)read_count;
-
-    return buffer;
-}
-
-bool WriteFileData(const char *name, const void *data, uint32 size, bool append)
-{
-    if (!append)
-        return SaveFile(name, data, size);
-
-    SDL_IOStream *io = IOFromFile(name, "ab");
-    if (!io)
-    {
+        LOG_ERROR("Invalid io position error: %s", SDL_GetError());
         return false;
     }
-
-    bool ok = WriteIO(io, data, size);
-    return CloseIO(io) && ok;
+    *pos_out = (uint32)pos;
+    return true;
 }
 
-bool MoveFile_(const char *dst, const char *src)
+bool IORemaining(SDL_IOStream *io, uint32 *remaining_out)
 {
     uint32 size = 0;
-    void *data = LoadFile(src, &size);
-    if (!data)
-    {
-        LOG_ERROR("impossible to get data from %s", src);
+    uint32 pos = 0;
+    if (!IOSize(io, &size) || !IOTell(io, &pos) || pos > size)
         return false;
+
+    *remaining_out = size - pos;
+    return true;
+}
+
+bool FileExists(const char *path)
+{
+    SDL_PathInfo info;
+    return PathInfo(path, &info) && info.type == SDL_PATHTYPE_FILE;
+}
+
+unsigned char *FileLoad(const char *path, uint32 *size_out)
+{
+    if (size_out != NULL)
+        *size_out = 0;
+
+    SDL_IOStream *io = IOOpen(path, "rb");
+    if (io == NULL)
+        return NULL;
+
+    uint32 size = 0;
+    if (!IOSize(io, &size) || size == UINT32_MAX)
+    {
+        IOClose(io);
+        return NULL;
     }
 
-    bool ok = SaveFile(dst, data, size);
-    SDL_free(data);
+    unsigned char *data = malloc(size + 1);
+    if (data == NULL)
+    {
+        LOG_ERROR("Out of memory loading: %s", path);
+        IOClose(io);
+        return NULL;
+    }
+
+    if (!IORead(io, data, size))
+    {
+        LOG_ERROR("Cant read whole file: %s", path);
+        free(data);
+        IOClose(io);
+        return NULL;
+    }
+
+    data[size] = '\0';
+    IOClose(io);
+
+    if (size_out != NULL)
+        *size_out = size;
+    return data;
+}
+
+bool FileSave(const char *path, const void *data, uint32 size)
+{
+    bool ok = SDL_SaveFile(path, data, size);
+    if (!ok)
+        LOG_ERROR("Cant save file: %s error: %s", path, SDL_GetError());
+    return ok;
+}
+
+bool FileAppend(const char *path, const void *data, uint32 size)
+{
+    SDL_IOStream *io = IOOpen(path, "ab");
+    if (io == NULL)
+        return false;
+
+    bool ok = IOWrite(io, data, size);
+    return IOClose(io) && ok;
+}
+
+bool FileCopy(const char *src, const char *dst)
+{
+    uint32 size = 0;
+    unsigned char *data = FileLoad(src, &size);
+    if (data == NULL)
+        return false;
+
+    bool ok = FileSave(dst, data, size);
+    free(data);
 
     if (!ok)
-    {
-        LOG_ERROR("Failed to save file :%s", dst);
-        if (!RemovePath(dst))
-        {
-            LOG_ERROR("Failed to remove path of %s", dst);
-        }
-    }
-
+        PathRemove(dst);
     return ok;
+}
+
+bool FileMove(const char *src, const char *dst)
+{
+    if (SDL_RenamePath(src, dst))
+        return true;
+
+    // rename can fail across volumes: fall back to copy + remove
+    return FileCopy(src, dst) && PathRemove(src);
 }

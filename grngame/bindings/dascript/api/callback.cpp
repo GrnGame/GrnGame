@@ -1,6 +1,6 @@
 #include <daScript/daScript.h>
 #include "grngame/bindings/dascript/api/callback.h"
-#include "grngame/assets/embedded_file_manager.h"
+#include "grngame/assets/cooker_manager.h"
 #include "grngame/platform/paths.h"
 #include "interpretor.h"
 #include <cstdlib>

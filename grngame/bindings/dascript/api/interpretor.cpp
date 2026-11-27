@@ -1,6 +1,6 @@
 #include <daScript/daScript.h>
 #include "interpretor.h"
-#include "grngame/assets/embedded_file_manager.h"
+#include "grngame/assets/cooker_manager.h"
 #include "grngame/bindings/dascript/api/callback.h"
 #include "grngame/core/app.h"
 #include "grngame/platform/paths.h"
@@ -19,8 +19,8 @@ bool DaScriptRun(const char *filename)
 
     // run script from disk
 
-    free:
-        free(name);
+free:
+    free(name);
     free(module);
 
     return true;
@@ -29,7 +29,7 @@ bool DaScriptRun(const char *filename)
 bool DaScriptRunFromMemory(const char *filename)
 {
 
-    const EmbeddedFile *file = EmbeddedFileGet(filename);
+    const CookerFile *file = CookerFileGet(filename);
     if (file == NULL)
     {
         LOG_ERROR("Failed to find %s in %s", filename, ASSETS_PAK);
@@ -47,8 +47,8 @@ bool DaScriptRunFromMemory(const char *filename)
 
     // run script from memory
 
-    free:
-        free(module);
+free:
+    free(module);
 
     return true;
 }

@@ -73,18 +73,15 @@ bool TextDraw(const Font *font, const char *text, vec2s position, int32 space_be
     SetSizeOut(size_out, 0.0f, 0.0f);
 
     bool find = false;
-    Texture tex = FindImage(font->name, &find);
+    Sprite sprite = {
+        .w = (uint16)font->size_of_case.x, .h = (uint16)font->size_of_case.y, .find = true, .name = font->name};
+    sprite.tex = FindImage(font->name, &find);
+
     if (!find)
     {
         LOG_WARNING("Impossible to get font texture: %s", font->name);
         return false;
     }
-
-    Sprite sprite = {.w = (uint16)font->size_of_case.x,
-                     .h = (uint16)font->size_of_case.y,
-                     .tex = tex,
-                     .find = true,
-                     .name = font->name};
 
     TextLayout l = {
         .start_x = position.x,

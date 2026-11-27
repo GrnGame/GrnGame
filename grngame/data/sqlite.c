@@ -1,12 +1,11 @@
 #include "sqlite.h"
-#include "SDL3/SDL_iostream.h"
 #include "file.h"
 #include "grngame/dev/logging.h"
 #include "grngame/math/types.h"
 #include "grngame/utils/attributes.h"
+#include "grngame/utils/string_compat.h"
 #include "grngame/utils/version.h"
 #include "kvec.h"
-#include <grngame/utils/string_compat.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +46,7 @@ static void DbBindArgs(sqlite3_stmt *stmt, DbArg *args, int32 argc)
 
 bool DbExists(const char *name)
 {
-    return FileExist(name);
+    return FileExists(name);
 }
 
 sqlite3 *DbCreate(const char *name)
@@ -150,8 +149,11 @@ static DbResult DbResultGet(sqlite3_stmt *stmt)
             case SQLITE_BLOB: {
                 v.type = DATA;
                 int32 size = sqlite3_column_bytes(stmt, i);
-                v.value.blob.data = malloc(size);
-                memcpy(v.value.blob.data, sqlite3_column_blob(stmt, i), size);
+                if (size > 0)
+                {
+                    v.value.blob.data = malloc((size_t)size);
+                    memcpy(v.value.blob.data, sqlite3_column_blob(stmt, i), (size_t)size);
+                }
                 v.value.blob.size = (uint32)size;
                 break;
             }
@@ -279,13 +281,13 @@ void DbStmtFree(DbStmt *s)
 
 bool ReadSqliteVersion(const char *path, int32 *out)
 {
-    SDL_IOStream *io = IOFromFile(path, "rb");
+    SDL_IOStream *io = IOOpen(path, "rb");
     if (!io)
         return false;
 
     uint8 h[100];
-    bool ok = ReadIO(io, h, sizeof(h));
-    CloseIO(io);
+    bool ok = IORead(io, h, sizeof(h));
+    IOClose(io);
 
     if (!ok || memcmp(h, "SQLite format 3\0", 16) != 0)
         return false;
@@ -296,7 +298,7 @@ bool ReadSqliteVersion(const char *path, int32 *out)
 
 bool ApplyDbPragmas(sqlite3 *db)
 {
-    if (!DataWrite(db, "PRAGMA journal_mode = WAL   ;"))
+    if (!DataWrite(db, "PRAGMA journal_mode = WAL;"))
     {
         LOG_ERROR("Can't write database journal_mode");
         return false;

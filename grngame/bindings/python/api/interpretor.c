@@ -1,6 +1,6 @@
 #include "interpretor.h"
 #include "callback.h"
-#include "grngame/assets/embedded_file_manager.h"
+#include "grngame/assets/cooker_manager.h"
 #include "grngame/core/app.h"
 #include "grngame/platform/paths.h"
 bool PyScriptRun(const char *filename)
@@ -26,7 +26,7 @@ free:
 bool PyScriptRunFromMemory(const char *filename)
 {
 
-    const EmbeddedFile *file = EmbeddedFileGet(filename);
+    const CookerFile *file = CookerFileGet(filename);
     if (file == NULL)
     {
         LOG_ERROR("Failed to find %s in %s", filename, ASSETS_PAK);

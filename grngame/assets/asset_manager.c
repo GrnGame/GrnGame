@@ -1,25 +1,23 @@
 #include "asset_manager.h"
-#include "grngame/assets/embedded_file_manager.h"
+#include "SDL3_image/SDL_image.h"
 #include "grngame/assets/load.h"
+#include "cooker_manager.h"
+#include "grngame/cooker/read.h"
 #include "grngame/core/app.h"
-#include "grngame/core/thread.h"
 #include "grngame/dev/logging.h"
 #include "grngame/dev/tracy.h"
-#include "grngame/embedded/embedded_file_generator.h"
 #include "grngame/platform/directories.h"
 #include "grngame/platform/paths.h"
 #include "grngame/utils/attributes.h"
 #include "grngame/utils/clear.h"
-#include "grngame/utils/string_compat.h"
 #include "khash.h"
-#include "kvec.h"
+#include "grngame/utils/time.h"
+
 #include <stdlib.h>
 
-static void AddAssetFileToArray(const char *path, void *user_data);
-static void LoadTaskWorker(void *data);
-static void LoadFilesMultithreaded(void);
+#define ATLAS_NODE_NAME "atlas"
 
-static Texture CreateDefaultTexture()
+static Texture CreateDefaultTexture(void)
 {
     Texture texture = {0};
     texture.w = 16;
@@ -27,7 +25,7 @@ static Texture CreateDefaultTexture()
 
     texture.texture =
         SDL_CreateTexture(g_app.renderer.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, 16, 16);
-
+    SetPixelArtFilter(texture.texture);
     uint32 pixels[16 * 16];
 
     for (int y = 0; y < 16; y++)
@@ -46,135 +44,177 @@ static Texture CreateDefaultTexture()
     return texture;
 }
 
-COLD AssetManager AssetManagerCreate()
+COLD AssetManager AssetManagerCreate(void)
 {
     AssetManager manager = {
-        .sound_map = kh_init(SoundMap), .texture_map = kh_init(TextureMap), .default_texture = CreateDefaultTexture()};
-
-    kv_init(manager.assets_list);
+        .sound_map = kh_init(SoundMap),
+        .texture_map = kh_init(TextureMap),
+        .default_texture = CreateDefaultTexture(),
+        .atlas = {0},
+    };
 
     return manager;
 }
 
-static void LoadTaskWorker(void *data)
+#ifndef GRNGAME_EMBED_ASSETS
+static void LoadAssetCallback(const char *path, void *userdata)
 {
-    LoadTask *task = (LoadTask *)data;
+    int32 *asset_count = (int32 *)userdata;
 
-    LoadFileParallel(task->path, &task->results[task->index]);
-
-    free(task);
-}
-
-static void LoadFilesMultithreaded(void)
-{
-    string_vec_t *list = &g_app.asset_manager.assets_list;
-    int32 count = (int32)kv_size(*list);
-
-    if (count == 0)
-        return;
-
-    if (g_app.info.enable_palette)
+    if (FileIsLoadableImage(path))
     {
-        InitPaletteRemapLUT();
+        if (LoadTextureFile(path))
+            (*asset_count)++;
     }
-
-    LoadResult *results = malloc(count * sizeof(LoadResult));
-    CLEAR_ARRAY(results, 0, count);
-
-    for (int32 i = 0; i < count; ++i)
+    else if (FileIsLoadableAudio(path))
     {
-        LoadTask *task = malloc(sizeof(LoadTask));
-
-        task->path = kv_A(*list, i);
-        task->results = results;
-        task->index = i;
-
-        ThreadManagerPush(LoadTaskWorker, task);
+        if (LoadSoundFile(path))
+            (*asset_count)++;
     }
-
-    ThreadManagerWait();
-
-    // main thread because gpu is not safe thread
-    for (int32 i = 0; i < count; ++i)
-    {
-        LoadResult *res = &results[i];
-
-        if (!res->success)
-            continue;
-
-        if (res->is_sound)
-            RegisterSoundResult(res);
-        else
-            RegisterTextureResult(res);
-    }
-
-    free(results);
 }
-
-static void AddAssetFileToArray(const char *path, void *user_data)
-{
-    int32 *count = (int32 *)user_data;
-
-    if (!(FileIsLoadableImage(path) || FileIsLoadableQOI(path)) && !FileIsLoadableAudio(path))
-        return;
-
-    if (count)
-        (*count)++;
-
-    kv_push(char *, g_app.asset_manager.assets_list, strdup(path));
-}
+#endif
 
 void AssetManagerLoadFolder(const char *folder)
 {
-    PROFILE_FUNCTION("LoadFolder");
+#ifndef GRNGAME_EMBED_ASSETS
+    // need it for palette on assets
+    InitLinearLut();
     int32 asset_count = 0;
-    DirWalk(folder, AddAssetFileToArray, &asset_count);
+    DirWalk(folder, LoadAssetCallback, &asset_count);
 
     if (asset_count == 0)
     {
         LOG_WARNING("No assets files in asset folder '%s'", folder);
         return;
     }
-    LoadFilesMultithreaded();
+#else
+    (void)folder;
+#endif
 }
+
+#ifdef GRNGAME_EMBED_ASSETS
+
+// can be long maybe need to profile it
+static bool LoadEmbeddedAtlas(void)
+{
+    const CookerFile *atlas_file = CookerFileGet(ATLAS_NODE_NAME);
+    if (!atlas_file)
+    {
+        LOG_WARNING("No atlas node found in %s", ASSETS_PAK);
+        return true;
+    }
+
+    SDL_IOStream *io = SDL_IOFromConstMem(atlas_file->data, atlas_file->size);
+    if (!io)
+    {
+        LOG_ERROR("Failed to create IO stream for atlas: %s", SDL_GetError());
+        return false;
+    }
+    SDL_Surface *surf = IMG_Load_IO(io, true);
+    if (!surf)
+    {
+        LOG_ERROR("Failed to decode atlas surface: %s", SDL_GetError());
+        return false;
+    }
+
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(g_app.renderer.renderer, surf);
+    if (!tex)
+    {
+        LOG_ERROR("Failed to create atlas SDL_Texture: %s", SDL_GetError());
+        SDL_DestroySurface(surf);
+        return false;
+    }
+    SetPixelArtFilter(tex);
+    g_app.asset_manager.atlas.texture = tex;
+    g_app.asset_manager.atlas.w = (uint16)surf->w;
+    g_app.asset_manager.atlas.h = (uint16)surf->h;
+    SDL_DestroySurface(surf);
+    return true;
+}
+
+static bool LoadEmbeddedAtlasEntries(void)
+{
+    uint32 count = 0;
+    ArchiveAssetData *assets_data = ReadArchiveAssetsData(ASSETS_PAK, &count);
+    if (!assets_data || count == 0)
+        return true;
+
+    khash_t(TextureMap) *map = g_app.asset_manager.texture_map;
+
+    for (uint32 i = 0; i < count; ++i)
+    {
+        TextureMemory entry = {
+            .positions = assets_data[i].positions,
+            .size = assets_data[i].size,
+        };
+
+        // same key as the dev path: the file stem
+        char *key = FileStem(assets_data[i].name);
+        if (UNLIKELY(key == NULL))
+            continue;
+
+        int32 ret = 0;
+        khiter_t k = kh_put(TextureMap, map, key, &ret);
+        if (UNLIKELY(ret == 0))
+        {
+            // the map keeps its existing key, the new one is not needed
+            LOG_WARNING("Duplicate atlas entry: %s", key);
+            free(key);
+        }
+
+        kh_value(map, k) = entry;
+    }
+
+    FreeArchiveAssetsData(assets_data, count);
+    return true;
+}
+#endif
 
 void AssetManagerLoadFolderFromMemory(const char *folder)
 {
+    (void)folder;
+#ifdef GRNGAME_EMBED_ASSETS
     PROFILE_FUNCTION("LoadFolderFromMemory");
-    int32 asset_count = 0;
-    LOG_DEBUG(
-        "assets count: %d,scripts count: %d,data count: %d", (int32)EmbeddedFileManagerGetCounts(EMBED_KIND_ASSET),
-        (int32)EmbeddedFileManagerGetCounts(EMBED_KIND_SCRIPT), (int32)EmbeddedFileManagerGetCounts(EMBED_KIND_DATA));
 
-    if (UNLIKELY(EmbeddedFileManagerGetCounts(EMBED_KIND_ASSET)) == 0)
-    {
-        LOG_WARNING("No assets files in embedded assets folder '%s'", folder);
+    if (!LoadEmbeddedAtlas())
         return;
-    }
-    khash_t(EmbeddedFileHash) *hash = g_app.embedded_file_manager.hash;
-    for (khint_t k = kh_begin(hash); k != kh_end(hash); ++k)
-    {
-        if (kh_exist(hash, k))
-        {
-            EmbeddedFile *asset = kh_value(hash, k);
-            AddAssetFileToArray(asset->name, &asset_count);
-        }
-    }
-    if (asset_count == 0)
-    {
-        LOG_WARNING("No assets files in asset folder '%s'", folder);
+
+    if (!LoadEmbeddedAtlasEntries())
         return;
+
+    khash_t(CookerFileHash) *files = g_app.cooker_file_manager.hash;
+    if (!files)
+        return;
+
+    for (khiter_t k = kh_begin(files); k != kh_end(files); ++k)
+    {
+        if (!kh_exist(files, k))
+            continue;
+
+        const CookerFile *file = kh_value(files, k);
+        if (file && file->kind == ARCHIVE_KIND_AUDIO)
+            LoadSoundFile(file->name);
     }
-    LoadFilesMultithreaded();
+#endif
 }
 
 void AssetManagerDestroy(AssetManager *manager)
 {
-
     UnloadAllTextureFiles();
     UnloadAllSoundFiles();
-    // Keys are owned by assets_list.
-    PaletteFreeStringVec(&manager->assets_list);
+
+    if (manager->atlas.texture)
+    {
+        SDL_DestroyTexture(manager->atlas.texture);
+        manager->atlas.texture = NULL;
+    }
+
+    if (manager->default_texture.texture)
+    {
+        SDL_DestroyTexture(manager->default_texture.texture);
+        manager->default_texture.texture = NULL;
+    }
+
     kh_destroy(TextureMap, manager->texture_map);
     kh_destroy(SoundMap, manager->sound_map);
     manager->texture_map = NULL;
@@ -188,6 +228,7 @@ MIX_Audio *FindAudio(const char *name)
     return it == kh_end(map) ? NULL : kh_value(map, it);
 }
 
+#ifndef GRNGAME_EMBED_ASSETS
 Texture FindImage(const char *name, bool *found)
 {
     khash_t(TextureMap) *map = g_app.asset_manager.texture_map;
@@ -206,3 +247,27 @@ Texture FindImage(const char *name, bool *found)
 
     return g_app.asset_manager.default_texture;
 }
+#else
+TextureMemory FindImage(const char *name, bool *found)
+{
+    khash_t(TextureMap) *map = g_app.asset_manager.texture_map;
+    khiter_t it = kh_get(TextureMap, map, name);
+
+    if (it != kh_end(map))
+    {
+        if (found)
+            *found = true;
+
+        return kh_value(map, it);
+    }
+
+    if (found)
+        *found = false;
+
+    TextureMemory fallback = {
+        .positions = {.x = 0.0f, .y = 0.0f},
+        .size = {.x = (float)g_app.asset_manager.default_texture.w, .y = (float)g_app.asset_manager.default_texture.h},
+    };
+    return fallback;
+}
+#endif

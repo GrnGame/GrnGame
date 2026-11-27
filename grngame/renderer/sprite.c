@@ -20,11 +20,25 @@ bool SpriteDraw(Sprite s, uint16 frame, float32 x, float32 y, uint8 c, int16 r, 
         }
     }
 
-    Texture tex = s.tex;
+    SDL_Texture *sdl_tex = NULL;
+    int16 tex_w = 0;
+    int16 tex_h = 0;
+    float32 base_x = 0.0f;
+    float32 base_y = 0.0f;
 
-    int16 tex_w = tex.w;
+#ifndef GRNGAME_EMBED_ASSETS
+    sdl_tex = s.tex.texture;
+    tex_w = (int16)s.tex.w;
+    tex_h = (int16)s.tex.h;
+#else
+    sdl_tex = g_app.asset_manager.atlas.texture;
+    tex_w = (int16)s.tex.size.x;
+    tex_h = (int16)s.tex.size.y;
+    base_x = s.tex.positions.x;
+    base_y = s.tex.positions.y;
+#endif
 
-    if (OffScreen(x, y, (float32)(tex_w * c), (float32)(tex.h * c)))
+    if (OffScreen(x, y, (float32)(tex_w * c), (float32)(tex_h * c)))
     {
         // LOG_DEBUG("Cant draw %s because it offscreen in :%f,%f", s.name, x, y);
         return true;
@@ -37,8 +51,8 @@ bool SpriteDraw(Sprite s, uint16 frame, float32 x, float32 y, uint8 c, int16 r, 
         return false;
     }
 
-    SDL_FRect src = {.x = (float32)((frame % cols) * s.w),
-                     .y = (float32)((frame / cols) * s.h),
+    SDL_FRect src = {.x = base_x + (float32)((frame % cols) * s.w),
+                     .y = base_y + (float32)((frame / cols) * s.h),
                      .w = (float32)s.w,
                      .h = (float32)s.h};
     SDL_FRect dst = {.x = PIXEL_ALIGN(x + g_app.info.offset_x),
@@ -47,15 +61,14 @@ bool SpriteDraw(Sprite s, uint16 frame, float32 x, float32 y, uint8 c, int16 r, 
                      .h = (float32)(s.h * c)};
     SDL_FPoint center = {.x = dst.w / 2.0f, .y = dst.h / 2.0f};
 
-    RendererSetTextureAlpha(tex.texture, a);
+    RendererSetTextureAlpha(sdl_tex, a);
     if (r == 0)
     {
-
-        SDL_RenderTexture(g_app.renderer.renderer, tex.texture, &src, &dst);
+        SDL_RenderTexture(g_app.renderer.renderer, sdl_tex, &src, &dst);
     }
     else
     {
-        RendererTextureRotated(tex.texture, &src, &dst, (float64)r, &center, SDL_FLIP_NONE);
+        RendererTextureRotated(sdl_tex, &src, &dst, (float64)r, &center, SDL_FLIP_NONE);
     }
 
     return true;

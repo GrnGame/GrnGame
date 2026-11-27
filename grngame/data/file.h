@@ -5,22 +5,29 @@
 #include "grngame/utils/c_cpp.h"
 #include <stdbool.h>
 
-#define MAX_PATH_ 1024
-
 BEGIN_DECLARATIONS
 
 bool PathInfo(const char *path, SDL_PathInfo *info);
-void *LoadFile(const char *name, uint32 *size);
-bool SaveFile(const char *name, const void *data, uint32 size);
-SDL_IOStream *IOFromFile(const char *file, const char *mode);
-bool WriteIO(SDL_IOStream *io, const void *data, uint32 size);
-bool ReadIO(SDL_IOStream *io, void *data, uint32 size);
-bool CloseIO(SDL_IOStream *io);
-bool RemovePath(const char *path);
+bool PathRemove(const char *path);
 
-bool FileExist(const char *name);
-// dont work on android
-unsigned char *ReturnFileData(const char *name, uint32 *size_out);
-bool WriteFileData(const char *name, const void *data, uint32 size, bool append);
-bool MoveFile_(const char *dst, const char *name);
+bool FileExists(const char *path);
+
+// need to free
+unsigned char *FileLoad(const char *path, uint32 *size_out);
+
+bool FileSave(const char *path, const void *data, uint32 size);
+bool FileAppend(const char *path, const void *data, uint32 size);
+bool FileCopy(const char *src, const char *dst);
+bool FileMove(const char *src, const char *dst);
+
+// sdl wrapper
+SDL_IOStream *IOOpen(const char *path, const char *mode);
+bool IOClose(SDL_IOStream *io);
+bool IORead(SDL_IOStream *io, void *data, uint32 size);
+bool IOWrite(SDL_IOStream *io, const void *data, uint32 size);
+bool IOSeek(SDL_IOStream *io, uint32 offset, SDL_IOWhence whence);
+bool IOSize(SDL_IOStream *io, uint32 *size_out);
+bool IOTell(SDL_IOStream *io, uint32 *pos_out);
+bool IORemaining(SDL_IOStream *io, uint32 *remaining_out);
+
 END_DECLARATIONS

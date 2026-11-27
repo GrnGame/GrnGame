@@ -5,6 +5,9 @@
 #include "grngame/utils/macro.h"
 #include "kvec.h"
 #include "stdbool.h"
+#include "grngame/core/app.h"
+
+#include <yyjson.h>
 
 BEGIN_DECLARATIONS
 
@@ -37,13 +40,25 @@ typedef struct
     } value;
 } JsonValue;
 
+typedef struct
+{
+    yyjson_doc *doc;
+    char *file;
+} JsonDoc;
+
 // read only json ,can be use on web ios and android (arrays need to be homogenous)
-JsonValue JsonReadValue(const char *file, const char *path);
-JsonValue JsonReadValueFromDirectory(const char *path, const char *key);
+JsonDoc JsonOpen(const char *file);
+JsonDoc JsonOpenFromDirectory(const char *path);
 
 // for config
-JsonValue JsonReadValueFromMemory(const char *file, const char *path, const unsigned char *text, uint32 size);
+JsonDoc JsonOpenFromMemory(const char *file, const unsigned char *text, uint32 size);
+
+JsonValue JsonReadValue(const JsonDoc *json, const char *key);
+void JsonClose(JsonDoc *json);
 
 void JsonValueFree(JsonValue *v);
+
+// used in grngame
+AppInfo *ParseConfig(const unsigned char *memory, uint32 size);
 
 END_DECLARATIONS

@@ -59,24 +59,7 @@ bool FileIsLoadableScript(const char *file)
 
     // null terminated so we can loop on it in the following loop
     // todo : remove py or das if config language is py or das
-    static const char *exts[] = {"das", "py", NULL};
-
-    // exts[i] will be false when it will reach NULL
-    for (int32 i = 0; exts[i]; ++i)
-        if (strcasecmp(ext, exts[i]) == 0)
-            return true;
-
-    return false;
-}
-
-bool FileIsLoadableQOI(const char *file)
-{
-    const char *ext = FileExtension(file);
-    if (!*ext) // if the string is empty that means there is no extension and it cant be determined
-        return false;
-
-    // null terminated so we can loop on it in the following loop
-    static const char *exts[] = {"qoi", NULL};
+    static const char *exts[] = {"das", "py", "qoi", NULL};
 
     // exts[i] will be false when it will reach NULL
     for (int32 i = 0; exts[i]; ++i)
@@ -126,22 +109,6 @@ bool FileIsLoadableJson(const char *file)
 
     // same
     static const char *exts[] = {"json", NULL};
-
-    for (int32 i = 0; exts[i]; ++i)
-        if (strcasecmp(ext, exts[i]) == 0)
-            return true;
-
-    return false;
-}
-
-bool FileIsLoadableTtf(const char *file)
-{
-    const char *ext = FileExtension(file);
-    if (!*ext) // same
-        return false;
-
-    // same
-    static const char *exts[] = {"ttf", NULL};
 
     for (int32 i = 0; exts[i]; ++i)
         if (strcasecmp(ext, exts[i]) == 0)

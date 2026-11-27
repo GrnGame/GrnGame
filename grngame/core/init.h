@@ -9,8 +9,7 @@ typedef enum
     INIT_LOG_FAILED,
     INIT_SOUND_FAILED,
     INIT_CONFIG_FAILED,
-    INIT_OPEN_GAME_DATA_FAILED,
-    INIT_METADATA_FAILED,
+    INIT_DATA_FAILED,
 } InitResult;
 
 InitResult InitAll();

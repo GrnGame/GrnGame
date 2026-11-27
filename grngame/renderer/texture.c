@@ -12,6 +12,13 @@
 bool TextureDraw(const char *name, float32 x, float32 y, uint8 c, int16 r, uint8 a)
 {
     bool find = false;
+    SDL_Texture *sdl_tex = NULL;
+    SDL_FRect src = {0};
+    const SDL_FRect *src_ptr = NULL;
+    float32 w = 0.0f;
+    float32 h = 0.0f;
+
+#ifndef GRNGAME_EMBED_ASSETS
     Texture tex = FindImage(name, &find);
     if (!find)
     {
@@ -19,26 +26,42 @@ bool TextureDraw(const char *name, float32 x, float32 y, uint8 c, int16 r, uint8
         return false;
     }
 
-    if (OffScreen(x, y, (float32)(tex.w * c), (float32)(tex.h * c)))
+    sdl_tex = tex.texture;
+    w = (float32)tex.w;
+    h = (float32)tex.h;
+#else
+    TextureMemory tex = FindImage(name, &find);
+    if (!find)
+    {
+        LOG_WARNING("Impossible to get texture: %s,default is set to 16x16", name);
+        return false;
+    }
+
+    sdl_tex = g_app.asset_manager.atlas.texture;
+    src = (SDL_FRect){.x = tex.positions.x, .y = tex.positions.y, .w = tex.size.x, .h = tex.size.y};
+    src_ptr = &src;
+    w = tex.size.x;
+    h = tex.size.y;
+#endif
+
+    if (OffScreen(x, y, w * c, h * c))
     {
         // LOG_DEBUG("Cant draw %s because it offscreen in :%f,%f", name, x, y);
         return true;
     }
 
-    SDL_FRect dst = {PIXEL_ALIGN(x + g_app.info.offset_x), PIXEL_ALIGN(y + g_app.info.offset_y), (float32)(tex.w * c),
-                     (float32)(tex.h * c)};
-
+    SDL_FRect dst = {
+        .x = PIXEL_ALIGN(x + g_app.info.offset_x), .y = PIXEL_ALIGN(y + g_app.info.offset_y), .w = w * c, .h = h * c};
     SDL_FPoint center = {.x = dst.w / 2.0f, .y = dst.h / 2.0f};
 
-    RendererSetTextureAlpha(tex.texture, a);
+    RendererSetTextureAlpha(sdl_tex, a);
     if (r == 0)
     {
-
-        SDL_RenderTexture(g_app.renderer.renderer, tex.texture, NULL, &dst);
+        SDL_RenderTexture(g_app.renderer.renderer, sdl_tex, src_ptr, &dst);
     }
     else
     {
-        RendererTextureRotated(tex.texture, NULL, &dst, (float64)r, &center, SDL_FLIP_NONE);
+        RendererTextureRotated(sdl_tex, src_ptr, &dst, (float64)r, &center, SDL_FLIP_NONE);
     }
 
     return true;
@@ -46,7 +69,8 @@ bool TextureDraw(const char *name, float32 x, float32 y, uint8 c, int16 r, uint8
 
 HOT ivec2s TextureGetSize(const char *name)
 {
-    bool find;
+    bool find = false;
+#ifndef GRNGAME_EMBED_ASSETS
     Texture tex = FindImage(name, &find);
     if (!find)
     {
@@ -55,4 +79,14 @@ HOT ivec2s TextureGetSize(const char *name)
     }
 
     return (ivec2s){.raw = {(int32)tex.w, (int32)tex.h}};
+#else
+    TextureMemory tex = FindImage(name, &find);
+    if (!find)
+    {
+        LOG_WARNING("Impossible to get texture: %s,size will be 16x16", name);
+        return (ivec2s){.raw = {0, 0}};
+    }
+
+    return (ivec2s){.raw = {(int32)tex.size.x, (int32)tex.size.y}};
+#endif
 }

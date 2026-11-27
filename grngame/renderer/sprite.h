@@ -10,7 +10,11 @@ typedef struct
 {
     uint16 w;
     uint16 h;
+#ifndef GRNGAME_EMBED_ASSETS
     Texture tex; // for optimisation
+#else
+    TextureMemory tex;
+#endif
     bool find;
     const char *name;
 } Sprite;

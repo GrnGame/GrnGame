@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,13 +14,18 @@ if __name__ == "__main__":
     embedded_dir = Path(sys.argv[4])
 
     embedded = find_embedded(embedded_dir)
+    local_embedded = build_dir / embedded.name
 
     remove_path(build_dir / ASSETS_PAK)
     created = populate(root_dir / target_name, root_dir, build_dir, copy_path)
 
+    # the cooker resolves its files from its own folder: run a copy placed in the test folder
+    shutil.copy2(embedded, local_embedded)
+
     try:
         content = [name for name in PAK_CONTENT if (build_dir / name).exists()]
-        subprocess.run([str(embedded.resolve()), ASSETS_PAK, *content], cwd=build_dir, check=True)
+        subprocess.run([str(local_embedded.resolve()), ASSETS_PAK, *content], cwd=build_dir, check=True)
     finally:
+        remove_path(local_embedded)
         for path in created:
             remove_path(path)

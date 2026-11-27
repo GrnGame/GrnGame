@@ -1,13 +1,10 @@
 #include "init.h"
-#include "data.h"
 #include "grngame/assets/asset_manager.h"
-#include "grngame/assets/embedded_file_manager.h"
 #include "grngame/bindings/api/callback.h"
 #include "grngame/bindings/api/interpretor.h"
 #include "grngame/core/app.h"
 #include "grngame/core/window.h"
 #include "grngame/data/file.h"
-#include "grngame/data/json.h"
 #include "grngame/data/json_read.h"
 #include "grngame/data/sqlite.h"
 #include "grngame/dev/hotreload.h"
@@ -86,147 +83,37 @@ static InitResult SetSDLMetadata(void)
     return INIT_OK;
 }
 
-static bool ReadConfigValue(const char *key, const unsigned char *memory, JsonValue *value, uint32 size)
-{
-    *value = memory == NULL ? JsonReadValueFromDirectory(CONFIG_FILE, key)
-                            : JsonReadValueFromMemory(CONFIG_FILE, key, memory, size);
-    return value->type != JSONV_VOID;
-}
-
-static bool ParseConfig(const unsigned char *memory, uint32 size)
-{
-    JsonValue value;
-
-    if (!ReadConfigValue("fps", memory, &value, size) || (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
-        goto invalid;
-    g_app.info.fps = (uint16)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("windowWidth", memory, &value, size) ||
-        (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
-        goto invalid;
-    g_app.info.window_width = (float32)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("windowHeight", memory, &value, size) ||
-        (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
-        goto invalid;
-    g_app.info.window_height = (float32)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("universeWidth", memory, &value, size) ||
-        (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
-        goto invalid;
-    g_app.info.window_universe_width = (uint16)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("universeHeight", memory, &value, size) ||
-        (value.type != JSONV_INTEGER && value.type != JSONV_FLOAT))
-        goto invalid;
-    g_app.info.window_universe_height = (uint16)(value.type == JSONV_INTEGER ? value.value.i : value.value.f);
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("resizable", memory, &value, size) || value.type != JSONV_BOOL)
-        goto invalid;
-    g_app.info.window_resizable = value.value.b;
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("fullscreen", memory, &value, size) || value.type != JSONV_BOOL)
-        goto invalid;
-    g_app.info.window_fullscreen = value.value.b;
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("maximised", memory, &value, size) || value.type != JSONV_BOOL)
-        goto invalid;
-    g_app.info.window_maximised = value.value.b;
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("bordered", memory, &value, size) || value.type != JSONV_BOOL)
-        goto invalid;
-    g_app.info.bordered = value.value.b;
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("forceUniverseScale", memory, &value, size) || value.type != JSONV_BOOL)
-        goto invalid;
-    g_app.info.force_universe_scale = value.value.b;
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("enable_palette", memory, &value, size) || value.type != JSONV_BOOL)
-        goto invalid;
-    g_app.info.enable_palette = value.value.b;
-    JsonValueFree(&value);
-
-    if (!ReadConfigValue("name", memory, &value, size) || value.type != JSONV_TEXT)
-        goto invalid;
-    g_app.info.name = value.value.s;
-
-    if (!ReadConfigValue("version", memory, &value, size) || value.type != JSONV_TEXT)
-        goto invalid;
-    g_app.info.version = value.value.s;
-
-    if (!ReadConfigValue("company", memory, &value, size) || value.type != JSONV_TEXT)
-        goto invalid;
-    g_app.info.company = value.value.s;
-
-    if (!ReadConfigValue("language", memory, &value, size) || value.type != JSONV_TEXT)
-        goto invalid;
-
-    if (strcmp("dascript", value.value.s) == 0)
-    {
-        g_app.info.scripting_langage = DAS_SCRIPT;
-    }
-    else if (strcmp("python", value.value.s) == 0)
-    {
-        g_app.info.scripting_langage = PY_SCRIPT;
-    }
-    else
-    {
-        LOG_WARNING("scripting language : %s is not supported set python to default", value.value.s);
-        g_app.info.scripting_langage = PY_SCRIPT;
-    }
-
-    if (!ReadConfigValue("palette", memory, &value, size) ||
-        (value.type != JSONV_TEXT_ARRAY && value.type != JSONV_EMPTY_ARRAY))
-        goto invalid;
-
-    if (value.type == JSONV_EMPTY_ARRAY)
-        kv_init(g_app.info.palette);
-    else
-        g_app.info.palette = value.value.sa;
-
-    return true;
-
-// first time of my life used a goto , but best choice here because used specific code error will be bloated the code
-invalid:
-    JsonValueFree(&value);
-    LOG_ERROR("Failed to read configuration value from %s", CONFIG_FILE);
-    return false;
-}
-
 static InitResult LoadAppConfig()
 {
-    if (!ParseConfig(NULL, 0))
+    AppInfo *info = ParseConfig(NULL, 0);
+    if (info == NULL)
     {
         LOG_ERROR("%s", "Failed to parse : somes parameters arent here");
         return INIT_CONFIG_FAILED;
     }
+    g_app.info = *info;
+    free(info);
     return INIT_OK;
 }
 
 static InitResult LoadAppConfigEmbedded()
 {
-    const EmbeddedFile *asset = EmbeddedFileGet(CONFIG_FILE);
+    const CookerFile *asset = CookerFileGet(CONFIG_FILE);
     if (!asset)
     {
         LOG_ERROR("Failed to get %s in %s.Did you delete it before package your app ?", CONFIG_FILE, ASSETS_PAK);
         return INIT_CONFIG_FAILED;
     }
 
-    if (!ParseConfig(asset->data, asset->size))
+    AppInfo *info = ParseConfig(asset->data, asset->size);
+    if (info == NULL)
     {
+
         LOG_ERROR("Failed to parse %s : somes parameters arent here", CONFIG_FILE);
         return INIT_CONFIG_FAILED;
     }
+    g_app.info = *info;
+    free(info);
     return INIT_OK;
 }
 
@@ -243,7 +130,7 @@ static SDL_IOStream *LoadControllerDatabase(void)
 {
 #ifdef GRNGAME_EMBED_ASSETS
     {
-        const EmbeddedFile *asset = EmbeddedFileGet(DATA_GAME_DB);
+        const CookerFile *asset = CookerFileGet(DATA_GAME_DB);
         if (!asset)
         {
             LOG_ERROR("Failed to get %s in Assets.pak,did you delete it before package your app?", DATA_GAME_DB);
@@ -314,20 +201,6 @@ static InitResult InitializeManagers(void)
 
     return INIT_OK;
 }
-
-static void InitializeJson(void)
-{
-    g_app.json_manager = JsonManagerCreate();
-}
-
-static void InitializePalette(void)
-{
-    InitLinearLut();
-    g_app.palette_manager = PaletteManagerCreate();
-    if (g_app.info.enable_palette)
-        PaletteParse(&g_app.info.palette);
-}
-
 static void InitializeAssets(void)
 {
     char *asset_path = PathFromExecutableDirectory(ASSET_FOLDER);
@@ -337,6 +210,17 @@ static void InitializeAssets(void)
     AssetManagerLoadFolderFromMemory(asset_path);
 #endif
     free(asset_path);
+}
+
+// only in dev mode
+static void InitializePalette(void)
+{
+    if (g_app.info.enable_palette)
+    {
+        InitLinearLut();
+        g_app.palette_manager = PaletteManagerCreate();
+        PaletteParse(&g_app.palette_manager, &g_app.info.palette);
+    }
 }
 
 static void InitializeScripts(void)
@@ -369,46 +253,21 @@ InitResult InitAll(void)
     if (result != INIT_OK)
         return result;
 
-    InitializeJson();
-
-#if GRNGAME_WASM
-    g_app.embedded_file_manager = EmbeddedFileManagerCreate();
-    if (!EmbeddedFileManagerLoadAssetsPak())
-        return INIT_OPEN_GAME_DATA_FAILED;
-#elif GRNGAME_EMBED_ASSETS
-#ifdef GRNGAME_ANDROID
-    g_app.embedded_file_manager = EmbeddedFileManagerCreate();
-    char *storage = PathFromAndroidStorage(ASSETS_PAK);
-    if (!MoveFile_(storage, ASSETS_PAK))
+#ifdef GRNGAME_EMBED_ASSETS
+    g_app.cooker_file_manager = CookerFileManagerCreate();
+    if (!CookerFileManagerLoadAssetsPak())
     {
-        free(storage);
-        return INIT_OPEN_GAME_DATA_FAILED;
+        return INIT_DATA_FAILED;
     }
 
-    g_app.info.file_db = DbCreate(storage);
-    free(storage);
-#else
-    g_app.embedded_file_manager = EmbeddedFileManagerCreate();
-    g_app.info.file_db = DbCreate(ASSETS_PAK);
-
-#endif
-
-    if (!EmbeddedFileManagerLoadAssetsPak())
-        return INIT_OPEN_GAME_DATA_FAILED;
 #endif
 
     result = InitAppConfig();
     if (result != INIT_OK)
         return result;
 
-#ifdef GRNGAME_EMBED_ASSETS
-#ifndef GRNGAME_WASM
-    if (!InstallGameData() || !InitGameData())
-        return INIT_OPEN_GAME_DATA_FAILED;
-
-    if (!EmbeddedFileManagerLoadGameData())
-        return INIT_OPEN_GAME_DATA_FAILED;
-#endif
+#ifndef GRNGAME_EMBED_ASSETS
+    InitializePalette();
 #endif
 
     result = InitializeSDL();
@@ -432,33 +291,11 @@ InitResult InitAll(void)
 
     LoadControllerMappings();
 
-    InitializePalette();
-
     InitializeAssets();
 
     InitializeScripts();
 
-#ifdef GRNGAME_EMBED_ASSETS
-    if (g_app.info.update_event_data)
-    {
-        if (!ApplyDbVersion(g_app.info.data_db, g_app.info.version))
-        {
-            LOG_ERROR("Failed to store new version for %s :'%s'", SAVE_FILE, g_app.info.version);
-            g_app.info.update_event_data = false;
-        }
-    }
-#endif
-
-    // todo : refactor
-    if (g_app.info.update_event_data)
-    {
-        CallbackArg args[2] = {
-            {.type = CB_ARG_STRING, .as.string = g_app.info.old_version},
-            {.type = CB_ARG_STRING, .as.string = g_app.info.version},
-        };
-
-        CallBack(args, GAME_DATA_NEW_VERSION);
-    }
+    // todo callback when game data update
 
     HotReloadInit(PathFromExecutableDirectory("."));
 

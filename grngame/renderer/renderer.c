@@ -122,3 +122,9 @@ bool OffScreen(float32 x, float32 y, float32 w, float32 h)
     float32 off_y = g_app.info.offset_y;
     return (x + w <= -off_x) || (x >= view_w + off_x) || (y + h <= -off_y) || (y >= view_h + off_y);
 }
+
+void SetPixelArtFilter(SDL_Texture *tex)
+{
+    if (tex != NULL && !SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST))
+        LOG_WARNING("Cant set nearest scale mode: %s", SDL_GetError());
+}

@@ -123,123 +123,15 @@ if (IS_DEV)
 endif ()
 
 # grngame library
-#dont use recursive include because it's don't work on clion
-set(GRNGAME_SOURCES
-        grngame/assets/asset_manager.c
-        grngame/assets/asset_manager.h
-        grngame/assets/embedded_file_manager.c
-        grngame/assets/embedded_file_manager.h
-        grngame/assets/load.c
-        grngame/assets/load.h
-        grngame/audio/filter.c
-        grngame/audio/filter.h
-        grngame/audio/sound.c
-        grngame/audio/sound.h
-        grngame/audio/sound_info.c
-        grngame/audio/sound_info.h
-        grngame/audio/sound_manager.c
-        grngame/audio/sound_manager.h
-        grngame/core/app.c
-        grngame/core/app.h
-        grngame/core/data.c
-        grngame/core/data.h
-        grngame/core/init.c
-        grngame/core/init.h
-        grngame/core/message.c
-        grngame/core/message.h
-        grngame/core/text.c
-        grngame/core/text.h
-        grngame/core/thread.c
-        grngame/core/thread.h
-        grngame/core/window.c
-        grngame/core/window.h
-        grngame/data/file.c
-        grngame/data/file.h
-        grngame/data/json.c
-        grngame/data/json.h
-        grngame/data/json_read.c
-        grngame/data/json_read.h
-        grngame/data/sqlite.c
-        grngame/data/sqlite.h
-        grngame/dev/hotreload.c
-        grngame/dev/hotreload.h
-        grngame/dev/logging.c
-        grngame/dev/logging.h
-        grngame/dev/tracy.h
-        grngame/embedded/embedded_file_generator.c
-        grngame/embedded/embedded_file_generator.h
-        grngame/embedded/embedded_file_generator_main.c
-        grngame/input/controller.c
-        grngame/input/controller.h
-        grngame/input/input_data.h
-        grngame/input/input_manager.c
-        grngame/input/input_manager.h
-        grngame/input/input_text.c
-        grngame/input/input_text.h
-        grngame/input/keyboard.c
-        grngame/input/keyboard.h
-        grngame/input/mouse.c
-        grngame/input/mouse.h
-        grngame/input/poll_events.c
-        grngame/input/poll_events.h
-        grngame/math/math.h
-        grngame/math/types.h
-        grngame/memory/bump_allocator.c
-        grngame/memory/bump_allocator.h
-        grngame/platform/check_type.h
-        grngame/platform/check_types.c
-        grngame/platform/directories.c
-        grngame/platform/directories.h
-        grngame/platform/paths.c
-        grngame/platform/paths.h
-        grngame/platform/virtual_memory.c
-        grngame/platform/virtual_memory.h
-        grngame/renderer/cielab.c
-        grngame/renderer/cielab.h
-        grngame/renderer/palette.c
-        grngame/renderer/palette.h
-        grngame/renderer/particule.c
-        grngame/renderer/particule.h
-        grngame/renderer/primitive.c
-        grngame/renderer/primitive.h
-        grngame/renderer/renderer.c
-        grngame/renderer/renderer.h
-        grngame/renderer/sprite.c
-        grngame/renderer/sprite.h
-        grngame/renderer/texture.c
-        grngame/renderer/texture.h
-        grngame/utils/attributes.h
-        grngame/utils/c_cpp.h
-        grngame/utils/clear.c
-        grngame/utils/clear.h
-        grngame/utils/macro.h
-        grngame/utils/random.c
-        grngame/utils/random.h
-        grngame/utils/string_compat.h
-        grngame/utils/taskbar_icon.c
-        grngame/utils/taskbar_icon.h
-        grngame/utils/time.c
-        grngame/utils/time.h
-        grngame/utils/version.c
-        grngame/utils/version.h
-        grngame/web/web.h
-        grngame/bindings/api/callback.h
-        grngame/bindings/api/interpretor.h
-        grngame/bindings/api/callback.cpp
-        grngame/bindings/api/interpretor.cpp
-        grngame/bindings/dascript/api/interpretor.h
-        grngame/bindings/dascript/api/interpretor.cpp
-        grngame/bindings/python/api/interpretor.h
-        grngame/bindings/python/api/interpretor.c
-        grngame/bindings/dascript/api/callback.h
-        grngame/bindings/python/api/callback.h
-        grngame/bindings/dascript/api/callback.cpp
-        grngame/bindings/python/api/callback.c
-
+file(GLOB_RECURSE GRNGAME_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/grngame/*.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/grngame/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/grngame/*.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/grngame/*.hpp"
 )
 
 # wasm doesn't like a double main declaration (segfault)
-list(REMOVE_ITEM GRNGAME_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/grngame/embedded/embedded_file_generator_main.c")
+list(REMOVE_ITEM GRNGAME_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/grngame/cooker/embedded_file_generator_main.c")
 add_library(grngame STATIC ${GRNGAME_SOURCES})
 target_include_directories(grngame PUBLIC ${CMAKE_SOURCE_DIR})
 target_compile_definitions(grngame PRIVATE WITH_SDL3_STATIC)
@@ -340,7 +232,7 @@ endif ()
 
 # Build embed generator for the host in dev mode
 if (IS_DEV AND NOT CMAKE_CROSSCOMPILING)
-    add_executable(Embedded "${CMAKE_CURRENT_SOURCE_DIR}/grngame/embedded/embedded_file_generator_main.c")
+    add_executable(Embedded "${CMAKE_CURRENT_SOURCE_DIR}/grngame/cooker/main.c")
     set_target_properties(Embedded PROPERTIES
             OUTPUT_NAME "Embedded-${GRNGAME_TAG}"
             RUNTIME_OUTPUT_DIRECTORY "${GRNGAME_OUTPUT_DIR}/embedded/$<LOWER_CASE:$<CONFIG>>")
