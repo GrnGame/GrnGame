@@ -165,48 +165,46 @@ static void CFileCallback(const char *path, void *userdata)
         ctx->script_files++;
 }
 
-static int ComparePackedImageHeightDesc(const void *a, const void *b)
-{
-    const PackedImage *ia = (const PackedImage *)a;
-    const PackedImage *ib = (const PackedImage *)b;
-    if (ib->surface->h != ia->surface->h)
-        return ib->surface->h - ia->surface->h;
-    return ib->surface->w - ia->surface->w;
-}
+#define STB_RECT_PACK_IMPLEMENTATION
+// https://github.com/nothings/stb/tree/master
+#include "stb_rect_pack.h"
 
-static bool TryPackShelf(PackedImage *images, size_t count, int32 atlas_w, int32 atlas_h)
+static bool TryPack(PackedImage *images, uint32 count, int32 atlas_w, int32 atlas_h)
 {
-    int32 cursor_x = 0;
-    int32 cursor_y = 0;
-    int32 row_h = 0;
-
-    for (size_t i = 0; i < count; ++i)
+    stbrp_node *nodes = malloc(sizeof(stbrp_node) * (uint32)(atlas_w + ATLAS_PADDING));
+    stbrp_rect *rects = malloc(sizeof(stbrp_rect) * count);
+    if (nodes == NULL || rects == NULL)
     {
-        int32 w = images[i].surface->w;
-        int32 h = images[i].surface->h;
-
-        if (w > atlas_w || h > atlas_h)
-            return false;
-
-        if (cursor_x + w > atlas_w)
-        {
-            cursor_y += row_h + ATLAS_PADDING;
-            cursor_x = 0;
-            row_h = 0;
-        }
-
-        if (cursor_y + h > atlas_h)
-            return false;
-
-        images[i].x = cursor_x;
-        images[i].y = cursor_y;
-
-        cursor_x += w + ATLAS_PADDING;
-        if (h > row_h)
-            row_h = h;
+        free(nodes);
+        free(rects);
+        return false;
     }
 
-    return true;
+    for (uint32 i = 0; i < count; ++i)
+    {
+        rects[i].id = (int)i;
+        rects[i].w = (stbrp_coord)(images[i].surface->w + ATLAS_PADDING);
+        rects[i].h = (stbrp_coord)(images[i].surface->h + ATLAS_PADDING);
+    }
+
+    // the target is padded too, so an image touching the border still fits
+    stbrp_context packer;
+    stbrp_init_target(&packer, atlas_w + ATLAS_PADDING, atlas_h + ATLAS_PADDING, nodes, atlas_w + ATLAS_PADDING);
+
+    bool ok = stbrp_pack_rects(&packer, rects, (int)count) != 0;
+    if (ok)
+    {
+        // rects keep their original order after packing
+        for (uint32 i = 0; i < count; ++i)
+        {
+            images[i].x = rects[i].x;
+            images[i].y = rects[i].y;
+        }
+    }
+
+    free(nodes);
+    free(rects);
+    return ok;
 }
 
 static void ApplyPaletteToSurface(SDL_Surface *surface, PaletteManager *manager)
@@ -280,15 +278,13 @@ static bool BuildAtlas(CookerContext *ctx, PaletteManager *manager, bool enable_
     if (count == 0)
         return true;
 
-    qsort(ctx->images.a, count, sizeof(PackedImage), ComparePackedImageHeightDesc);
-
     int32 atlas_w = ATLAS_MIN_SIZE;
     int32 atlas_h = ATLAS_MIN_SIZE;
     bool packed = false;
 
     while (atlas_w <= ATLAS_MAX_SIZE && atlas_h <= ATLAS_MAX_SIZE)
     {
-        if (TryPackShelf(ctx->images.a, count, atlas_w, atlas_h))
+        if (TryPack(ctx->images.a, count, atlas_w, atlas_h))
         {
             packed = true;
             break;

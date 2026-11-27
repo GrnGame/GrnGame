@@ -1,6 +1,6 @@
 #pragma once
 #include "grngame/math/types.h"
-
+#include <stdbool.h>
 typedef struct AppInfo AppInfo;
 
 typedef enum ArchiveKind

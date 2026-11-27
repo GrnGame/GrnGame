@@ -2,10 +2,11 @@
 #include "grngame/math/types.h"
 #include "parser.h"
 #include "cglm/types-struct.h"
+#include <stdbool.h>
 
 #define PATH_SIZE 2048
 
-typedef struct
+    typedef struct
 {
     uint32 magic;
     uint32 version;
